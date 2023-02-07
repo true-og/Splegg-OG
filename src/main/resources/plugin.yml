@@ -1,0 +1,8 @@
+name: Splegg-OG
+main: main.SpleggOG
+version: 1.0
+authors: [Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle]
+api-version: 1.18
+depend: [Vault, WorldEdit]
+commands:
+  splegg:
