@@ -111,8 +111,7 @@ public class Map {
 		int z = this.getConfig().getInt("Spawns." + id + ".z");
 		float yaw = (float)this.getConfig().getInt("Spawns." + id + ".yaw");
 		float pitch = (float)this.getConfig().getInt("Spawns." + id + ".pitch");
-		// TODO: Fix config file returning null here
-		World world = Bukkit.getWorld(splegg.getConfig().getString("Spawns." + id + ".world"));
+		World world = Bukkit.getWorld(this.getConfig().getString("Spawns." + id + ".world"));
 		return new Location(world, (double)x + 0.5D, (double)y + 0.5D, (double)z + 0.5D, yaw, pitch);
 	}
 

@@ -179,9 +179,9 @@ public class SpleggCommand implements CommandExecutor {
 									Region sel = null;
 									try {
 										sel = we.getSession(player).getSelection(new BukkitWorld(player.getWorld()));
-									} catch (IncompleteRegionException e) {
-										// TODO Auto-generated catch block
-										//e.printStackTrace();
+									}
+									catch (IncompleteRegionException e) {
+										SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The area you have selected is incomplete.");
 									}
 									if (sel == null) {
 										SpleggOG.getPlugin().chat.sendMessage(player, "&5Please select an area with worldedit.");

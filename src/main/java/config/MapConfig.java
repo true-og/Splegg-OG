@@ -19,14 +19,13 @@ public class MapConfig {
 
 	public void setup() {
 
-		// TODO: More accurate way of detecting this file.
 		this.f = new File(SpleggOG.getPlugin().getDataFolder(), "maps.yml");
 		try {
 			this.f.createNewFile();
 		}
 		catch (IOException e) {
 
-			SpleggOG.getPlugin().getLogger().info("Could not find maps.yml.");
+			SpleggOG.getPlugin().getLogger().info("Error IOException while creating maps.yml.");
 
 		}
 
