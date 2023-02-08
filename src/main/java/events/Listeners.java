@@ -41,7 +41,18 @@ public class Listeners implements Listener {
 		if (event.getView().getTitle().equals(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title"))) {
 			if (shopmanager.contains(player.getName())) {
 				EconomyResponse r;
-				if (stack.getType() == Material.GOLDEN_SHOVEL) {
+				Material selectedType;
+				try {
+
+					selectedType = stack.getType();
+
+				}
+				catch(NullPointerException error) {
+
+					selectedType = null;
+
+				}
+				if (selectedType == Material.GOLDEN_SHOVEL) {
 					player.closeInventory();
 					if (SpleggOG.getPlugin().econ.getBalance(player.getName()) >= (double)SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")) {
 						r = SpleggOG.getPlugin().econ.withdrawPlayer(player.getName(), (double)SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price"));
@@ -63,7 +74,7 @@ public class Listeners implements Listener {
 					}
 				}
 
-				if (stack.getType() == Material.DIAMOND_SHOVEL) {
+				if (selectedType == Material.DIAMOND_SHOVEL) {
 					player.closeInventory();
 					if (SpleggOG.getPlugin().econ.getBalance(player.getName()) >= (double)SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price")) {
 						r = SpleggOG.getPlugin().econ.withdrawPlayer(player.getName(), (double)SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price"));
@@ -84,6 +95,7 @@ public class Listeners implements Listener {
 						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney").replaceAll("&", "�"));
 					}
 				}
+
 			} else {
 				SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought").replaceAll("&", "�"));
 				player.closeInventory();
@@ -99,9 +111,9 @@ public class Listeners implements Listener {
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		Player player = event.getPlayer();
-		ItemStack hand = player.getItemInHand();
+		ItemStack hand = player.getInventory().getItemInMainHand();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		if (event.getAction() == Action.RIGHT_CLICK_AIR) {
+		if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			if (hand.getType() == Material.IRON_SHOVEL && u.getGame() != null && u.isAlive() && launchEggs.contains(player.getName())) {
 				player.launchProjectile(Egg.class);
 				player.playSound(player.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1.0F, 1.0F);
@@ -172,7 +184,7 @@ public class Listeners implements Listener {
 	}
 
 	private Inventory getSpecInventory() {
-		Inventory spec = Bukkit.createInventory((InventoryHolder)null, 27, "Splegg - Spectators");
+		Inventory spec = Bukkit.createInventory((InventoryHolder) null, 27, "Splegg - Spectators");
 		return spec;
 	}
 }

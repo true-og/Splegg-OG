@@ -42,7 +42,7 @@ public class SpleggCommand implements CommandExecutor {
 					if (u.getGame() != null && u.isAlive()) {
 						Game game = u.getGame();
 						game.leaveGame(u);
-						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.LeaveGame").replaceAll("&", "�").replaceAll("%map%", game.getMap().getName()));
+						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.LeaveGame").replaceAll("&", "§").replaceAll("%map%", game.getMap().getName()));
 					}
 				} else if (args[0].equalsIgnoreCase("start")) {
 					if (player.hasPermission("splegg.admin")) {
