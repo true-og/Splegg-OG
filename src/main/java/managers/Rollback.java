@@ -15,6 +15,7 @@ public class Rollback {
 	private int z;
 
 	public Rollback(String world, Material previd, BlockData prevdata, int x, int y, int z) {
+
 		this.world = world;
 		this.previd = previd;
 		this.prevdata = prevdata;
@@ -23,37 +24,55 @@ public class Rollback {
 		this.x = x;
 		this.y = y;
 		this.z = z;
+
 	}
 
 	public String getWorld() {
+
 		return this.world;
+
 	}
 
 	public BlockData getPrevdata() {
+
 		return this.prevdata;
+
 	}
 
 	public BlockData getNewdata() {
+
 		return this.newdata;
+
 	}
 
 	public Material getPrevid() {
+
 		return this.previd;
+
 	}
 
 	public Material getNewid() {
+
 		return this.newid;
+
 	}
 
 	public int getX() {
+
 		return this.x;
+
 	}
 
 	public int getY() {
+
 		return this.y;
+
 	}
 
 	public int getZ() {
+
 		return this.z;
+
 	}
+
 }

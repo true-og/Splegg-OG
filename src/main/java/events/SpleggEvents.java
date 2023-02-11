@@ -40,7 +40,7 @@ public class SpleggEvents implements Listener {
 
 				if (hit.getType() == Material.TNT) {
 					e.getEntity().getWorld().createExplosion(e.getEntity().getLocation(), 3.0F);
-					Iterator var7 = e.getEntity().getWorld().getEntities().iterator();
+					Iterator<?> var7 = e.getEntity().getWorld().getEntities().iterator();
 
 					while(var7.hasNext()) {
 						Entity drop = (Entity)var7.next();

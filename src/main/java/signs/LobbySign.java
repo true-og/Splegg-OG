@@ -21,12 +21,15 @@ public class LobbySign {
 	Map map;
 
 	public LobbySign(Map map, SpleggOG s) {
+
 		this.splegg = s;
 		this.map = map;
+
 	}
 
 	private static Collection<Material> signMaterials = new ArrayList<>();
 	static {
+
 		signMaterials.add(Material.ACACIA_SIGN);
 		signMaterials.add(Material.DARK_OAK_SIGN);
 		signMaterials.add(Material.OAK_SIGN);
@@ -43,106 +46,167 @@ public class LobbySign {
 		signMaterials.add(Material.JUNGLE_WALL_SIGN);
 		signMaterials.add(Material.CRIMSON_WALL_SIGN);
 		signMaterials.add(Material.WARPED_WALL_SIGN);
+
 	}
 
 	public void create(Location location, final Map map) {
+
 		String loc = LobbySignUtils.get().locationToString(location);
 		this.splegg.maps.c.addSign(map.getName(), loc);
+
 		if (this.map == null) {
+
 			this.map = map;
+
 		}
 
 		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this.splegg, new Runnable() {
+
 			public void run() {
+
 				LobbySign.this.update(map, true);
+
 			}
+
 		}, 5L);
+
 	}
 
 	public void delete(Location location) {
+
 		String loc = LobbySignUtils.get().locationToString(location);
 		this.splegg.maps.c.delSign(this.map.getName(), loc);
+
 		this.splegg.maps.c.saveMaps();
 		this.map = null;
+
 	}
 
 	public void update(Map map, boolean force) {
-		Iterator var4 = this.splegg.maps.c.maps.getStringList("Signs." + map.getName() + ".lobby").iterator();
 
+		Iterator<?> var4 = this.splegg.maps.c.maps.getStringList("Signs." + map.getName() + ".lobby").iterator();
 		while(var4.hasNext()) {
+
 			String loc = (String)var4.next();
 			Location location = LobbySignUtils.get().stringToLocation(loc);
-			if (!signMaterials.contains(location.getBlock().getType())) {
+			if (! signMaterials.contains(location.getBlock().getType())) {
+
 				location.getBlock().setType(Material.OAK_WALL_SIGN);
+
 			}
 
-			Sign s = (Sign)location.getBlock().getState();
+			Sign s = (Sign) location.getBlock().getState();
 			String[] sign;
 			if (force) {
-				String[] array = new String[]{splegg.getConfig().getString("Sings.Restarting.1").replaceAll("&", "�").replaceAll("#", "█"), splegg.getConfig().getString("Sings.Restarting.2").replaceAll("&", "�"), splegg.getConfig().getString("Sings.Restarting.3").replaceAll("&", "�").replaceAll("%map%", map.getName()), splegg.getConfig().getString("Sings.Restarting.4").replaceAll("&", "�").replaceAll("#", "█")};
+
+				String[] array = new String[]{splegg.getConfig().getString("Sings.Restarting.1").replaceAll("&", "§").replaceAll("#", "§"), splegg.getConfig().getString("Sings.Restarting.2").replaceAll("&", "§"), splegg.getConfig().getString("Sings.Restarting.3").replaceAll("&", "§").replaceAll("%map%", map.getName()), splegg.getConfig().getString("Sings.Restarting.4").replaceAll("&", "§").replaceAll("#", "§")};
 				this.setSign(array, s);
 				sign = new String[4];
 				Game game = this.splegg.games.getGame(map.getName());
 				if (game == null) {
+
 					sign[0] = "";
 					sign[1] = ChatColor.DARK_RED + "Please remove";
 					sign[2] = ChatColor.DARK_RED + "this sign";
 					sign[3] = "";
-				} else {
-					sign[0] = splegg.getConfig().getString("Sings.Format.1").replaceAll("&", "�").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game));
-					sign[1] = splegg.getConfig().getString("Sings.Format.2").replaceAll("&", "�").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game));
-					sign[2] = splegg.getConfig().getString("Sings.Format.3").replaceAll("&", "�").replaceAll("%map%", map.getName()).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%count%/%maxcount%", this.getPlayers(game));
-					sign[3] = splegg.getConfig().getString("Sings.Format.4").replaceAll("&", "�").replaceAll("%count%/%maxcount%", this.getPlayers(game)).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName());
+
+				}
+				else {
+
+					sign[0] = splegg.getConfig().getString("Sings.Format.1").replaceAll("&", "§").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game));
+					sign[1] = splegg.getConfig().getString("Sings.Format.2").replaceAll("&", "§").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game));
+					sign[2] = splegg.getConfig().getString("Sings.Format.3").replaceAll("&", "§").replaceAll("%map%", map.getName()).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%count%/%maxcount%", this.getPlayers(game));
+					sign[3] = splegg.getConfig().getString("Sings.Format.4").replaceAll("&", "§").replaceAll("%count%/%maxcount%", this.getPlayers(game)).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName());
+
 				}
 
 				Bukkit.getScheduler().scheduleSyncDelayedTask(this.splegg, new SignDelay(sign, s), 40L);
-			} else {
-				Game game = this.splegg.games.getGame(map.getName());
-				sign = new String[]{splegg.getConfig().getString("Sings.Format.1").replaceAll("&", "�").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.2").replaceAll("&", "�").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.3").replaceAll("&", "�").replaceAll("%map%", map.getName()).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.4").replaceAll("&", "�").replaceAll("%count%/%maxcount%", this.getPlayers(game)).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName())};
-				this.setSign(sign, s);
+
 			}
+			else {
+
+				Game game = this.splegg.games.getGame(map.getName());
+				sign = new String[]{splegg.getConfig().getString("Sings.Format.1").replaceAll("&", "§").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.2").replaceAll("&", "§").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.3").replaceAll("&", "§").replaceAll("%map%", map.getName()).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.4").replaceAll("&", "§").replaceAll("%count%/%maxcount%", this.getPlayers(game)).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName())};
+				this.setSign(sign, s);
+
+			}
+
 		}
 
 	}
 
 	private String getPlayers(Game game) {
+
 		String players = "";
 		if (game.getStatus() == Status.DISABLED) {
+
 			players = "";
-		} else if (game.getMap().getSpawnCount() <= 1) {
+
+		}
+		else if (game.getMap().getSpawnCount() <= 1) {
+
 			players = "Players: " + game.getPlayers().size();
-		} else {
+
+		}
+		else {
+
 			players = game.getPlayers().size() + "/" + game.getMap().getSpawnCount();
+
 		}
 
 		return players;
+
 	}
 
 	private void setSign(String[] lines, Sign s) {
+
 		for(int i = 0; i < lines.length; ++i) {
-			s.setLine(i, lines[i]);
+
+			// TODO: Convert lines[i] here to be adventure TextComponent
+			s.line(i, lines[i]);
+
 		}
 
 		s.update();
+
 	}
 
 	private String getFancyStatus(Game game) {
-		String status = "";
+
+		String status = new String();
 		Status st = game.getStatus();
 		if (st == Status.LOBBY) {
+
 			if (game.isStarting()) {
-				status = splegg.getConfig().getString("Sings.Status.Join").replaceAll("&", "�");
-			} else {
-				status = splegg.getConfig().getString("Sings.Status.Join").replaceAll("&", "�");
+
+				status = splegg.getConfig().getString("Sings.Status.Join").replaceAll("&", "§");
+
 			}
-		} else if (st == Status.DISABLED) {
-			status = splegg.getConfig().getString("Sings.Status.Disabled").replaceAll("&", "�");
-		} else if (st == Status.INGAME) {
-			status = splegg.getConfig().getString("Sings.Status.Started").replaceAll("&", "�");
-		} else {
+			else {
+
+				status = splegg.getConfig().getString("Sings.Status.Join").replaceAll("&", "§");
+
+			}
+
+		}
+		else if (st == Status.DISABLED) {
+
+			status = splegg.getConfig().getString("Sings.Status.Disabled").replaceAll("&", "§");
+
+		}
+		else if (st == Status.INGAME) {
+
+			status = splegg.getConfig().getString("Sings.Status.Started").replaceAll("&", "§");
+
+		}
+		else {
+
 			status = ChatColor.DARK_GREEN + st.toString().toLowerCase();
+
 		}
 
 		return status;
+
 	}
+
 }

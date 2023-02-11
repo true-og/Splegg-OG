@@ -21,21 +21,23 @@ public class MapConfig {
 
 		this.f = new File(SpleggOG.getPlugin().getDataFolder(), "maps.yml");
 		try {
+
 			this.f.createNewFile();
+
 		}
 		catch (IOException e) {
 
-			SpleggOG.getPlugin().getLogger().info("Error IOException while creating maps.yml.");
+			SpleggOG.getPlugin().getLogger().info("An error occured while creating maps.yml.");
 
 		}
 
 		this.loadMaps();
 		this.saveMaps();
 		SpleggOG.getPlugin().maps.MAPS.clear();
-		Iterator var2 = this.getEnabledMaps().iterator();
 
+		Iterator<?> var2 = this.getEnabledMaps().iterator();
 		while(var2.hasNext()) {
-			String maps = (String)var2.next();
+			String maps = (String) var2.next();
 			SpleggOG.getPlugin().maps.addMap(maps);
 			Map map = SpleggOG.getPlugin().maps.getMap(maps);
 			Game game = new Game(SpleggOG.getPlugin(), map);
@@ -59,33 +61,33 @@ public class MapConfig {
 
 	}
 
-	public List getEnabledMaps() {
+	public List<String> getEnabledMaps() {
 		return this.maps.getStringList("maps");
 	}
 
 	public void addSign(String map, String loc) {
-		List signs = this.maps.getStringList("Signs." + map + ".lobby");
+		List<String> signs = this.maps.getStringList("Signs." + map + ".lobby");
 		signs.add(loc);
 		this.maps.set("Signs." + map + ".lobby", signs);
 		this.saveMaps();
 	}
 
 	public void delSign(String map, String loc) {
-		List signs = this.maps.getStringList("Signs." + map + ".lobby");
+		List<String> signs = this.maps.getStringList("Signs." + map + ".lobby");
 		signs.remove(loc);
 		this.maps.set("Signs." + map + ".lobby", signs);
 		this.saveMaps();
 	}
 
 	public void addMap(String name) {
-		List maps = this.maps.getStringList("maps");
+		List<String> maps = this.maps.getStringList("maps");
 		maps.add(name);
 		this.maps.set("maps", maps);
 		this.saveMaps();
 	}
 
 	public void removeMap(String name) {
-		List maps = this.maps.getStringList("maps");
+		List<String> maps = this.maps.getStringList("maps");
 		maps.remove(name);
 		this.maps.set("maps", maps);
 		this.saveMaps();

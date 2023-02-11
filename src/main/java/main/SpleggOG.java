@@ -30,7 +30,7 @@ import utils.UtilPlayer;
 import utils.Utils;
 
 public class SpleggOG extends JavaPlugin {
-	
+
 	private static SpleggOG plugin;
 	public Economy econ = null;
 	public Utils chat;
@@ -43,7 +43,7 @@ public class SpleggOG extends JavaPlugin {
 	public boolean updateOut = false;
 	public String newVer = "";
 	public File updateFile = this.getFile();
-	public List special = Arrays.asList("Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle");
+	public List<String> special = Arrays.asList("Hraponssi, MrLuangamer, NotAlexNoyle");
 	public boolean disabling = false;
 	boolean economy = true;
 
@@ -51,7 +51,7 @@ public class SpleggOG extends JavaPlugin {
 		if (this.getServer().getPluginManager().getPlugin("Vault") == null) {
 			return false;
 		} else {
-			RegisteredServiceProvider rsp = this.getServer().getServicesManager().getRegistration(Economy.class);
+			RegisteredServiceProvider<Economy> rsp = this.getServer().getServicesManager().getRegistration(Economy.class);
 			if (rsp == null) {
 				return false;
 			} else {
@@ -107,7 +107,7 @@ public class SpleggOG extends JavaPlugin {
 		int gameCounter = 0;
 		try {
 
-			Iterator var2 = this.games.GAMES.values().iterator();
+			Iterator<?> var2 = this.games.GAMES.values().iterator();
 
 			while(var2.hasNext()) {
 				Game game = (Game)var2.next();
@@ -132,12 +132,12 @@ public class SpleggOG extends JavaPlugin {
 		Plugin worldEdit = this.getServer().getPluginManager().getPlugin("WorldEdit");
 		return worldEdit instanceof WorldEditPlugin ? (WorldEditPlugin)worldEdit : null;
 	}
-	
+
 	public static SpleggOG getPlugin() {
-		
+
 		// Pass instance of main to other classes.
 		return plugin;
-		
+
 	}
 
 }

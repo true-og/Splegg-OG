@@ -24,7 +24,7 @@ public class SpleggCommand implements CommandExecutor {
 			Player player = (Player)sender;
 			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 			if (args.length == 0) {
-				SpleggOG.getPlugin().chat.sendMessage(player, "Plugin created by MrLuangamer, > Theluangamer9416 for more information /splegg help");
+				SpleggOG.getPlugin().chat.sendMessage(player, "Plugin created by MrLuangamer, updated by Hraponssi, now maintained by NotAlexNoyle for true-og.net. For more information: /splegg help");
 			} else if (args.length == 1) {
 				if (args[0].equalsIgnoreCase("join")) {
 					if (player.hasPermission("splegg.join")) {
@@ -52,7 +52,7 @@ public class SpleggCommand implements CommandExecutor {
 							SpleggOG.getPlugin().game.startGame(u.getGame());
 							SpleggOG.getPlugin().chat.sendMessage(player, "&eGame started!");
 						} else if (u.getGame().getStatus() == Status.INGAME) {
-							SpleggOG.getPlugin().chat.sendMessage(player, "�cGame has already begun.");
+							SpleggOG.getPlugin().chat.sendMessage(player, "&cGame has already begun.");
 						}
 					} else {
 						SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
@@ -66,7 +66,7 @@ public class SpleggCommand implements CommandExecutor {
 						} else if (u.getGame().getStatus() == Status.INGAME) {
 							SpleggOG.getPlugin().chat.bc("&5" + player.getName() + "&6 has stopped the game.", u.getGame());
 							SpleggOG.getPlugin().game.stopGame(u.getGame(), 1);
-							SpleggOG.getPlugin().chat.sendMessage(player, "�eYou have stopped the game.");
+							SpleggOG.getPlugin().chat.sendMessage(player, "&eYou have stopped the game.");
 						}
 					} else {
 						SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
@@ -130,7 +130,7 @@ public class SpleggCommand implements CommandExecutor {
 										SpleggOG.getPlugin().game.startGame(game);
 										SpleggOG.getPlugin().chat.sendMessage(player, "&eStarting " + name + ".");
 									} else if (game.getStatus() == Status.INGAME) {
-										SpleggOG.getPlugin().chat.sendMessage(player, "�cGame has already begun.");
+										SpleggOG.getPlugin().chat.sendMessage(player, "&cGame has already begun.");
 									}
 								} else {
 									SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
@@ -150,7 +150,7 @@ public class SpleggCommand implements CommandExecutor {
 									} else if (game.getStatus() == Status.INGAME) {
 										SpleggOG.getPlugin().chat.bc("&5" + player.getName() + "&6 has stopped the game.", game);
 										SpleggOG.getPlugin().game.stopGame(game, 1);
-										SpleggOG.getPlugin().chat.sendMessage(player, "�eYou have stopped the game.");
+										SpleggOG.getPlugin().chat.sendMessage(player, "&eYou have stopped the game.");
 									}
 								} else {
 									SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
@@ -259,15 +259,18 @@ public class SpleggCommand implements CommandExecutor {
 		}
 
 		return false;
+
 	}
 
 	boolean lobbyset() {
+
 		try {
 			SpleggOG.getPlugin().config.getLobby();
 			return true;
 		} catch (Exception var2) {
 			return false;
 		}
+
 	}
 
 	boolean spawnset(int i, Map map) {
