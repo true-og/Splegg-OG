@@ -60,7 +60,7 @@ public class GameManager {
 				if (Listeners.goldspade.contains(sp.getPlayer().getName())) {
 
 					sp.getPlayer().getInventory().clear();
-					sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, 0, splegg.getConfig().getString("Shovels.Gold.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Gold.Lore").replaceAll("&", "§")));
+					sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, splegg.getConfig().getString("Shovels.Gold.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Gold.Lore").replaceAll("&", "§")));
 					sp.getPlayer().updateInventory();
 
 					Listeners.manager.remove(sp.getPlayer().getName());
@@ -74,7 +74,7 @@ public class GameManager {
 				if (Listeners.diamondspade.contains(sp.getPlayer().getName())) {
 
 					sp.getPlayer().getInventory().clear();
-					sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.DIAMOND_SHOVEL, 0, splegg.getConfig().getString("Shovels.Diamond.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Diamond.Lore").replaceAll("&", "§")));
+					sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.DIAMOND_SHOVEL, splegg.getConfig().getString("Shovels.Diamond.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Diamond.Lore").replaceAll("&", "§")));
 					sp.getPlayer().updateInventory();
 
 					Listeners.manager.remove(sp.getPlayer().getName());
@@ -89,7 +89,7 @@ public class GameManager {
 			else {
 
 				sp.getPlayer().getInventory().clear();
-				sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.IRON_SHOVEL, 0, splegg.getConfig().getString("Shovels.Iron.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Iron.Lore").replaceAll("&", "§")));
+				sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.IRON_SHOVEL, splegg.getConfig().getString("Shovels.Iron.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Iron.Lore").replaceAll("&", "§")));
 				sp.getPlayer().updateInventory();
 
 				Listeners.manager.remove(sp.getPlayer().getName());
@@ -168,7 +168,7 @@ public class GameManager {
 		Iterator<?> var4 = players.values().iterator();
 		while(var4.hasNext()) {
 
-			SpleggPlayer sp = (SpleggPlayer)var4.next();
+			SpleggPlayer sp = (SpleggPlayer) var4.next();
 			this.splegg.chat.sendMessage(sp.getPlayer(), "Splegg is ending in §5§l" + this.splegg.game.getDigitTime(count));
 
 		}

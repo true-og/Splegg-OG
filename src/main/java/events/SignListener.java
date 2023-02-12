@@ -32,6 +32,7 @@ public class SignListener implements Listener {
 
 				LobbySign ls = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
 				ls.create(e.getBlock().getLocation(), SpleggOG.getPlugin().maps.getMap(map));
+
 				SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("&", "§").replaceAll("%map%", map));
 
 			}
@@ -42,6 +43,7 @@ public class SignListener implements Listener {
 
 	private static Collection<Material> signMaterials = new ArrayList<>();
 	static {
+
 		signMaterials.add(Material.ACACIA_SIGN);
 		signMaterials.add(Material.DARK_OAK_SIGN);
 		signMaterials.add(Material.OAK_SIGN);
@@ -58,46 +60,73 @@ public class SignListener implements Listener {
 		signMaterials.add(Material.JUNGLE_WALL_SIGN);
 		signMaterials.add(Material.CRIMSON_WALL_SIGN);
 		signMaterials.add(Material.WARPED_WALL_SIGN);
+
 	}
 
 	@EventHandler
 	public void onInteract(PlayerInteractEvent e) {
+
 		if (e.hasBlock() && signMaterials.contains(e.getClickedBlock().getType()) && e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+
 			Sign s = (Sign)e.getClickedBlock().getState();
 			Player player = e.getPlayer();
 			if (s.line(0).toString().equalsIgnoreCase(SpleggOG.getPlugin().getConfig().getString("Sings.Format.1").replaceAll("&", "§"))) {
+
 				String map = ChatColor.stripColor(s.line(2).toString());
+
 				if (SpleggOG.getPlugin().maps.mapExists(map)) {
+
 					player.chat("/splegg join " + map);
 					player.updateInventory();
+
 					e.setCancelled(true);
-				} else {
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist").replaceAll("&", "§"));
-					e.setCancelled(true);
+
 				}
+				else {
+
+					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist").replaceAll("&", "§"));
+
+					e.setCancelled(true);
+
+				}
+
 			}
+
 		}
 
 	}
 
 	@EventHandler
 	public void signBreak(BlockBreakEvent e) {
+
 		Player player = e.getPlayer();
 		if(signMaterials.contains(e.getBlock().getType())) {
+
 			Sign s = (Sign) e.getBlock().getState();
 			String[] lines = (String[]) s.lines().toArray();
 			String map = ChatColor.stripColor(lines[1]);
 			if (LobbySignUtils.get().isLobbySign(e.getBlock().getLocation(), map)) {
+
 				if (player.hasPermission("splegg.admin")) {
+
 					LobbySign sign = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
 					sign.delete(e.getBlock().getLocation());
+
 					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign").replaceAll("&", "§").replaceAll("%map%", map));
-				} else {
-					e.setCancelled(true);
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign").replaceAll("&", "§"));
+
 				}
+				else {
+
+					e.setCancelled(true);
+
+					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign").replaceAll("&", "§"));
+
+				}
+
 			}
+
 		}
 
 	}
+
 }

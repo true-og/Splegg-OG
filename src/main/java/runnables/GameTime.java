@@ -43,6 +43,7 @@ public class GameTime implements Runnable {
 		else {
 
 			this.game.stopGameTimer();
+
 			this.splegg.chat.bc(splegg.getConfig().getString("Messages.Timelimitreached"), this.game);
 			this.splegg.game.stopGame(this.game, 1);
 

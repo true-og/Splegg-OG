@@ -25,10 +25,13 @@ public class MapUtilities {
 		Map m = this.getMap(name);
 		Game game = SpleggOG.getPlugin().games.getGame(name);
 		if (game.getStatus() == Status.INGAME) {
+
 			SpleggOG.getPlugin().game.stopGame(game, 0);
+
 		}
 
 		SpleggOG.getPlugin().games.GAMES.remove(m.getName());
+
 		this.MAPS.remove(name, m);
 		this.c.removeMap(name);
 		m.delete();
@@ -42,27 +45,38 @@ public class MapUtilities {
 	}
 
 	public Collection<Map> getMaps() {
+
 		return this.MAPS.values();
+
 	}
 
 	public Map getMap(String name) {
-		return (Map)this.MAPS.get(name);
+
+		return (Map) this.MAPS.get(name);
+
 	}
 
+	// TODO: Use getRandomMap in map voting as an option.
 	/*private Map getRandomMap() {
 
 		ArrayList<Map> all = new ArrayList<Map>();
 		Iterator<?> var3 = this.MAPS.values().iterator();
 
 		while(var3.hasNext()) {
+
 			Map map = (Map)var3.next();
+
 			if (map.isUsable()) {
+
 				all.add(map);
+
 			}
+
 		}
 
 		Object[] mapsa = all.toArray();
-		Map randomMap = (Map)mapsa[(new Random()).nextInt(mapsa.length)];
+		Map randomMap = (Map) mapsa[(new Random()).nextInt(mapsa.length)];
+
 		return randomMap;
 
 	}*/

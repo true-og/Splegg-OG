@@ -18,6 +18,7 @@ public class InvStore {
 	public GameMode gamemode;
 
 	public InvStore(Player player) {
+
 		this.player = player;
 		this.exp = 0.0F;
 		this.level = 0;
@@ -26,9 +27,11 @@ public class InvStore {
 		this.fire = 0;
 		this.armour = null;
 		this.inv = null;
+
 	}
 
 	public void load() {
+
 		this.player.getInventory().setContents(this.inv);
 		this.player.getInventory().setArmorContents(this.armour);
 		this.player.setExp(this.exp);
@@ -39,9 +42,11 @@ public class InvStore {
 		this.player.setGameMode(this.gamemode);
 		this.player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
 		this.player.updateInventory();
+
 	}
 
 	public void save() {
+
 		this.inv = this.player.getInventory().getContents();
 		this.armour = this.player.getInventory().getArmorContents();
 		this.exp = this.player.getExp();
@@ -51,9 +56,11 @@ public class InvStore {
 		this.health = this.player.getHealthScale();
 		this.gamemode = this.player.getGameMode();
 		this.player.updateInventory();
+
 	}
 
 	public void reset() {
+
 		this.exp = 0.0F;
 		this.level = 0;
 		this.health = 0.0D;
@@ -62,5 +69,7 @@ public class InvStore {
 		this.gamemode = null;
 		this.armour = null;
 		this.inv = null;
+
 	}
+
 }

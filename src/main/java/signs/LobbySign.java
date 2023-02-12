@@ -14,6 +14,8 @@ import config.Map;
 import main.SpleggOG;
 import managers.Game;
 import managers.Status;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 
 public class LobbySign {
 
@@ -162,8 +164,8 @@ public class LobbySign {
 
 		for(int i = 0; i < lines.length; ++i) {
 
-			// TODO: Convert lines[i] here to be adventure TextComponent
-			s.line(i, lines[i]);
+			TextComponent signLineContainer = Component.text(lines[i]);
+			s.line(i, signLineContainer);
 
 		}
 

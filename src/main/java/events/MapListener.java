@@ -14,31 +14,41 @@ public class MapListener implements Listener {
 
 	@EventHandler
 	public void blockBreak(BlockBreakEvent e) {
+
 		Player player = e.getPlayer();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 		if (u.getGame() != null && u.isAlive()) {
+
 			e.setCancelled(true);
+
 		}
 
 	}
 
 	@EventHandler
 	public void blockPlace(BlockPlaceEvent e) {
+
 		Player player = e.getPlayer();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 		if (u.getGame() != null && u.isAlive()) {
+
 			e.setCancelled(true);
+
 		}
 
 	}
 
 	@EventHandler
 	public void hangingEntityBreak(HangingBreakByEntityEvent e) {
+
 		Player player = (Player)e.getRemover();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 		if (u.getGame() != null && u.isAlive()) {
+
 			e.setCancelled(true);
+
 		}
 
 	}
+
 }

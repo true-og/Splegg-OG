@@ -62,6 +62,7 @@ public class Game {
 		this.y1 = 0;
 		this.y2 = 0;
 		this.small = -1;
+
 		this.setSign(new LobbySign(map, splegg));
 
 		(new BukkitRunnable() {
@@ -88,8 +89,8 @@ public class Game {
 			public void run() {
 
 				Game.this.splegg.chat.bc(Game.this.splegg.getConfig().getString("Messages.GraceTimeFinish").replaceAll("&", "§"), Game.this);
-				Iterator<?> var2 = Game.this.players.values().iterator();
 
+				Iterator<?> var2 = Game.this.players.values().iterator();
 				while(var2.hasNext()) {
 
 					SpleggPlayer sp = (SpleggPlayer) var2.next();
@@ -140,7 +141,6 @@ public class Game {
 
 		ArrayList<SpleggPlayer> sp = new ArrayList<SpleggPlayer>();
 		Iterator<?> var3 = this.players.values().iterator();
-
 		while(var3.hasNext()) {
 
 			SpleggPlayer sps = (SpleggPlayer) var3.next();
@@ -227,7 +227,9 @@ public class Game {
 
 				Listeners.manager.add(u.getPlayer().getName());
 				Listeners.shopmanager.add(u.getPlayer().getName());
-				player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), 0, splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
+
+				player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
+
 				this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), u.getGame());
 
 				if (this.players.size() >= this.splegg.getConfig().getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
@@ -239,8 +241,6 @@ public class Game {
 
 			}
 			else if (size >= max && ! player.hasPermission("splegg.joinfull")) {
-
-				SpleggOG.getPlugin().getLogger().info("Lobby Full! Size: " + size + " Max: " + max + ".");
 
 				this.splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.VIPPrivilege").replaceAll("&", "§"));
 
@@ -256,12 +256,15 @@ public class Game {
 				sp = new SpleggPlayer(player, u);
 				u.setAlive(true);
 				u.getStore().save();
+
 				this.splegg.utils.clearInventory(player);
+
 				player.setHealth(20.0D);
 				player.setFoodLevel(20);
 				player.setLevel(0);
 				player.setExp(0.0F);
 				player.setGameMode(GameMode.ADVENTURE);
+
 				this.players.put(player.getName(), sp);
 				u.setGame(this.splegg.games.getGame(this.name));
 
@@ -276,9 +279,10 @@ public class Game {
 
 				}
 
-				player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), 0, splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
+				player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
 				Listeners.manager.add(u.getPlayer().getName());
 				Listeners.shopmanager.add(u.getPlayer().getName());
+
 				this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), u.getGame());
 
 				if (this.players.size() >= this.splegg.getConfig().getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
@@ -332,19 +336,23 @@ public class Game {
 		}
 
 		this.players.remove(u.getName());
+
 		Listeners.launchEggs.remove(sp.getPlayer().getName());
 		Listeners.shopmanager.remove(sp.getPlayer().getName());
 		Listeners.manager.remove(sp.getPlayer().getName());
 		Listeners.goldspade.remove(sp.getPlayer().getName());
 		Listeners.diamondspade.remove(sp.getPlayer().getName());
 		Listeners.moneymanager.remove(sp.getPlayer().getName());
+
 		u.getPlayer().teleport(this.splegg.config.getLobby());
 		u.setGame((Game)null);
 		u.setAlive(false);
 		u.getPlayer().setHealth(20.0D);
+
 		InvStore store = u.getStore();
 		store.load();
 		store.reset();
+
 		u.getPlayer().setFallDistance(0.0F);
 
 		for(Player p : Bukkit.getOnlinePlayers()) {
@@ -352,13 +360,14 @@ public class Game {
 			if (Listeners.moneymanager.contains(p.getName())) {
 
 				p.sendMessage(ChatColor.GREEN + "You received " + splegg.getConfig().getInt("Money.KillPlayer") +" coins!");
+
 				splegg.econ.depositPlayer(p, splegg.getConfig().getInt("Money.KillPlayer"));
 
 			}
 
 		}
 
-		if (!this.splegg.disabling) {
+		if (! this.splegg.disabling) {
 
 			this.getSign().update(this.map, false);
 
@@ -399,7 +408,9 @@ public class Game {
 
 				Location l1 = this.map.getFloor(i, "1");
 				Location l2 = this.map.getFloor(i, "2");
+
 				CuboidRegion sel = new CuboidRegion(BlockVector3.at(l1.getBlockX(),l1.getBlockY(),l1.getBlockZ()), BlockVector3.at(l2.getBlockX(),l2.getBlockY(),l2.getBlockZ()));
+
 				BlockVector3 min = sel.getMinimumPoint();
 				BlockVector3 max = sel.getMaximumPoint();
 
@@ -444,8 +455,9 @@ public class Game {
 		Iterator<?> var2 = this.data.iterator();
 		while(var2.hasNext()) {
 
-			Rollback d = (Rollback)var2.next();
-			Location l = new Location(Bukkit.getWorld(d.getWorld()), (double)d.getX(), (double)d.getY(), (double)d.getZ());
+			Rollback d = (Rollback) var2.next();
+			Location l = new Location(Bukkit.getWorld(d.getWorld()), (double) d.getX(), (double) d.getY(), (double) d.getZ());
+
 			l.getBlock().setType(d.getPrevid());
 			l.getBlock().setBlockData(d.getPrevdata());
 			l.getBlock().getState().update();

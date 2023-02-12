@@ -47,27 +47,50 @@ public class SpleggOG extends JavaPlugin {
 	public boolean disabling = false;
 	boolean economy = true;
 
+	// TODO: Don't give the "Diamonds" advancement or any other advancements when items are added to the players inventory that are used by Splegg-OG to do things.
+	// TODO: If a shovel in the splegg shop is too expensive, close the inventory and tell the user about it.
 	private boolean setupEconomy() {
+
 		if (this.getServer().getPluginManager().getPlugin("Vault") == null) {
+
 			return false;
-		} else {
+
+		}
+		else {
+
 			RegisteredServiceProvider<Economy> rsp = this.getServer().getServicesManager().getRegistration(Economy.class);
 			if (rsp == null) {
+
 				return false;
-			} else {
-				this.econ = (Economy)rsp.getProvider();
-				return this.econ != null;
+
 			}
+			else {
+
+				this.econ = (Economy)rsp.getProvider();
+
+				return this.econ != null;
+
+			}
+
 		}
+
 	}
 
 	public void onEnable() {
+
 		plugin = this;
 		this.chat = new Utils();
 		if (this.getServer().getPluginManager().getPlugin("WorldEdit") == null) {
-			this.chat.log("WorldEdit not found! Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit");
+
+			String noWorldEditError = "\"ERROR: WorldEdit not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
+			this.getLogger().info(noWorldEditError);
+			this.chat.log(noWorldEditError);
+
 			Bukkit.getPluginManager().disablePlugin(this);
-		} else {
+
+		}
+		else {
+
 			this.maps = new MapUtilities();
 			this.games = new GameUtilities();
 			this.game = new GameManager(this);
@@ -76,28 +99,47 @@ public class SpleggOG extends JavaPlugin {
 			this.config = new Utils();
 			this.maps.c.setup();
 			this.config.setup();
+
 			this.getConfig().options().copyDefaults(true);
 			this.saveConfig();
+
 			this.getServer().getPluginManager().registerEvents(new MapListener(), this);
 			this.getServer().getPluginManager().registerEvents(new PlayerListener(), this);
 			this.getServer().getPluginManager().registerEvents(new SpleggEvents(), this);
 			this.getServer().getPluginManager().registerEvents(new SignListener(), this);
 			this.getServer().getPluginManager().registerEvents(new Listeners(), this);
+
 			this.getCommand("splegg").setExecutor(new SpleggCommand());
-			if (!this.setupEconomy()) {
+
+			if (! this.setupEconomy()) {
+
+				// TODO: Use this for all serious errors in plugins.
 				this.getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", this.getDescription().getName()));
+
+				// Disable Splegg-OG for this instance because Vault (a crucial dependency) was not found.
 				this.getServer().getPluginManager().disablePlugin(this);
-			} else {
-				for(Player p : Bukkit.getOnlinePlayers()) {
-					UtilPlayer u = new UtilPlayer(p);
-					this.pm.PLAYERS.put(p.getName(), u);
-				}
+
 			}
+			else {
+
+				for(Player p : Bukkit.getOnlinePlayers()) {
+
+					UtilPlayer u = new UtilPlayer(p);
+
+					this.pm.PLAYERS.put(p.getName(), u);
+
+				}
+
+			}
+
 		}
+
 	}
 
 	public void onDisable() {
+
 		this.disabling = true;
+
 		HandlerList.unregisterAll(new MapListener());
 		HandlerList.unregisterAll(new PlayerListener());
 		HandlerList.unregisterAll(new SpleggEvents());
@@ -110,11 +152,16 @@ public class SpleggOG extends JavaPlugin {
 			Iterator<?> var2 = this.games.GAMES.values().iterator();
 
 			while(var2.hasNext()) {
+
 				Game game = (Game)var2.next();
 				if (game.getStatus() == Status.INGAME) {
+
 					gameCounter++;
+
 					this.game.stopGame(game, 1);
+
 				}
+
 			}
 
 			this.getLogger().info("Splegg-OG Shut Down with " + gameCounter + " games running.");
@@ -129,8 +176,11 @@ public class SpleggOG extends JavaPlugin {
 	}
 
 	public WorldEditPlugin getWorldEdit() {
+
 		Plugin worldEdit = this.getServer().getPluginManager().getPlugin("WorldEdit");
-		return worldEdit instanceof WorldEditPlugin ? (WorldEditPlugin)worldEdit : null;
+
+		return worldEdit instanceof WorldEditPlugin ? (WorldEditPlugin) worldEdit : null;
+
 	}
 
 	public static SpleggOG getPlugin() {
