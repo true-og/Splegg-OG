@@ -86,7 +86,7 @@ public class GameUtilities {
 		Iterator<?> var3 = this.GAMES.values().iterator();
 		while(var3.hasNext()) {
 
-			Game games = (Game)var3.next();
+			Game games = (Game) var3.next();
 			if (games.getStatus() == Status.LOBBY) {
 
 				all.add(games);

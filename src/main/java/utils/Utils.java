@@ -61,13 +61,13 @@ public class Utils {
 
 	public void bc(String string, Game game) {
 
-		Iterator<?> var4 = SpleggOG.getPlugin().pm.PLAYERS.values().iterator();
-		while(var4.hasNext()) {
+		Iterator<?> playerIterator = SpleggOG.getPlugin().pm.PLAYERS.values().iterator();
+		while(playerIterator.hasNext()) {
 
-			UtilPlayer u = (UtilPlayer)var4.next();
+			UtilPlayer u = (UtilPlayer) playerIterator.next();
 			if (u.getGame() == game && u.isAlive()) {
 
-				this.sendMessage(u.getPlayer(), string);
+				sendMessage(u.getPlayer(), string);
 
 			}
 
@@ -84,7 +84,7 @@ public class Utils {
 
 			if (u.getGame() == game && u.isAlive() && u.getPlayer() != player) {
 
-				this.sendMessage(u.getPlayer(), string);
+				sendMessage(u.getPlayer(), string);
 
 			}
 
@@ -111,15 +111,15 @@ public class Utils {
 
 		}
 
-		this.reloadSpawns();
-		this.saveSpawns();
-		this.reloadSpawns();
+		reloadSpawns();
+		saveSpawns();
+		reloadSpawns();
 
 	}
 
 	private void reloadSpawns() {
 
-		this.spawns = YamlConfiguration.loadConfiguration(this.f);
+		this.spawns = YamlConfiguration.loadConfiguration(f);
 
 	}
 
@@ -127,7 +127,7 @@ public class Utils {
 
 		try {
 
-			this.spawns.save(this.f);
+			this.spawns.save(f);
 
 		}
 		catch (IOException error) {
@@ -154,7 +154,7 @@ public class Utils {
 		this.spawns.set("Spawns.lobby.pitch", pitch);
 		this.spawns.set("Spawns.lobby.yaw", yaw);
 
-		this.saveSpawns();
+		saveSpawns();
 
 	}
 
@@ -191,7 +191,7 @@ public class Utils {
 		pInv.clear();
 
 		player.setFireTicks(0);
-		this.clearPotions(player);
+		clearPotions(player);
 
 	}
 

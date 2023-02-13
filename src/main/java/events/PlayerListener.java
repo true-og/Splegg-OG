@@ -23,7 +23,7 @@ public class PlayerListener implements Listener {
 
 		if (e.getEntity() instanceof Player) {
 
-			Player player = (Player)e.getEntity();
+			Player player = (Player) e.getEntity();
 			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
 
@@ -42,7 +42,7 @@ public class PlayerListener implements Listener {
 		Entity ent = e.getEntity();
 		if (ent instanceof Player) {
 
-			Player player = (Player)ent;
+			Player player = (Player) ent;
 			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
 
@@ -68,7 +68,7 @@ public class PlayerListener implements Listener {
 	public void onQuit(PlayerQuitEvent e) {
 
 		Player player = e.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player.getName());
 		if (u.getGame() != null && u.isAlive()) {
 
 			u.getGame().leaveGame(u);
@@ -83,7 +83,7 @@ public class PlayerListener implements Listener {
 	public void dropItem(PlayerDropItemEvent e) {
 
 		Player player = e.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player.getName());
 
 		if (u.getGame() != null && u.isAlive()) {
 
@@ -97,12 +97,12 @@ public class PlayerListener implements Listener {
 	public void onCommand(PlayerCommandPreprocessEvent e) {
 
 		Player player = e.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player.getName());
 		if (u.getGame() != null && u.isAlive() && !e.getMessage().startsWith("/splegg") && ! player.hasPermission("splegg.admin")) {
 
 			e.setCancelled(true);
 
-			SpleggOG.getPlugin().chat.sendMessage(player, "&eYou cannot use commands in &bSplegg");
+			SpleggOG.getPlugin().chat.sendMessage(player, "&6You cannot use commands in &3Splegg&6!");
 
 		}
 

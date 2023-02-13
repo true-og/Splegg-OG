@@ -47,8 +47,7 @@ public class SpleggOG extends JavaPlugin {
 	public boolean disabling = false;
 	boolean economy = true;
 
-	// TODO: Don't give the "Diamonds" advancement or any other advancements when items are added to the players inventory that are used by Splegg-OG to do things.
-	// TODO: If a shovel in the splegg shop is too expensive, close the inventory and tell the user about it.
+	// TODO: If a shovel in the Splegg shop is too expensive, close the inventory and tell the user about it.
 	private boolean setupEconomy() {
 
 		if (this.getServer().getPluginManager().getPlugin("Vault") == null) {
@@ -66,7 +65,7 @@ public class SpleggOG extends JavaPlugin {
 			}
 			else {
 
-				this.econ = (Economy)rsp.getProvider();
+				this.econ = (Economy) rsp.getProvider();
 
 				return this.econ != null;
 
@@ -149,11 +148,10 @@ public class SpleggOG extends JavaPlugin {
 		int gameCounter = 0;
 		try {
 
-			Iterator<?> var2 = this.games.GAMES.values().iterator();
+			Iterator<?> gameIterator = this.games.GAMES.values().iterator();
+			while(gameIterator.hasNext()) {
 
-			while(var2.hasNext()) {
-
-				Game game = (Game)var2.next();
+				Game game = (Game) gameIterator.next();
 				if (game.getStatus() == Status.INGAME) {
 
 					gameCounter++;

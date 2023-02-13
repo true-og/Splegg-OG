@@ -55,7 +55,7 @@ public class SpleggCommand implements CommandExecutor {
 					}
 					else {
 
-						SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
+						permissionMessage(player);
 
 					}
 
@@ -97,7 +97,7 @@ public class SpleggCommand implements CommandExecutor {
 					}
 					else {
 
-						SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
+						permissionMessage(player);
 
 					}
 
@@ -113,7 +113,7 @@ public class SpleggCommand implements CommandExecutor {
 						}
 						else if (u.getGame().getStatus() == Status.LOBBY) {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cGame has not begun yet!");
+							SpleggOG.getPlugin().chat.sendMessage(player, "&cThe game has not begun yet!");
 
 						}
 						else if (u.getGame().getStatus() == Status.INGAME) {
@@ -129,7 +129,7 @@ public class SpleggCommand implements CommandExecutor {
 					}
 					else {
 
-						SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
+						permissionMessage(player);
 
 					}
 
@@ -140,19 +140,19 @@ public class SpleggCommand implements CommandExecutor {
 
 						SpleggOG.getPlugin().config.setLobby(player.getLocation());
 
-						SpleggOG.getPlugin().chat.sendMessage(player, "You have set the splegg lobby.");
+						SpleggOG.getPlugin().chat.sendMessage(player, "&aYou have set the splegg lobby.");
 
 					}
 					else {
 
-						SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
+						permissionMessage(player);
 
 					}
 
 				}
 				else if (!args[0].equalsIgnoreCase("")) {
 
-					SpleggOG.getPlugin().chat.sendMessage(player, "&cIncorrect Usage: &6/" + tag + " <join,leave,stop,start,setlobby,help>");
+					SpleggOG.getPlugin().chat.sendMessage(player, "&cIncorrect Usage. &6Applicable commands are: &e/" + tag + " &6<&ejoin&6, &eleave&6, &estop&6, &estart&6, &esetlobby&6, &ehelp&6>");
 
 				}
 
@@ -160,26 +160,27 @@ public class SpleggCommand implements CommandExecutor {
 			else {
 
 				Map map;
-				String name;
+				String firstUserCommandArgument;
+				Game game;
 				if (args.length == 2) {
 
 					if (args[0].equalsIgnoreCase("create")) {
 
 						if (player.hasPermission("splegg.admin")) {
 
-							name = args[1];
-							if (SpleggOG.getPlugin().maps.mapExists(name)) {
+							firstUserCommandArgument = args[1];
+							if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
 
-								SpleggOG.getPlugin().chat.sendMessage(player, "Map already exists.");
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cThe map &e" + firstUserCommandArgument + " &calready exists.");
 
 							}
 							else {
 
-								SpleggOG.getPlugin().maps.c.addMap(name);
-								SpleggOG.getPlugin().maps.addMap(name);
+								SpleggOG.getPlugin().maps.c.addMap(firstUserCommandArgument);
+								SpleggOG.getPlugin().maps.addMap(firstUserCommandArgument);
 
-								map = SpleggOG.getPlugin().maps.getMap(name);
-								Game game = new Game(SpleggOG.getPlugin(), map);
+								map = SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument);
+								game = new Game(SpleggOG.getPlugin(), map);
 
 								SpleggOG.getPlugin().games.addGame(map.getName(), game);
 
@@ -189,14 +190,14 @@ public class SpleggCommand implements CommandExecutor {
 
 								}
 
-								SpleggOG.getPlugin().chat.sendMessage(player, "Map has been added and created &c" + name + "&6.");
+								SpleggOG.getPlugin().chat.sendMessage(player, "&aThe map &e" + firstUserCommandArgument + " &ahas been created.");
 
 							}
 
 						}
 						else {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
+							permissionMessage(player);
 
 						}
 
@@ -205,12 +206,53 @@ public class SpleggCommand implements CommandExecutor {
 
 						if (player.hasPermission("splegg.admin")) {
 
-							name = args[1];
-							if (SpleggOG.getPlugin().maps.mapExists(name)) {
+							firstUserCommandArgument = args[1];
+							if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
 
-								SpleggOG.getPlugin().maps.deleteMap(name);
+								SpleggOG.getPlugin().maps.deleteMap(firstUserCommandArgument);
 
-								SpleggOG.getPlugin().chat.sendMessage(player, "The map has been deleted.");
+								SpleggOG.getPlugin().chat.sendMessage(player, "&aThe map &e" + firstUserCommandArgument + " has been deleted.");
+
+							}
+							else {
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cThe map &e" + firstUserCommandArgument + " &cdoes not exist.");
+
+							}
+
+						}
+						else {
+
+							permissionMessage(player);
+
+						}
+
+					}
+					else if(args[0].equalsIgnoreCase("start")) {
+
+						if (player.hasPermission("splegg.admin")) {
+
+							firstUserCommandArgument = args[1];
+							if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
+
+								game = SpleggOG.getPlugin().games.getGame(firstUserCommandArgument);
+								if (game == null) {
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are not in a game.");
+
+								}
+								else if (game.getStatus() == Status.LOBBY) {
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "&eStarting " + firstUserCommandArgument + "...");
+
+									SpleggOG.getPlugin().game.startGame(game);
+
+								}
+								else if (game.getStatus() == Status.INGAME) {
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cThe match has already begun.");
+
+								}
 
 							}
 							else {
@@ -222,240 +264,185 @@ public class SpleggCommand implements CommandExecutor {
 						}
 						else {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
+							permissionMessage(player);
 
 						}
-
 					}
-					else {
-
-						Game game;
-						if (args[0].equalsIgnoreCase("start")) {
-
-							if (player.hasPermission("splegg.admin")) {
-
-								name = args[1];
-								if (SpleggOG.getPlugin().maps.mapExists(name)) {
-
-									game = SpleggOG.getPlugin().games.getGame(name);
-									if (game == null) {
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are not in a game.");
-
-									}
-									else if (game.getStatus() == Status.LOBBY) {
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "&eStarting " + name + "...");
-
-										SpleggOG.getPlugin().game.startGame(game);
-
-									}
-									else if (game.getStatus() == Status.INGAME) {
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "&cGame has already begun.");
-
-									}
-
-								}
-								else {
-
-									SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
-
-								}
-
-							}
-							else {
-
-								SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
-
-							}
-
-						}
-						else if (args[0].equalsIgnoreCase("stop")) {
-
-							if (player.hasPermission("splegg.admin")) {
-
-								name = args[1];
-								if (SpleggOG.getPlugin().maps.mapExists(name)) {
-
-									game = SpleggOG.getPlugin().games.getGame(name);
-									if (game == null) {
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are not in a game.");
-
-									}
-									else if (game.getStatus() == Status.LOBBY) {
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "&cGame has not begun yet!");
-
-									}
-									else if (game.getStatus() == Status.INGAME) {
-
-										SpleggOG.getPlugin().chat.bc("&5" + player.getName() + "&6 has stopped the game.", game);
-
-										SpleggOG.getPlugin().game.stopGame(game, 1);
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "&eYou have stopped the game.");
-
-									}
-
-								}
-								else {
-
-									SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
-
-								}
-
-							}
-							else {
-
-								SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
-
-							}
-
-						}
-						else if (args[0].equalsIgnoreCase("setlobby")) {
-
-							if (player.hasPermission("splegg.admin")) {
-
-								name = args[1];
-								if (SpleggOG.getPlugin().maps.mapExists(name)) {
-
-									SpleggOG.getPlugin().maps.getMap(name).setLobby(player.getLocation());
-
-									SpleggOG.getPlugin().chat.sendMessage(player, "Lobby for map &e" + name + "&6 set.");
-
-								}
-								else {
-
-									SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
-
-								}
-
-							}
-							else {
-
-								SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
-
-							}
-
-						}
-						else if (args[0].equalsIgnoreCase("addfloor")) {
-
-							if (player.hasPermission("splegg.admin")) {
-
-								name = args[1];
-								if (SpleggOG.getPlugin().maps.mapExists(name)) {
-
-									map = SpleggOG.getPlugin().maps.getMap(name);
-									WorldEditPlugin we = SpleggOG.getPlugin().getWorldEdit();
-									Region sel = null;
-									try {
-
-										sel = we.getSession(player).getSelection(new BukkitWorld(player.getWorld()));
-
-									}
-									catch (IncompleteRegionException error) {
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The area you have selected is incomplete.");
-
-									}
-
-									if (sel == null) {
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "&5Please select an area with worldedit.");
-
-									}
-									else {
-
-										map.addFloor(new Location(player.getWorld(), sel.getMinimumPoint().getBlockX(), sel.getMinimumPoint().getBlockY(), sel.getMinimumPoint().getBlockZ()), new Location(player.getWorld(), sel.getMaximumPoint().getBlockX(), sel.getMaximumPoint().getBlockY(), sel.getMaximumPoint().getBlockZ()));
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "Floor " + map.getFloors() + " added to map " + map.getName() + ".");
-
-									}
-
-								}
-								else {
-
-									SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
-
-								}
-
-							}
-							else {
-
-								SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
-
-							}
-
-						}
-						else if (args[0].equalsIgnoreCase("join")) {
-
-							if (player.hasPermission("splegg.join")) {
-
-								if (u.getGame() != null && u.isAlive()) {
-
-									SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are already playing.");
-
-								}
-								else {
-
-									name = args[1];
-									if (SpleggOG.getPlugin().maps.mapExists(name)) {
-
-										game = SpleggOG.getPlugin().games.getGame(name);
-										if (game != null && SpleggOG.getPlugin().maps.getMap(name).isUsable()) {
-
-											game.joinGame(u);
-
-										}
-										else {
-
-											SpleggOG.getPlugin().chat.sendMessage(player, "This map is incorrectly setup - See console for detailed output.");
-
-										}
-
-									}
-									else {
-
-										SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
-
-									}
-
-								}
-
-							}
-							else {
-
-								SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
-
-							}
-
-						}
-						else if (args[0].equalsIgnoreCase("leave")) {
-
-							SpleggOG.getPlugin().chat.sendMessage(player, "Please use &e/" + tag + " leave");
-
-						}
-						else if (args[0].equalsIgnoreCase("") && ! args[1].equalsIgnoreCase("") && ! args[1].equalsIgnoreCase("") && ! args[1].equalsIgnoreCase("")) {
-
-							SpleggOG.getPlugin().chat.sendMessage(player, "Usage: /" + tag + " help <player|mod|admin>");
-
-						}
-
-					}
-
-				}
-				else if (args.length == 3) {
-
-					if (args[0].equalsIgnoreCase("setspawn")) {
+					else if (args[0].equalsIgnoreCase("stop")) {
 
 						if (player.hasPermission("splegg.admin")) {
 
-							name = args[1];
-							if (SpleggOG.getPlugin().maps.mapExists(name)) {
+							firstUserCommandArgument = args[1];
+							if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
 
-								map = SpleggOG.getPlugin().maps.getMap(name);
+								game = SpleggOG.getPlugin().games.getGame(firstUserCommandArgument);
+								if (game == null) {
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are not in a game.");
+
+								}
+								else if (game.getStatus() == Status.LOBBY) {
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cGame has not begun yet!");
+
+								}
+								else if (game.getStatus() == Status.INGAME) {
+
+									SpleggOG.getPlugin().chat.bc("&5" + player.getName() + "&6 has stopped the game.", game);
+
+									SpleggOG.getPlugin().game.stopGame(game, 1);
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "&eYou have stopped the game.");
+
+								}
+
+							}
+							else {
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
+
+							}
+
+						}
+						else {
+
+							permissionMessage(player);
+
+						}
+
+					}
+					else if (args[0].equalsIgnoreCase("setlobby")) {
+
+						if (player.hasPermission("splegg.admin")) {
+
+							firstUserCommandArgument = args[1];
+							if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
+
+								SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument).setLobby(player.getLocation());
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "Lobby for map &e" + firstUserCommandArgument + "&6 set.");
+
+							}
+							else {
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
+
+							}
+
+						}
+						else {
+
+							permissionMessage(player);
+
+						}
+
+					}
+					else if (args[0].equalsIgnoreCase("addfloor")) {
+
+						if (player.hasPermission("splegg.admin")) {
+
+							firstUserCommandArgument = args[1];
+							if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
+
+								map = SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument);
+								WorldEditPlugin we = SpleggOG.getPlugin().getWorldEdit();
+								Region sel = null;
+								try {
+
+									sel = we.getSession(player).getSelection(new BukkitWorld(player.getWorld()));
+
+								}
+								catch (IncompleteRegionException error) {
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The area you have selected is incomplete.");
+
+								}
+
+								if (sel == null) {
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "&5Please select an area with worldedit.");
+
+								}
+								else {
+
+									map.addFloor(new Location(player.getWorld(), sel.getMinimumPoint().getBlockX(), sel.getMinimumPoint().getBlockY(), sel.getMinimumPoint().getBlockZ()), new Location(player.getWorld(), sel.getMaximumPoint().getBlockX(), sel.getMaximumPoint().getBlockY(), sel.getMaximumPoint().getBlockZ()));
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "Floor " + map.getFloors() + " added to map " + map.getName() + ".");
+
+								}
+
+							}
+							else {
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
+
+							}
+
+						}
+						else {
+
+							permissionMessage(player);
+
+						}
+
+					}
+					else if (args[0].equalsIgnoreCase("join")) {
+
+						if (player.hasPermission("splegg.join")) {
+
+							if (u.getGame() != null && u.isAlive()) {
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are already playing.");
+
+							}
+							else {
+
+								firstUserCommandArgument = args[1];
+								if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
+
+									game = SpleggOG.getPlugin().games.getGame(firstUserCommandArgument);
+									if (game != null && SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument).isUsable()) {
+
+										game.joinGame(u);
+
+									}
+									else {
+
+										SpleggOG.getPlugin().chat.sendMessage(player, "&cThe map &e" + firstUserCommandArgument + " &cis incorrectly set up.");
+
+									}
+
+								}
+								else {
+
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist.");
+
+								}
+
+							}
+
+						}
+						else {
+
+							permissionMessage(player);
+
+						}
+
+					}
+					else if (args[0].equalsIgnoreCase("leave")) {
+
+						SpleggOG.getPlugin().chat.sendMessage(player, "Please use &e/" + tag + " leave");
+
+					}
+					else if (args[0].equalsIgnoreCase("setspawn")) {
+
+						if (player.hasPermission("splegg.admin")) {
+
+							firstUserCommandArgument = args[1];
+							if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
+
+								map = SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument);
+
 								if (args[2].equalsIgnoreCase("next")) {
 
 									map.addSpawn(player.getLocation());
@@ -465,26 +452,27 @@ public class SpleggCommand implements CommandExecutor {
 								}
 								else {
 
+									int secondUserCommandArgument;
 									try {
 
-										int id = Integer.parseInt(args[2]);
-										if (this.spawnset(id, map)) {
+										secondUserCommandArgument = Integer.parseInt(args[2]);
+										if (this.spawnset(secondUserCommandArgument, map)) {
 
-											map.setSpawn(id, player.getLocation());
+											map.setSpawn(secondUserCommandArgument, player.getLocation());
 
-											SpleggOG.getPlugin().chat.sendMessage(player, "You have re-set the spawn " + id + " for map " + name + ".");
+											SpleggOG.getPlugin().chat.sendMessage(player, "You have re-set the spawn point " + secondUserCommandArgument + " for map " + firstUserCommandArgument + ".");
 
 										}
 										else {
 
-											SpleggOG.getPlugin().chat.sendMessage(player, "Please set the spawn using &e/" + tag + " setspawn <mapname> next &6then try this command again.");
+											SpleggOG.getPlugin().chat.sendMessage(player, "&cTo re-set a spawn point, type its number. Spawn point numbers are defined by the order you created them in.");
 
 										}
 
 									}
-									catch (NumberFormatException error) {
+									catch(Exception error) {
 
-										SpleggOG.getPlugin().chat.sendMessage(player, "&cPlease type a number.");
+										usageMessage(player, tag);
 
 									}
 
@@ -493,28 +481,28 @@ public class SpleggCommand implements CommandExecutor {
 							}
 							else {
 
-								SpleggOG.getPlugin().chat.sendMessage(player, "&cMap does not exist!");
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cThe map &e" + firstUserCommandArgument + " &cdoes not exist.");
 
 							}
 
 						}
 						else {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission.");
+							permissionMessage(player);
 
 						}
 
 					}
 					else {
 
-						SpleggOG.getPlugin().chat.sendMessage(player, "Usage: &a/" + tag + " setspawn <mapname> <next|spawnid>");
+						usageMessage(player, tag);
 
 					}
 
 				}
 				else {
 
-					SpleggOG.getPlugin().chat.sendMessage(player, "Incorrect Usage!");
+					usageMessage(player, tag);
 
 				}
 
@@ -523,6 +511,18 @@ public class SpleggCommand implements CommandExecutor {
 		}
 
 		return false;
+
+	}
+
+	void permissionMessage(Player player) {
+
+		SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission to do that.");
+
+	}
+
+	void usageMessage(Player player, String tag) {
+
+		SpleggOG.getPlugin().chat.sendMessage(player, "&cUse the command: &e/splegg setspawn &cto create spawn points.");
 
 	}
 

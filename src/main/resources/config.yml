@@ -1,11 +1,11 @@
 Messages:
-  Prefix: '&8[&2Splegg&r-&4OG&7] &3'
+  Prefix: '&8[&2Splegg&8-&4OG&8] &3'
   NoPermission: '&cYou do not have permission!'
-  JoinGame: '&8[&a%count%/%maxcount%&8] &6%player% has joined the game.'
+  JoinGame: '&6%player% has joined the game. &7[&a%count%&7/%maxcount%&7]'
   LeaveGame: '&6You have left the lobby for map &c%map%'
   LobbyTimer: '&6Match starting &f%timer% &6seconds.'
   InstructionsGame: '&6Use the shovel to throw eggs and make the other players fall!'
-  GraceTimeStart: '&6Grace Period (&f%grace%&6s)'
+  GraceTimeStart: '&aGrace Period (&6%grace% &aseconds)'
   GraceTimeFinish: '&6Grace Period Over!'
   EndingTimer: '&6Game is ending in &f%timer%'
   Youbrokeblocks: '&6You broke %broke% blocks.'
@@ -65,7 +65,7 @@ Shovels:
     Lore: '&e&lClick right to launch eggs!'
 GUI:
   Shop:
-    Title: '&lSplegg Shop'
+    Title: '&BSplegg Shop'
     Size: 9
     GoldShovel:
       Name: '&e&lGolden Shovel'

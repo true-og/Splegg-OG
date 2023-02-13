@@ -32,7 +32,7 @@ public class Map {
 
 	public void load() {
 
-		SpleggOG.getPlugin().chat.log("Loading map " + this.name + ".");
+		SpleggOG.getPlugin().chat.log("Loading map " + this.name + "...");
 
 		this.usable = false;
 
@@ -64,7 +64,7 @@ public class Map {
 		}
 		else {
 
-			SpleggOG.getPlugin().chat.log("Spawn count is 0");
+			SpleggOG.getPlugin().chat.log("Spawn count is 0.");
 
 		}
 
@@ -75,22 +75,9 @@ public class Map {
 		}
 		else {
 
-			SpleggOG.getPlugin().chat.log("No floors are setup.");
+			SpleggOG.getPlugin().chat.log("No floors are set up yet.");
 
 		}
-
-		if (this.usable) {
-
-			SpleggOG.getPlugin().chat.log("Map is usable");
-
-		}
-		else {
-
-			SpleggOG.getPlugin().chat.log("The map is not fully set up, please review the instructions.");
-
-		}
-
-		SpleggOG.getPlugin().chat.log("Map loading Complete!");
 
 	}
 

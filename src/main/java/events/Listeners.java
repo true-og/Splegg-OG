@@ -20,6 +20,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import com.destroystokyo.paper.event.player.PlayerAdvancementCriterionGrantEvent;
+
 import io.papermc.paper.event.player.AsyncChatEvent;
 import main.SpleggOG;
 import net.kyori.adventure.text.Component;
@@ -62,7 +64,7 @@ public class Listeners implements Listener {
 
 				if (selectedType == Material.GOLDEN_SHOVEL) {
 
-					player.closeInventory();
+					event.getWhoClicked().closeInventory();
 
 					if (SpleggOG.getPlugin().econ.getBalance(player) >= (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")) {
 
@@ -91,6 +93,8 @@ public class Listeners implements Listener {
 					}
 					else {
 
+						event.getWhoClicked().closeInventory();
+
 						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney").replaceAll("&", "§"));
 
 					}
@@ -99,7 +103,7 @@ public class Listeners implements Listener {
 
 				if (selectedType == Material.DIAMOND_SHOVEL) {
 
-					player.closeInventory();
+					event.getWhoClicked().closeInventory();
 
 					if (SpleggOG.getPlugin().econ.getBalance(player) >= (double)SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price")) {
 
@@ -128,6 +132,8 @@ public class Listeners implements Listener {
 					}
 					else {
 
+						event.getWhoClicked().closeInventory();
+
 						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney").replaceAll("&", "§"));
 
 					}
@@ -137,7 +143,7 @@ public class Listeners implements Listener {
 			}
 			else {
 
-				player.closeInventory();
+				event.getWhoClicked().closeInventory();
 
 				SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought").replaceAll("&", "§"));
 
@@ -234,13 +240,25 @@ public class Listeners implements Listener {
 		if(event.getEntityType() == EntityType.PLAYER) {
 
 			Player player = (Player) event.getEntity();
-
 			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
 
 				event.setCancelled(true);
 
 			}
+
+		}
+
+	}
+	
+	@EventHandler
+	public void onPlayerAdvancement(PlayerAdvancementCriterionGrantEvent event) {
+
+		Player player = event.getPlayer();
+		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+		if(u.getGame() != null && u.isAlive()) {
+
+			event.setCancelled(true);
 
 		}
 
@@ -255,7 +273,7 @@ public class Listeners implements Listener {
 
 	private Inventory getShopInventory() {
 
-		TextComponent shopTitle = Component.text(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title"));
+		TextComponent shopTitle = Component.text(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title").replaceAll("&", "§"));
 		Inventory shop = Bukkit.createInventory((InventoryHolder) null, InventoryType.CHEST, shopTitle);
 
 		shop.setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Name").replaceAll("&", "§"), SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Description").replaceAll("&", "§").replaceAll("%price%", String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")))));

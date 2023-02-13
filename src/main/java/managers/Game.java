@@ -90,10 +90,10 @@ public class Game {
 
 				Game.this.splegg.chat.bc(Game.this.splegg.getConfig().getString("Messages.GraceTimeFinish").replaceAll("&", "§"), Game.this);
 
-				Iterator<?> var2 = Game.this.players.values().iterator();
-				while(var2.hasNext()) {
+				Iterator<?> PlayersInGame = players.values().iterator();
+				while(PlayersInGame.hasNext()) {
 
-					SpleggPlayer sp = (SpleggPlayer) var2.next();
+					SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
 					sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
 					Listeners.launchEggs.add(sp.getPlayer().getName());
 
@@ -103,7 +103,7 @@ public class Game {
 
 			}
 
-		}).runTaskLater(this.splegg, (long)(20 * grace));
+		}).runTaskLater(this.splegg, (long) (20 * grace));
 
 	}
 
