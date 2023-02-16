@@ -10,10 +10,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Egg;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -21,6 +26,7 @@ import org.bukkit.potion.PotionEffect;
 
 import main.SpleggOG;
 import managers.Game;
+import managers.Status;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 
@@ -30,7 +36,6 @@ public class Utils {
 	public FileConfiguration config = SpleggOG.getPlugin().getConfig();
 
 	public HashMap<String, UtilPlayer> PLAYERS = new HashMap<String, UtilPlayer>();
-	public FileConfiguration spawns;
 	private File f;
 	private String prefix = config.getString("Messages.Prefix").replaceAll("&", "§");
 
@@ -75,23 +80,6 @@ public class Utils {
 
 	}
 
-	public void bcNotForPlayer(Player player, String string, Game game) {
-
-		Iterator<?> var5 = SpleggOG.getPlugin().pm.PLAYERS.values().iterator();
-		while(var5.hasNext()) {
-
-			UtilPlayer u = (UtilPlayer) var5.next();
-
-			if (u.getGame() == game && u.isAlive() && u.getPlayer() != player) {
-
-				sendMessage(u.getPlayer(), string);
-
-			}
-
-		}
-
-	}
-
 	public void setup() {
 
 		this.f = new File(SpleggOG.getPlugin().getDataFolder(), "spawns.yml");
@@ -119,7 +107,7 @@ public class Utils {
 
 	private void reloadSpawns() {
 
-		this.spawns = YamlConfiguration.loadConfiguration(f);
+		this.config = YamlConfiguration.loadConfiguration(f);
 
 	}
 
@@ -127,7 +115,7 @@ public class Utils {
 
 		try {
 
-			this.spawns.save(f);
+			this.config.save(f);
 
 		}
 		catch (IOException error) {
@@ -147,26 +135,27 @@ public class Utils {
 		float pitch = l.getPitch();
 		String worldName = l.getWorld().getName();
 
-		this.spawns.set("Spawns.lobby.world", worldName);
-		this.spawns.set("Spawns.lobby.x", x);
-		this.spawns.set("Spawns.lobby.y", y);
-		this.spawns.set("Spawns.lobby.z", z);
-		this.spawns.set("Spawns.lobby.pitch", pitch);
-		this.spawns.set("Spawns.lobby.yaw", yaw);
+		this.config.set("Spawns.lobby.world", worldName);
+		this.config.set("Spawns.lobby.x", x);
+		this.config.set("Spawns.lobby.y", y);
+		this.config.set("Spawns.lobby.z", z);
+		this.config.set("Spawns.lobby.pitch", pitch);
+		this.config.set("Spawns.lobby.yaw", yaw);
 
 		saveSpawns();
 
 	}
 
-	public Location getLobby() {
+	public Location getLobby(Player player) {
 
-		int x = this.spawns.getInt("Spawns.lobby.x");
-		int y = this.spawns.getInt("Spawns.lobby.y");
-		int z = this.spawns.getInt("Spawns.lobby.z");
+		int x = this.config.getInt("Spawns.lobby.x");
+		int y = this.config.getInt("Spawns.lobby.y");
+		int z = this.config.getInt("Spawns.lobby.z");
 
-		float yaw = (float) this.spawns.getInt("Spawns.lobby.yaw");
-		float pitch = (float) this.spawns.getInt("Spawns.lobby.pitch");
-		World worldName = Bukkit.getWorld(this.spawns.getString("Spawns.lobby.world"));
+		float yaw = (float) this.config.getInt("Spawns.lobby.yaw");
+		float pitch = (float) this.config.getInt("Spawns.lobby.pitch");
+
+		World worldName = player.getWorld();
 
 		return new Location(worldName, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
 
@@ -197,10 +186,10 @@ public class Utils {
 
 	public void clearPotions(Player player) {
 
-		Iterator<?> var3 = player.getActivePotionEffects().iterator();
-		while(var3.hasNext()) {
+		Iterator<?> activePotionEffects = player.getActivePotionEffects().iterator();
+		while(activePotionEffects.hasNext()) {
 
-			PotionEffect effect = (PotionEffect) var3.next();
+			PotionEffect effect = (PotionEffect) activePotionEffects.next();
 
 			player.removePotionEffect(effect.getType());
 
@@ -221,6 +210,93 @@ public class Utils {
 		stack.setItemMeta(meta);
 
 		return stack;
+
+	}
+
+	public static void fireEgg(Player player) {
+
+		ItemStack hand = player.getInventory().getItemInMainHand();
+		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+
+		if(u.getGame().getStatus().equals(Status.INGAME) && u.isAlive()) {
+
+			switch(hand.getType()) {
+			case WOODEN_SHOVEL:
+				player.launchProjectile(Egg.class);
+				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
+				break;
+			case STONE_SHOVEL:
+				player.launchProjectile(Egg.class);
+				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
+				break;
+			case IRON_SHOVEL:
+				player.launchProjectile(Egg.class);
+				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
+				break;
+			case GOLDEN_SHOVEL:
+				player.launchProjectile(Egg.class);
+				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
+				break;
+			case DIAMOND_SHOVEL:
+				for(int i = 0; i < 2; i = i + 1) {
+
+					player.launchProjectile(Egg.class);
+
+				}
+				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
+				break;
+			case NETHERITE_SHOVEL:
+				for(int i = 0; i < 3; i = i + 1) {
+
+					player.launchProjectile(Egg.class);
+
+				}
+				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
+				break;
+			default:
+				break;
+			}
+
+		}
+
+		if (hand.getType() == Material.COMPASS) {
+
+			player.openInventory(getSpecInventory());
+
+		}
+
+		if (hand.getType() == Material.SLIME_BALL) {
+
+			u.getGame().leaveGame(u.getPlayer());
+
+		}
+
+		if (hand.getType() == Material.getMaterial(SpleggOG.getPlugin().getConfig().getString("Shop.Item"))) {
+
+			player.openInventory(getShopInventory());
+
+		}
+
+	}
+
+	private static Inventory getShopInventory() {
+
+		TextComponent shopTitle = Component.text(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title").replaceAll("&", "§"));
+		Inventory shop = Bukkit.createInventory((InventoryHolder) null, InventoryType.CHEST, shopTitle);
+
+		shop.setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Name").replaceAll("&", "§"), SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Description").replaceAll("&", "§").replaceAll("%price%", String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")))));
+		shop.setItem(1, Utils.getItem(Material.DIAMOND_SHOVEL, SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Name").replaceAll("&", "§"), SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Description").replaceAll("&", "§").replaceAll("%price%", String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price")))));
+
+		return shop;
+
+	}
+
+	private static Inventory getSpecInventory() {
+
+		TextComponent spectatorTitle = Component.text("Splegg - Spectators");
+		Inventory spec = Bukkit.createInventory((InventoryHolder) null, InventoryType.CHEST, spectatorTitle);
+
+		return spec;
 
 	}
 

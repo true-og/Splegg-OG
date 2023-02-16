@@ -1,7 +1,7 @@
 Messages:
   Prefix: '&8[&2Splegg&8-&4OG&8] &3'
   NoPermission: '&cYou do not have permission!'
-  JoinGame: '&6%player% has joined the game. &7[&a%count%&7/%maxcount%&7]'
+  JoinGame: '&6%player% has joined the game. &7[&e%count%/%maxcount%&7]'
   LeaveGame: '&6You have left the lobby for map &c%map%'
   LobbyTimer: '&6Match starting &f%timer% &6seconds.'
   InstructionsGame: '&6Use the shovel to throw eggs and make the other players fall!'
@@ -13,15 +13,15 @@ Messages:
   PlayersRemaining: '&e&l%count% players remain alive.'
   AlreadyInGame: '&6You are already in a game.'
   AlreadyInLobby: '&6You are already in this lobby.'
-  NoEnoughMoney: '&cYou dont have enough &BDiamonds &cto purchase this shovel.!'
-  NoEnoughPlayers: '&cThere are not enough players to start the game.'
-  NotBreakSign: '&6You cannot break a splegg sign!'
+  NoEnoughMoney: '&cERROR: You dont have enough &BDiamonds &cto purchase this shovel.!'
+  NoEnoughPlayers: '&cERROR: There are not enough players to start the game.'
+  NotBreakSign: '&cERROR: You cannot break a splegg sign!'
   RemovedSign: '&6Removed a splegg sign for map &c%map%'
   CreateSign: '&6You have created a splegg sign for: &b%map%'
   Timelimitreached: '&6Time limit reached.'
-  Mapnotexist: '&cMap does not exist!'
-  Mapdisabled: '&4Map is disabled.'
-  Haveyoueverbought: '&cYou already own this shovel.'
+  Mapnotexist: '&cERROR: Map does not exist!'
+  Mapdisabled: '&cERROR: Map is disabled.'
+  Haveyoueverbought: '&cERROR: You already own this shovel.'
   BuyGoldShovel: '&BYou bought a Gold Shovel!'
   BuyDiamondShovel: '&BYou bought a Diamond Shovel!'
   VIPPrivilege: '&6Only &fOG &6players and above can enter the full game!'
@@ -56,27 +56,35 @@ Sings:
 Shovels:
   Iron:
     Name: '&f&lIron Shovel'
-    Lore: '&e&lClick right to launch eggs!'
+    Lore: '&e&lRight-Click to launch eggs!'
   Gold:
     Name: '&e&lGolden Shovel'
-    Lore: '&e&lClick right to launch eggs!'
+    Lore: '&e&lRight-Click to launch eggs!'
   Diamond:
     Name: '&b&lDiamond Shovel'
-    Lore: '&e&lClick right to launch eggs!'
+    Lore: '&e&lRight-Click to launch eggs!'
 GUI:
   Shop:
-    Title: '&BSplegg Shop'
-    Size: 9
+    Title: '&lSplegg Shop'
+    Size: 10
     GoldShovel:
       Name: '&e&lGolden Shovel'
-      Description: '&6The Golden Shovel shoots 2 eggs at a time! Price: &B%price% Diamonds'
+      Description: '&6Impress your SO with this fancy &eGolden &6shovel! Price: &B%price% Diamonds&6.'
       Price: 500
     DiamondShovel:
       Name: '&b&lDiamond Shovel'
-      Description: '&6The Diamond Shovel shoots 3 eggs at a time! Price: &B%price% Diamonds'
+      Description: '&6The Diamond Shovel shoots 2 eggs at a time! Price: &B%price% Diamonds'
       Price: 1000
 Shop:
+  Item: ENCHANTED_BOOK
+  Slot: 0
+  Name: 'Splegg Guide'
+  Lore: '&eLearn how to play!'
   Item: DIAMOND
-  Slot: 1
+  Slot: 4
   Name: 'Splegg Shop'
   Lore: '&eBuy fancy new shovels!'
+  Item: SLIME_BALL
+  Slot: 8
+  Name: 'Exit Game'
+  Lore: '&eReturn to &2True&4OG &2SMP&e!'

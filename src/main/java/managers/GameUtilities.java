@@ -113,7 +113,7 @@ public class GameUtilities {
 				while(var4.hasNext()) {
 
 					SpleggPlayer sp = (SpleggPlayer) var4.next();
-					game.leaveGame(sp.getUtilPlayer());
+					game.leaveGame(sp.getPlayer());
 
 				}
 

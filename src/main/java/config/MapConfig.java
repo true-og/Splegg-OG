@@ -36,17 +36,17 @@ public class MapConfig {
 
 		SpleggOG.getPlugin().maps.MAPS.clear();
 
-		Iterator<?> var2 = this.getEnabledMaps().iterator();
-		while(var2.hasNext()) {
+		Iterator<?> enabledMapIterator = this.getEnabledMaps().iterator();
+		while(enabledMapIterator.hasNext()) {
 
-			String maps = (String) var2.next();
+			String maps = (String) enabledMapIterator.next();
 			SpleggOG.getPlugin().maps.addMap(maps);
 
 			Map map = SpleggOG.getPlugin().maps.getMap(maps);
 			Game game = new Game(SpleggOG.getPlugin(), map);
 			SpleggOG.getPlugin().games.addGame(map.getName(), game);
 
-			if (! map.isUsable()) {
+			if (! map.isUsable(map)) {
 
 				game.setStatus(Status.DISABLED);
 

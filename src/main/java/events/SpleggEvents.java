@@ -3,6 +3,8 @@ package events;
 import java.util.Iterator;
 
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.Entity;
@@ -13,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerEggThrowEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.BlockIterator;
 
 import main.SpleggOG;
@@ -25,11 +28,20 @@ public class SpleggEvents implements Listener {
 	@EventHandler
 	public void eggLand(ProjectileHitEvent e) {
 
-		if (e.getEntity().getShooter() instanceof Player && e.getEntity() instanceof Egg) {
+		ProjectileSource shooter = e.getEntity().getShooter();
+		if (shooter instanceof Player && e.getEntity() instanceof Egg) {
 
-			Player player = (Player) e.getEntity().getShooter();
+			Player player = (Player) shooter;
 			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
+
+				// If the egg hit an entity, do this.
+				if(e.getHitEntity() != null) {
+
+					// Cancel the hit.
+					e.setCancelled(true);
+
+				}
 
 				BlockIterator bi = new BlockIterator(e.getEntity().getWorld(), e.getEntity().getLocation().toVector(), e.getEntity().getVelocity().normalize(), 0.0D, 4);
 				Block hit = null;
@@ -72,8 +84,16 @@ public class SpleggEvents implements Listener {
 				if (u.getGame().getFloor().contains(hit.getLocation())) {
 
 					Game game = u.getGame();
+					// If the game is in-progress, do this.
 					if (game.getStatus() == Status.INGAME) {
 
+						// Play chicken egg sound upon block hit for every player nearby the event.
+						player.getWorld().playSound(hit.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1.0F, 1.0F);
+
+						// Spawn spell particles when a block is destroyed to indicate vaporization.
+						player.getWorld().spawnParticle(Particle.SPELL, hit.getLocation(), 10);
+
+						// Destroy the block that was hit by an egg.
 						hit.setType(Material.AIR);
 
 					}
@@ -97,13 +117,11 @@ public class SpleggEvents implements Listener {
 			SpleggOG.getPlugin().chat.bc((SpleggOG.getPlugin().special.contains(player.getName()) ? "§4" : "§e") + SpleggOG.getPlugin().getConfig().getString("Messages.KnockoutPlayer").replaceAll("&", "§").replaceAll("%player%", player.getName()), u.getGame());
 			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining").replaceAll("&", "§").replaceAll("%count%", String.valueOf(u.getGame().getPlayers().size() - 1)), u.getGame());
 
-			player.setFallDistance(0.0F);
+			player.setFallDistance(1.0F);
 
-			Listeners.launchEggs.remove(player.getName());
+			u.getGame().leaveGame(player);
 
-			u.getGame().leaveGame(u);
-
-			player.setFallDistance(0.0F);
+			player.setFallDistance(1.0F);
 
 		}
 

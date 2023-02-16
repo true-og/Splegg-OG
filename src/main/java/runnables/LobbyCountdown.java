@@ -34,7 +34,7 @@ public class LobbyCountdown implements Runnable {
 
 				sp = (SpleggPlayer) var2.next();
 				sp.getPlayer().setLevel(this.lobbycount);
-				sp.getPlayer().setExp((float)((double)this.game.getLobbyCount() * 0.008D));
+				sp.getPlayer().setExp((float)((double) this.game.getLobbyCount() * 0.008D));
 
 			}
 
@@ -53,7 +53,7 @@ public class LobbyCountdown implements Runnable {
 				var2 = this.game.getPlayers().values().iterator();
 				while(var2.hasNext()) {
 
-					sp = (SpleggPlayer)var2.next();
+					sp = (SpleggPlayer) var2.next();
 					sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 1.0F, 1.0F);
 
 				}
@@ -65,7 +65,7 @@ public class LobbyCountdown implements Runnable {
 				var2 = this.game.getPlayers().values().iterator();
 				while(var2.hasNext()) {
 
-					sp = (SpleggPlayer)var2.next();
+					sp = (SpleggPlayer) var2.next();
 
 				}
 

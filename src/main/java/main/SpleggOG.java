@@ -43,7 +43,7 @@ public class SpleggOG extends JavaPlugin {
 	public boolean updateOut = false;
 	public String newVer = "";
 	public File updateFile = this.getFile();
-	public List<String> special = Arrays.asList("Hraponssi, MrLuangamer, NotAlexNoyle");
+	public List<String> special = Arrays.asList("Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle");
 	public boolean disabling = false;
 	boolean economy = true;
 
@@ -92,10 +92,11 @@ public class SpleggOG extends JavaPlugin {
 
 			this.maps = new MapUtilities();
 			this.games = new GameUtilities();
-			this.game = new GameManager(this);
+			this.game = new GameManager();
 			this.pm = new Utils();
 			this.utils = new Utils();
 			this.config = new Utils();
+
 			this.maps.c.setup();
 			this.config.setup();
 

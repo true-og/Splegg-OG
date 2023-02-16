@@ -95,7 +95,6 @@ public class Game {
 
 					SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
 					sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
-					Listeners.launchEggs.add(sp.getPlayer().getName());
 
 				}
 
@@ -181,10 +180,10 @@ public class Game {
 
 	}
 
-	public void joinGame(UtilPlayer u) {
+	public void joinGame(UtilPlayer playerWhoIsJoining) {
 
-		Player player = u.getPlayer();
-		if (u.getGame() != null) {
+		Player player = playerWhoIsJoining.getPlayer();
+		if (playerWhoIsJoining.getGame() != null) {
 
 			this.splegg.chat.sendMessage(player, this.splegg.getConfig().getString("Messages.AlreadyInGame").replaceAll("&", "§"));
 
@@ -202,9 +201,9 @@ public class Game {
 			SpleggPlayer sp;
 			if (max == 1) {
 
-				sp = new SpleggPlayer(player, u);
-				u.setAlive(true);
-				u.getStore().save();
+				sp = new SpleggPlayer(playerWhoIsJoining);
+				playerWhoIsJoining.setAlive(true);
+				playerWhoIsJoining.getStore().save();
 				this.splegg.utils.clearInventory(player);
 				player.setHealth(20.0D);
 				player.setFoodLevel(20);
@@ -212,7 +211,7 @@ public class Game {
 				player.setExp(0.0F);
 				player.setGameMode(GameMode.ADVENTURE);
 				this.players.put(player.getName(), sp);
-				u.setGame(this.splegg.games.getGame(this.name));
+				playerWhoIsJoining.setGame(this.splegg.games.getGame(this.name));
 
 				if (this.map.lobbySet()) {
 
@@ -221,16 +220,16 @@ public class Game {
 				}
 				else {
 
-					player.teleport(this.splegg.config.getLobby());
+					player.teleport(this.splegg.config.getLobby(player));
 
 				}
 
-				Listeners.manager.add(u.getPlayer().getName());
-				Listeners.shopmanager.add(u.getPlayer().getName());
+				Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
+				Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
 
 				player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
 
-				this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), u.getGame());
+				this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
 
 				if (this.players.size() >= this.splegg.getConfig().getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
 
@@ -253,9 +252,9 @@ public class Game {
 
 				}
 
-				sp = new SpleggPlayer(player, u);
-				u.setAlive(true);
-				u.getStore().save();
+				sp = new SpleggPlayer(playerWhoIsJoining);
+				playerWhoIsJoining.setAlive(true);
+				playerWhoIsJoining.getStore().save();
 
 				this.splegg.utils.clearInventory(player);
 
@@ -266,7 +265,7 @@ public class Game {
 				player.setGameMode(GameMode.ADVENTURE);
 
 				this.players.put(player.getName(), sp);
-				u.setGame(this.splegg.games.getGame(this.name));
+				playerWhoIsJoining.setGame(this.splegg.games.getGame(this.name));
 
 				if (this.map.lobbySet()) {
 
@@ -275,15 +274,15 @@ public class Game {
 				}
 				else {
 
-					player.teleport(this.splegg.config.getLobby());
+					player.teleport(this.splegg.config.getLobby(player));
 
 				}
 
 				player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
-				Listeners.manager.add(u.getPlayer().getName());
-				Listeners.shopmanager.add(u.getPlayer().getName());
+				Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
+				Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
 
-				this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), u.getGame());
+				this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
 
 				if (this.players.size() >= this.splegg.getConfig().getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
 
@@ -312,10 +311,10 @@ public class Game {
 
 			this.lobbycount = this.splegg.getConfig().getInt("Options.Timer");
 
-			Iterator<?> var2 = this.players.values().iterator();
-			while(var2.hasNext()) {
+			Iterator<?> playersInGame = this.players.values().iterator();
+			while(playersInGame.hasNext()) {
 
-				SpleggPlayer sp = (SpleggPlayer)var2.next();
+				SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
 				sp.getPlayer().setLevel(this.getLobbyCount());
 
 			}
@@ -326,40 +325,35 @@ public class Game {
 
 	}
 
-	public void leaveGame(UtilPlayer u) {
+	public void leaveGame(Player playerWhoIsLeaving) {
 
-		SpleggPlayer sp = this.getPlayer(u.getPlayer());
+		UtilPlayer u = new UtilPlayer(playerWhoIsLeaving);
+		SpleggPlayer sp = new SpleggPlayer(u);
 		if (this.status == Status.ENDING || this.status == Status.INGAME) {
 
-			this.splegg.chat.sendMessage(u.getPlayer(), splegg.getConfig().getString("Messages.Youbrokeblocks").replaceAll("&", "§").replaceAll("%broke%", String.valueOf(sp.getBroken())));
+			sp.getPlayer().sendMessage(playerWhoIsLeaving.getPlayer().getUniqueId(), SpleggOG.getPlugin().getConfig().getString("Messages.Youbrokeblocks").replaceAll("&", "§").replaceAll("%broke%", String.valueOf(sp.getBroken())));
 
 		}
 
-		this.players.remove(u.getName());
+		this.players.remove(playerWhoIsLeaving.getName());
 
-		Listeners.launchEggs.remove(sp.getPlayer().getName());
 		Listeners.shopmanager.remove(sp.getPlayer().getName());
 		Listeners.manager.remove(sp.getPlayer().getName());
 		Listeners.goldspade.remove(sp.getPlayer().getName());
 		Listeners.diamondspade.remove(sp.getPlayer().getName());
 		Listeners.moneymanager.remove(sp.getPlayer().getName());
 
-		u.getPlayer().teleport(this.splegg.config.getLobby());
-		u.setGame((Game)null);
+		playerWhoIsLeaving.getPlayer().teleport(this.splegg.config.getLobby(playerWhoIsLeaving.getPlayer()));
+		u.setGame((Game) null);
 		u.setAlive(false);
-		u.getPlayer().setHealth(20.0D);
-
-		InvStore store = u.getStore();
-		store.load();
-		store.reset();
-
-		u.getPlayer().setFallDistance(0.0F);
+		playerWhoIsLeaving.getPlayer().setHealth(20.0D);
+		playerWhoIsLeaving.getPlayer().setFallDistance(0.0F);
 
 		for(Player p : Bukkit.getOnlinePlayers()) {
 
 			if (Listeners.moneymanager.contains(p.getName())) {
 
-				p.sendMessage(ChatColor.GREEN + "You received " + splegg.getConfig().getInt("Money.KillPlayer") +" coins!");
+				p.sendMessage(ChatColor.GREEN + "You received " + splegg.getConfig().getInt("Money.KillPlayer") +" &BDiamond Shards!");
 
 				splegg.econ.depositPlayer(p, splegg.getConfig().getInt("Money.KillPlayer"));
 
@@ -409,7 +403,7 @@ public class Game {
 				Location l1 = this.map.getFloor(i, "1");
 				Location l2 = this.map.getFloor(i, "2");
 
-				CuboidRegion sel = new CuboidRegion(BlockVector3.at(l1.getBlockX(),l1.getBlockY(),l1.getBlockZ()), BlockVector3.at(l2.getBlockX(),l2.getBlockY(),l2.getBlockZ()));
+				CuboidRegion sel = new CuboidRegion(BlockVector3.at(l1.getBlockX(), l1.getBlockY(), l1.getBlockZ()), BlockVector3.at(l2.getBlockX(), l2.getBlockY(), l2.getBlockZ()));
 
 				BlockVector3 min = sel.getMinimumPoint();
 				BlockVector3 max = sel.getMaximumPoint();

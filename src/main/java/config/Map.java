@@ -10,6 +10,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import main.SpleggOG;
+import managers.Game;
+import managers.Status;
 
 public class Map {
 
@@ -34,8 +36,6 @@ public class Map {
 
 		SpleggOG.getPlugin().chat.log("Loading map " + this.name + "...");
 
-		this.usable = false;
-
 		this.file = new File(SpleggOG.getPlugin().getDataFolder(), this.name + ".yml");
 		try {
 
@@ -48,41 +48,40 @@ public class Map {
 		}
 		catch (IOException error) {
 
-			SpleggOG.getPlugin().getLogger().info("An error occured while creating " + this.name + ".yml.");
+			SpleggOG.getPlugin().getLogger().info("ERROR: Issue creating " + this.name + ".yml: " + error.getMessage());
 
 		}
 
 		this.setConfig(YamlConfiguration.loadConfiguration(this.file));
 		this.save();
+
 		this.loadSpawns();
 		this.loadFloors();
 
-		if (this.spawncount > 0) {
+		SpleggOG.getPlugin().getLogger().info("File set: " + this.file.getName() + ".");
 
+	}
+
+	public void usableDecider(Map map) {
+
+		if (this.spawncount > 0 && this.floorcount > 0) {
+
+			SpleggOG.getPlugin().getLogger().info("Floor and spawn point(s) detected. The map is ready to go!");
 			this.usable = true;
+			SpleggOG.getPlugin().games.getGame(this.getName()).setStatus(Status.LOBBY);
 
 		}
 		else {
 
-			SpleggOG.getPlugin().chat.log("Spawn count is 0.");
-
-		}
-
-		if (this.floorcount > 0) {
-
-			this.usable = true;
-
-		}
-		else {
-
-			SpleggOG.getPlugin().chat.log("No floors are set up yet.");
+			this.usable = false;
 
 		}
 
 	}
 
-	public boolean isUsable() {
+	public boolean isUsable(Map map) {
 
+		usableDecider(map);
 		return this.usable;
 
 	}
@@ -115,7 +114,7 @@ public class Map {
 
 	}
 
-	public void setSpawn(int id, Location l) {
+	public void setSpawn(Map map, int id, Location l) {
 
 		int x = l.getBlockX();
 		int y = l.getBlockY();
@@ -134,6 +133,8 @@ public class Map {
 		this.getConfig().set("Spawns." + id + ".yaw", yaw);
 
 		this.save();
+		
+		usableDecider(map);
 
 	}
 
@@ -178,8 +179,8 @@ public class Map {
 		int y = this.getConfig().getInt("Spec.y");
 		int z = this.getConfig().getInt("Spec.z");
 
-		float yaw = (float)this.getConfig().getInt("Spec.yaw");
-		float pitch = (float)this.getConfig().getInt("Spec.pitch");
+		float yaw = (float) this.getConfig().getInt("Spec.yaw");
+		float pitch = (float) this.getConfig().getInt("Spec.pitch");
 
 		World world = Bukkit.getWorld(this.getConfig().getString("Spec.world"));
 
@@ -205,15 +206,15 @@ public class Map {
 
 	}
 
-	public void addSpawn(Location l) {
+	public void addSpawn(Location l, Game game) {
 
 		this.spawncount++;
 		this.savenumbers();
-		this.setSpawn(this.spawncount, l);
+		this.setSpawn(game.getMap(), this.spawncount, l);
 
 	}
 
-	public void addFloor(Location p1, Location p2) {
+	public void addFloor(Location p1, Location p2, Game game) {
 
 		this.floorcount++;
 		this.savenumbers();
@@ -228,6 +229,8 @@ public class Map {
 		this.config.set("Floors." + this.floorcount + ".p2.world", p2.getWorld().getName());
 
 		this.save();
+
+		usableDecider(game.getMap());
 
 	}
 
@@ -307,8 +310,8 @@ public class Map {
 		int y = this.getConfig().getInt("Spawns.lobby.y");
 		int z = this.getConfig().getInt("Spawns.lobby.z");
 
-		float yaw = (float)this.getConfig().getInt("Spawns.lobby.yaw");
-		float pitch = (float)this.getConfig().getInt("Spawns.lobby.pitch");
+		float yaw = (float) this.getConfig().getInt("Spawns.lobby.yaw");
+		float pitch = (float) this.getConfig().getInt("Spawns.lobby.pitch");
 
 		World world = Bukkit.getWorld(this.getConfig().getString("Spawns.lobby.world"));
 

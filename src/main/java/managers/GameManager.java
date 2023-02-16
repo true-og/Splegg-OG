@@ -16,11 +16,11 @@ import utils.Utils;
 public class GameManager {
 
 	SpleggOG splegg;
+	
+	public GameManager() {
 
-	public GameManager(SpleggOG splegg) {
-
-		this.splegg = splegg;
-
+		this.splegg = SpleggOG.getPlugin();
+		
 	}
 
 	public void startGame(Game game) {
@@ -35,11 +35,11 @@ public class GameManager {
 		game.loadFloors();
 		Map map = game.getMap();
 
-		Iterator<?> var5 = game.players.values().iterator();
+		Iterator<?> playersInGame = game.players.values().iterator();
 		SpleggPlayer sp;
-		while(var5.hasNext()) {
+		while(playersInGame.hasNext()) {
 
-			sp = (SpleggPlayer)var5.next();
+			sp = (SpleggPlayer) playersInGame.next();
 			sp.getPlayer().setLevel(0);
 			sp.getUtilPlayer().setAlive(true);
 
@@ -55,6 +55,7 @@ public class GameManager {
 			sp.getPlayer().setExp(0.0F);
 			sp.getPlayer().setGameMode(GameMode.ADVENTURE);
 
+			// TODO: Add all available shovels here.
 			if (! Listeners.manager.contains(sp.getPlayer().getName())) {
 
 				if (Listeners.goldspade.contains(sp.getPlayer().getName())) {
@@ -112,14 +113,6 @@ public class GameManager {
 
 		this.splegg.chat.log("Commencing shutdown of " + game.getMap().getName() + ".");
 
-		Iterator<?> var4 = game.players.values().iterator();
-		while(var4.hasNext()) {
-
-			SpleggPlayer sp = (SpleggPlayer)var4.next();
-			Listeners.launchEggs.remove(sp.getPlayer().getName());
-
-		}
-
 		game.status = Status.ENDING;
 		game.stopGameTimer();
 		game.setLobbyCount(31);
@@ -135,8 +128,8 @@ public class GameManager {
 		Iterator<?> var5 = h.values().iterator();
 		while(var5.hasNext()) {
 
-			SpleggPlayer sp = (SpleggPlayer)var5.next();
-			game.leaveGame(sp.getUtilPlayer());
+			SpleggPlayer sp = (SpleggPlayer) var5.next();
+			game.leaveGame(sp.getPlayer());
 
 		}
 
@@ -165,11 +158,11 @@ public class GameManager {
 
 	public void ingameTimer(int count, HashMap<String, SpleggPlayer> players) {
 
-		Iterator<?> var4 = players.values().iterator();
-		while(var4.hasNext()) {
+		Iterator<?> playersInGame = players.values().iterator();
+		while(playersInGame.hasNext()) {
 
-			SpleggPlayer sp = (SpleggPlayer) var4.next();
-			this.splegg.chat.sendMessage(sp.getPlayer(), "Splegg is ending in §5§l" + this.splegg.game.getDigitTime(count));
+			SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
+			this.splegg.chat.sendMessage(sp.getPlayer(), "&6Splegg is ending in §5§l" + this.splegg.game.getDigitTime(count));
 
 		}
 

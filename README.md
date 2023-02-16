@@ -12,7 +12,9 @@ Dependencies: WorldEdit, Vault.
 
 `/splegg setspawn my-map` The amount of spawn points you set is the amount of players that will be able to join the map.
 
-`/splegg setspawn my-map 3` At any time, you can modify existing spawn points using the number of the order in which you created them.
+`/splegg setspawn my-map next` You can define new spawn points for a map with or without the "next" keyword.
+
+`/splegg setspawn my-map 3` At any time, you can modify existing spawn points by using the number of the order in which you created them.
 
 `/splegg setlobby my-map` Set a lobby area for the map during the voting/warm-up period.
 
@@ -20,11 +22,9 @@ Dependencies: WorldEdit, Vault.
 
 `/splegg addfloor my-map` Add the area you just selected with WorldEdit as a floor. You can add as many as you like.
 
-`/stop` Restart the server so that the map can be recognized correctly (this will become unnecessary in a future update).
-
 `/splegg join my-map` You can now join the map you just created, and so can anyone else with splegg.join permission.
 
-`/splegg start` Anyone with splegg.admin permissions can start the game even if not enough players join.
+`/splegg start` Anyone with splegg.admin permissions can start the game even if less players join than there are spawn points.
 
 [Original Bukkit Page](https://dev.bukkit.org/projects/splegg-minigame).
 
@@ -35,5 +35,21 @@ Dependencies: WorldEdit, Vault.
 `./gradlew build`
 
 The resulting .jar file will be in build/libs/
+
+**Known Bugs:**
+
+- Shovel is given in lobby sometimes
+
+- Splegg Shop is incomplete
+
+- Dying or leaving a game teleports players to the wrong point
+
+- "you are already playing" message is sometimes displayed even after leaving
+
+- pre-game inventory is not always being preserved
+
+- right clicking blocks shoots two eggs when it shouldn't
+
+- The shooting sound is wrong
 
 **Licensed under the GPLv3.**

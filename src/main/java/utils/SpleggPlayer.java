@@ -4,14 +4,12 @@ import org.bukkit.entity.Player;
 
 public class SpleggPlayer {
 
-	Player player;
 	UtilPlayer u;
 	int kills;
 	int broken;
 
-	public SpleggPlayer(Player player, UtilPlayer u) {
+	public SpleggPlayer(UtilPlayer u) {
 
-		this.player = player;
 		this.u = u;
 		this.kills = 0;
 		this.broken = 0;
@@ -26,7 +24,7 @@ public class SpleggPlayer {
 
 	public Player getPlayer() {
 
-		return this.player;
+		return this.u.getPlayer();
 
 	}
 

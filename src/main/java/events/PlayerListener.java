@@ -24,7 +24,7 @@ public class PlayerListener implements Listener {
 		if (e.getEntity() instanceof Player) {
 
 			Player player = (Player) e.getEntity();
-			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+			UtilPlayer u = new UtilPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
 
 				e.setCancelled(true);
@@ -43,7 +43,7 @@ public class PlayerListener implements Listener {
 		if (ent instanceof Player) {
 
 			Player player = (Player) ent;
-			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+			UtilPlayer u = new UtilPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
 
 				e.setCancelled(true);
@@ -68,10 +68,10 @@ public class PlayerListener implements Listener {
 	public void onQuit(PlayerQuitEvent e) {
 
 		Player player = e.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player.getName());
+		UtilPlayer u = new UtilPlayer(player);
 		if (u.getGame() != null && u.isAlive()) {
 
-			u.getGame().leaveGame(u);
+			u.getGame().leaveGame(player);
 
 		}
 
@@ -83,7 +83,7 @@ public class PlayerListener implements Listener {
 	public void dropItem(PlayerDropItemEvent e) {
 
 		Player player = e.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player.getName());
+		UtilPlayer u = new UtilPlayer(player);
 
 		if (u.getGame() != null && u.isAlive()) {
 
@@ -97,7 +97,7 @@ public class PlayerListener implements Listener {
 	public void onCommand(PlayerCommandPreprocessEvent e) {
 
 		Player player = e.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player.getName());
+		UtilPlayer u = new UtilPlayer(player);
 		if (u.getGame() != null && u.isAlive() && !e.getMessage().startsWith("/splegg") && ! player.hasPermission("splegg.admin")) {
 
 			e.setCancelled(true);
