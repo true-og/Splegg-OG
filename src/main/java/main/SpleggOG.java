@@ -1,9 +1,7 @@
 package main;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -43,7 +41,6 @@ public class SpleggOG extends JavaPlugin {
 	public boolean updateOut = false;
 	public String newVer = "";
 	public File updateFile = this.getFile();
-	public List<String> special = Arrays.asList("Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle");
 	public boolean disabling = false;
 	boolean economy = true;
 
@@ -82,7 +79,7 @@ public class SpleggOG extends JavaPlugin {
 		if (this.getServer().getPluginManager().getPlugin("WorldEdit") == null) {
 
 			String noWorldEditError = "\"ERROR: WorldEdit not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
-			this.getLogger().info(noWorldEditError);
+			this.getLogger().severe(noWorldEditError);
 			this.chat.log(noWorldEditError);
 
 			Bukkit.getPluginManager().disablePlugin(this);
@@ -113,7 +110,7 @@ public class SpleggOG extends JavaPlugin {
 
 			if (! this.setupEconomy()) {
 
-				// TODO: Use this for all serious errors in plugins.
+				// Inform the user that the plugin will not work due to a missing vault dependency.
 				this.getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", this.getDescription().getName()));
 
 				// Disable Splegg-OG for this instance because Vault (a crucial dependency) was not found.

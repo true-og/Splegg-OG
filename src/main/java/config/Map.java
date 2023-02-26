@@ -14,14 +14,16 @@ import managers.Game;
 import managers.Status;
 
 public class Map {
-
+	
 	SpleggOG splegg;
 	String name;
 	File file;
-	private FileConfiguration config;
 	int spawncount;
 	int floorcount;
 	boolean usable;
+	
+	// Enable the conversion of text from config.yml to objects.
+	public FileConfiguration config = SpleggOG.getPlugin().getConfig();
 
 	public Map(SpleggOG splegg, String name) {
 
@@ -48,7 +50,7 @@ public class Map {
 		}
 		catch (IOException error) {
 
-			SpleggOG.getPlugin().getLogger().info("ERROR: Issue creating " + this.name + ".yml: " + error.getMessage());
+			SpleggOG.getPlugin().getLogger().severe("ERROR: Issue creating " + this.name + ".yml: " + error.getMessage());
 
 		}
 
@@ -94,8 +96,8 @@ public class Map {
 
 	public void savenumbers() {
 
-		this.getConfig().set("Spawns.count", this.spawncount);
-		this.getConfig().set("Floors.count", this.floorcount);
+		config.set("Spawns.count", this.spawncount);
+		config.set("Floors.count", this.floorcount);
 
 	}
 
@@ -103,12 +105,12 @@ public class Map {
 
 		try {
 
-			this.getConfig().save(this.file);
+			config.save(this.file);
 
 		}
 		catch (IOException error) {
 
-			SpleggOG.getPlugin().getLogger().info("An error occured while saving " + this.name + ".yml.");
+			SpleggOG.getPlugin().getLogger().severe("An error occured while saving " + this.name + ".yml.");
 
 		}
 
@@ -125,12 +127,12 @@ public class Map {
 
 		String worldname = l.getWorld().getName();
 
-		this.getConfig().set("Spawns." + id + ".world", worldname);
-		this.getConfig().set("Spawns." + id + ".x", x);
-		this.getConfig().set("Spawns." + id + ".y", y);
-		this.getConfig().set("Spawns." + id + ".z", z);
-		this.getConfig().set("Spawns." + id + ".pitch", pitch);
-		this.getConfig().set("Spawns." + id + ".yaw", yaw);
+		config.set("Spawns." + id + ".world", worldname);
+		config.set("Spawns." + id + ".x", x);
+		config.set("Spawns." + id + ".y", y);
+		config.set("Spawns." + id + ".z", z);
+		config.set("Spawns." + id + ".pitch", pitch);
+		config.set("Spawns." + id + ".yaw", yaw);
 
 		this.save();
 		
@@ -140,14 +142,14 @@ public class Map {
 
 	public Location getSpawn(int id) {
 
-		int x = this.getConfig().getInt("Spawns." + id + ".x");
-		int y = this.getConfig().getInt("Spawns." + id + ".y");
-		int z = this.getConfig().getInt("Spawns." + id + ".z");
+		int x = config.getInt("Spawns." + id + ".x");
+		int y = config.getInt("Spawns." + id + ".y");
+		int z = config.getInt("Spawns." + id + ".z");
 
-		float yaw = (float) this.getConfig().getInt("Spawns." + id + ".yaw");
-		float pitch = (float) this.getConfig().getInt("Spawns." + id + ".pitch");
+		float yaw = (float) config.getInt("Spawns." + id + ".yaw");
+		float pitch = (float) config.getInt("Spawns." + id + ".pitch");
 
-		World world = Bukkit.getWorld(this.getConfig().getString("Spawns." + id + ".world"));
+		World world = Bukkit.getWorld(config.getString("Spawns." + id + ".world"));
 
 		return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
 
@@ -164,25 +166,25 @@ public class Map {
 
 		String worldname = l.getWorld().getName();
 
-		this.getConfig().set("Spec.world", worldname);
-		this.getConfig().set("Spec.x", x);
-		this.getConfig().set("Spec.y", y);
-		this.getConfig().set("Spec.z", z);
-		this.getConfig().set("Spec.pitch", pitch);
-		this.getConfig().set("Spec.yaw", yaw);
+		config.set("Spec.world", worldname);
+		config.set("Spec.x", x);
+		config.set("Spec.y", y);
+		config.set("Spec.z", z);
+		config.set("Spec.pitch", pitch);
+		config.set("Spec.yaw", yaw);
 
 	}
 
 	public Location getSpawnSpec() {
 
-		int x = this.getConfig().getInt("Spec.x");
-		int y = this.getConfig().getInt("Spec.y");
-		int z = this.getConfig().getInt("Spec.z");
+		int x = config.getInt("Spec.x");
+		int y = config.getInt("Spec.y");
+		int z = config.getInt("Spec.z");
 
-		float yaw = (float) this.getConfig().getInt("Spec.yaw");
-		float pitch = (float) this.getConfig().getInt("Spec.pitch");
+		float yaw = (float) config.getInt("Spec.yaw");
+		float pitch = (float) config.getInt("Spec.pitch");
 
-		World world = Bukkit.getWorld(this.getConfig().getString("Spec.world"));
+		World world = Bukkit.getWorld(config.getString("Spec.world"));
 
 		return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
 
@@ -248,13 +250,13 @@ public class Map {
 
 	public int getCount() {
 
-		return this.getConfig().getInt("Spawns.count");
+		return config.getInt("Spawns.count");
 
 	}
 
 	public int getFloors() {
 
-		return this.getConfig().getInt("Floors.count");
+		return config.getInt("Floors.count");
 
 	}
 
@@ -278,7 +280,7 @@ public class Map {
 
 	public boolean lobbySet() {
 
-		return this.getConfig().isString("Spawns.lobby.world");
+		return config.isString("Spawns.lobby.world");
 
 	}
 
@@ -293,12 +295,12 @@ public class Map {
 
 		String worldname = l.getWorld().getName();
 
-		this.getConfig().set("Spawns.lobby.world", worldname);
-		this.getConfig().set("Spawns.lobby.x", x);
-		this.getConfig().set("Spawns.lobby.y", y);
-		this.getConfig().set("Spawns.lobby.z", z);
-		this.getConfig().set("Spawns.lobby.pitch", pitch);
-		this.getConfig().set("Spawns.lobby.yaw", yaw);
+		config.set("Spawns.lobby.world", worldname);
+		config.set("Spawns.lobby.x", x);
+		config.set("Spawns.lobby.y", y);
+		config.set("Spawns.lobby.z", z);
+		config.set("Spawns.lobby.pitch", pitch);
+		config.set("Spawns.lobby.yaw", yaw);
 
 		this.save();
 
@@ -306,14 +308,14 @@ public class Map {
 
 	public Location getLobby() {
 
-		int x = this.getConfig().getInt("Spawns.lobby.x");
-		int y = this.getConfig().getInt("Spawns.lobby.y");
-		int z = this.getConfig().getInt("Spawns.lobby.z");
+		int x = config.getInt("Spawns.lobby.x");
+		int y = config.getInt("Spawns.lobby.y");
+		int z = config.getInt("Spawns.lobby.z");
 
-		float yaw = (float) this.getConfig().getInt("Spawns.lobby.yaw");
-		float pitch = (float) this.getConfig().getInt("Spawns.lobby.pitch");
+		float yaw = (float) config.getInt("Spawns.lobby.yaw");
+		float pitch = (float) config.getInt("Spawns.lobby.pitch");
 
-		World world = Bukkit.getWorld(this.getConfig().getString("Spawns.lobby.world"));
+		World world = Bukkit.getWorld(config.getString("Spawns.lobby.world"));
 
 		return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
 

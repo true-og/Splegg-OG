@@ -113,13 +113,15 @@ public class SpleggEvents implements Listener {
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 		if (u.getGame() != null && u.isAlive() && ((double) player.getLocation().getBlockY() < -5.0D || player.getLocation().getBlockY() < u.getGame().getLowestPossible()) && u.getGame().getStatus() == Status.INGAME) {
 
-			// TODO: What in the world is going on with "special" players here?
-			SpleggOG.getPlugin().chat.bc((SpleggOG.getPlugin().special.contains(player.getName()) ? "§4" : "§e") + SpleggOG.getPlugin().getConfig().getString("Messages.KnockoutPlayer").replaceAll("&", "§").replaceAll("%player%", player.getName()), u.getGame());
 			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining").replaceAll("&", "§").replaceAll("%count%", String.valueOf(u.getGame().getPlayers().size() - 1)), u.getGame());
 
-			player.setFallDistance(1.0F);
+			Listeners.launchEggs.remove(player.getName());
 
-			u.getGame().leaveGame(player);
+			// TODO: Remove dev logger
+			SpleggOG.getPlugin().getLogger().info("Player leaving game onKnockout: " + u.getGame() + " with map " + u.getGame().getMap().getName());
+
+			Game game = u.getGame();
+			game.leaveGame(u);
 
 			player.setFallDistance(1.0F);
 

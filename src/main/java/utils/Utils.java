@@ -16,7 +16,9 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -95,7 +97,7 @@ public class Utils {
 		}
 		catch (IOException error) {
 
-			SpleggOG.getPlugin().getLogger().info("An error occured while creating spawns.yml.");
+			SpleggOG.getPlugin().getLogger().severe("An error occured while creating spawns.yml.");
 
 		}
 
@@ -120,7 +122,7 @@ public class Utils {
 		}
 		catch (IOException error) {
 
-			SpleggOG.getPlugin().getLogger().info("An error occured while saving spawns.yml.");
+			SpleggOG.getPlugin().getLogger().severe("An error occured while saving spawns.yml.");
 
 		}
 
@@ -175,6 +177,7 @@ public class Utils {
 
 	public void clearInventory(Player player) {
 
+		// TODO: Save this inventory and give it back to the player after the game.
 		PlayerInventory pInv = player.getInventory();
 		pInv.setArmorContents((ItemStack[]) null);
 		pInv.clear();
@@ -213,48 +216,53 @@ public class Utils {
 
 	}
 
-	public static void fireEgg(Player player) {
+	public static void fireEgg(PlayerInteractEvent event) {
 
+		Player player = event.getPlayer();
 		ItemStack hand = player.getInventory().getItemInMainHand();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 
-		if(u.getGame().getStatus().equals(Status.INGAME) && u.isAlive()) {
+		if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
 
-			switch(hand.getType()) {
-			case WOODEN_SHOVEL:
-				player.launchProjectile(Egg.class);
-				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
-				break;
-			case STONE_SHOVEL:
-				player.launchProjectile(Egg.class);
-				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
-				break;
-			case IRON_SHOVEL:
-				player.launchProjectile(Egg.class);
-				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
-				break;
-			case GOLDEN_SHOVEL:
-				player.launchProjectile(Egg.class);
-				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
-				break;
-			case DIAMOND_SHOVEL:
-				for(int i = 0; i < 2; i = i + 1) {
+			if(u.getGame().getStatus().equals(Status.INGAME) && u.isAlive()) {
 
+				switch(hand.getType()) {
+				case WOODEN_SHOVEL:
 					player.launchProjectile(Egg.class);
-
-				}
-				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
-				break;
-			case NETHERITE_SHOVEL:
-				for(int i = 0; i < 3; i = i + 1) {
-
+					eggSound(player);
+					break;
+				case STONE_SHOVEL:
 					player.launchProjectile(Egg.class);
+					eggSound(player);
+					break;
+				case IRON_SHOVEL:
+					player.launchProjectile(Egg.class);
+					eggSound(player);
+					break;
+				case GOLDEN_SHOVEL:
+					player.launchProjectile(Egg.class);
+					eggSound(player);
+					break;
+				case DIAMOND_SHOVEL:
+					for(int i = 0; i < 2; i = i + 1) {
 
+						player.launchProjectile(Egg.class);
+
+					}
+					eggSound(player);
+					break;
+				case NETHERITE_SHOVEL:
+					for(int i = 0; i < 3; i = i + 1) {
+
+						player.launchProjectile(Egg.class);
+
+					}
+					eggSound(player);
+					break;
+				default:
+					break;
 				}
-				player.playSound(player.getLocation(), Sound.UI_TOAST_OUT, 1.0F, 1.0F);
-				break;
-			default:
-				break;
+
 			}
 
 		}
@@ -267,7 +275,11 @@ public class Utils {
 
 		if (hand.getType() == Material.SLIME_BALL) {
 
-			u.getGame().leaveGame(u.getPlayer());
+			// TODO: Remove dev logger
+			SpleggOG.getPlugin().getLogger().info("Player leaving game slimeball: " + u.getGame() + " with map " + u.getGame().getMap().getName());
+
+			Game game = u.getGame();
+			game.leaveGame(u);
 
 		}
 
@@ -276,6 +288,12 @@ public class Utils {
 			player.openInventory(getShopInventory());
 
 		}
+
+	}
+
+	private static void eggSound(Player player) {
+
+		player.playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 0.10F, 2.0F);
 
 	}
 

@@ -12,6 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -47,6 +48,9 @@ public class Game {
 	int timer = 0;
 	boolean starting;
 	LobbySign sign;
+	
+	// Enable the conversion of text from config.yml to objects.
+	public FileConfiguration config = SpleggOG.getPlugin().getConfig();
 
 	public Game(SpleggOG splegg, final Map map) {
 
@@ -81,20 +85,21 @@ public class Game {
 
 	public void startGameTimer() {
 
-		int grace = this.splegg.getConfig().getInt("Options.GraceTime");
-		this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.GraceTimeStart").replaceAll("&", "§").replaceAll("%grace%", String.valueOf(grace)), this);
+		int grace = config.getInt("Options.GraceTime");
+		this.splegg.chat.bc(config.getString("Messages.GraceTimeStart").replaceAll("&", "§").replaceAll("%grace%", String.valueOf(grace)), this);
 
 		(new BukkitRunnable() {
 
 			public void run() {
 
-				Game.this.splegg.chat.bc(Game.this.splegg.getConfig().getString("Messages.GraceTimeFinish").replaceAll("&", "§"), Game.this);
+				Game.this.splegg.chat.bc(config.getString("Messages.GraceTimeFinish").replaceAll("&", "§"), Game.this);
 
 				Iterator<?> PlayersInGame = players.values().iterator();
 				while(PlayersInGame.hasNext()) {
 
 					SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
 					sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
+					Listeners.launchEggs.add(sp.getPlayer().getName());
 
 				}
 
@@ -185,7 +190,7 @@ public class Game {
 		Player player = playerWhoIsJoining.getPlayer();
 		if (playerWhoIsJoining.getGame() != null) {
 
-			this.splegg.chat.sendMessage(player, this.splegg.getConfig().getString("Messages.AlreadyInGame").replaceAll("&", "§"));
+			this.splegg.chat.sendMessage(player, config.getString("Messages.AlreadyInGame").replaceAll("&", "§"));
 
 		}
 		else if (this.players.containsKey(player.getName())) {
@@ -229,9 +234,9 @@ public class Game {
 
 				player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
 
-				this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
+				this.splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
 
-				if (this.players.size() >= this.splegg.getConfig().getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
+				if (this.players.size() >= config.getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
 
 					this.startCountdown();
 					this.setStarting(true);
@@ -256,7 +261,7 @@ public class Game {
 				playerWhoIsJoining.setAlive(true);
 				playerWhoIsJoining.getStore().save();
 
-				this.splegg.utils.clearInventory(player);
+				splegg.utils.clearInventory(player);
 
 				player.setHealth(20.0D);
 				player.setFoodLevel(20);
@@ -264,17 +269,17 @@ public class Game {
 				player.setExp(0.0F);
 				player.setGameMode(GameMode.ADVENTURE);
 
-				this.players.put(player.getName(), sp);
-				playerWhoIsJoining.setGame(this.splegg.games.getGame(this.name));
+				players.put(player.getName(), sp);
+				playerWhoIsJoining.setGame(splegg.games.getGame(name));
 
-				if (this.map.lobbySet()) {
+				if (map.lobbySet()) {
 
 					player.teleport(this.map.getLobby());
 
 				}
 				else {
 
-					player.teleport(this.splegg.config.getLobby(player));
+					player.teleport(splegg.config.getLobby(player));
 
 				}
 
@@ -282,23 +287,23 @@ public class Game {
 				Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
 				Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
 
-				this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
+				splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
 
-				if (this.players.size() >= this.splegg.getConfig().getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
+				if (players.size() >= config.getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
 
-					this.startCountdown();
-					this.setStarting(true);
+					startCountdown();
+					setStarting(true);
 
 				}
 
 			}
 
-			this.getSign().update(this.map, false);
+			getSign().update(this.map, false);
 
 		}
 		else if (this.status == Status.DISABLED) {
 
-			this.splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.Mapdisabled").replaceAll("&", "§"));
+			splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.Mapdisabled").replaceAll("&", "§"));
 
 		}
 
@@ -309,7 +314,7 @@ public class Game {
 		Bukkit.getScheduler().cancelTask(this.counter);
 		if (this.status == Status.LOBBY) {
 
-			this.lobbycount = this.splegg.getConfig().getInt("Options.Timer");
+			this.lobbycount = config.getInt("Options.Timer");
 
 			Iterator<?> playersInGame = this.players.values().iterator();
 			while(playersInGame.hasNext()) {
@@ -325,46 +330,42 @@ public class Game {
 
 	}
 
-	public void leaveGame(Player playerWhoIsLeaving) {
-
-		UtilPlayer u = new UtilPlayer(playerWhoIsLeaving);
-		SpleggPlayer sp = new SpleggPlayer(u);
+	// TODO: Fix Me
+	public void leaveGame(UtilPlayer u) {
+		SpleggPlayer sp = this.getPlayer(u.getPlayer());
 		if (this.status == Status.ENDING || this.status == Status.INGAME) {
-
-			sp.getPlayer().sendMessage(playerWhoIsLeaving.getPlayer().getUniqueId(), SpleggOG.getPlugin().getConfig().getString("Messages.Youbrokeblocks").replaceAll("&", "§").replaceAll("%broke%", String.valueOf(sp.getBroken())));
-
+			this.splegg.chat.sendMessage(u.getPlayer(), splegg.getConfig().getString("Messages.Youbrokeblocks").replaceAll("&", "§").replaceAll("%broke%", String.valueOf(sp.getBroken())));
 		}
 
-		this.players.remove(playerWhoIsLeaving.getName());
+		//      if (Splegg.getSplegg().getConfig().getString("BarAPI.Enabled").equalsIgnoreCase("true")) {
+		//         BarAPI.removeBar(sp.getPlayer());
+		//      }
 
+		this.players.remove(u.getName());
+		Listeners.launchEggs.remove(sp.getPlayer().getName());
 		Listeners.shopmanager.remove(sp.getPlayer().getName());
 		Listeners.manager.remove(sp.getPlayer().getName());
 		Listeners.goldspade.remove(sp.getPlayer().getName());
 		Listeners.diamondspade.remove(sp.getPlayer().getName());
 		Listeners.moneymanager.remove(sp.getPlayer().getName());
-
-		playerWhoIsLeaving.getPlayer().teleport(this.splegg.config.getLobby(playerWhoIsLeaving.getPlayer()));
+		// End of game location.
+		u.getPlayer().teleport(u.getGame().getMap().getLobby());
 		u.setGame((Game) null);
 		u.setAlive(false);
-		playerWhoIsLeaving.getPlayer().setHealth(20.0D);
-		playerWhoIsLeaving.getPlayer().setFallDistance(0.0F);
-
+		u.getPlayer().setHealth(20.0D);
+		InvStore store = u.getStore();
+		store.load();
+		store.reset();
+		u.getPlayer().setFallDistance(0.0F);
 		for(Player p : Bukkit.getOnlinePlayers()) {
-
 			if (Listeners.moneymanager.contains(p.getName())) {
-
-				p.sendMessage(ChatColor.GREEN + "You received " + splegg.getConfig().getInt("Money.KillPlayer") +" &BDiamond Shards!");
-
+				p.sendMessage(ChatColor.GREEN + "!!! You received " + splegg.getConfig().getInt("Money.KillPlayer") +" coins!");
 				splegg.econ.depositPlayer(p, splegg.getConfig().getInt("Money.KillPlayer"));
-
 			}
-
 		}
 
-		if (! this.splegg.disabling) {
-
+		if (!this.splegg.disabling) {
 			this.getSign().update(this.map, false);
-
 		}
 
 	}

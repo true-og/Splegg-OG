@@ -38,18 +38,28 @@ The resulting .jar file will be in build/libs/
 
 **Known Bugs:**
 
-- Shovel is given in lobby sometimes
+- Floors below 0 y-level do not function.
 
-- Splegg Shop is incomplete
+- Slimeball does not work and is not labeled.
 
-- Dying or leaving a game teleports players to the wrong point
+- The game does not end when 1 player is remaining.
 
-- "you are already playing" message is sometimes displayed even after leaving
+- It is possible to start a game with only 1 player.
 
-- pre-game inventory is not always being preserved
+- Pre-game inventory is not preserved.
 
-- right clicking blocks shoots two eggs when it shouldn't
+**Planned Features:**
 
-- The shooting sound is wrong
+- Better lobby inventory
+
+- Better splegg shop
+
+- Diamond shard integration with DiamondBank-OG
+
+- Multiverse Integration
+
+- Spectator Mode
+
+- Leaderboards
 
 **Licensed under the GPLv3.**

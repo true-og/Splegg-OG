@@ -1,3 +1,19 @@
+**1.2:**
+
+- Fixed the shovel being given in the lobby.
+
+- Fixed leaving a game or dying teleporting players to the wrong point.
+
+- Fixed "you are already playing" message being displayed even after leaving a game.
+
+- Fixed grace period timer.
+
+- Right clicking blocks now only shoots one egg.
+
+- The shooting sound has been restored from Hive Java's Splegg.
+
+- Fixed a few NullPointerException errors.
+
 **1.1:**
 
 - In-game players can no longer be hit with eggs.

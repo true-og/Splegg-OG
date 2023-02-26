@@ -100,26 +100,10 @@ public class GameUtilities {
 
 	public void checkWinner(Game game) {
 
-		if (game.players.size() <= 1) {
+		if (game.players.size() < 2) {
 
-			if (game.players.size() == 0) {
-
-				game.splegg.game.stopGame(game, 0);
-
-			} 
-			else {
-
-				Iterator<?> var4 = game.players.values().iterator();
-				while(var4.hasNext()) {
-
-					SpleggPlayer sp = (SpleggPlayer) var4.next();
-					game.leaveGame(sp.getPlayer());
-
-				}
-
-				game.splegg.game.stopGame(game, 5);
-
-			}
+			// TODO: Assign winner here.
+			game.splegg.game.stopGame(game, game.players.size());
 
 		}
 

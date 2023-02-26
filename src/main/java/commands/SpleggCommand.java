@@ -28,7 +28,8 @@ public class SpleggCommand implements CommandExecutor {
 
 			if (args.length == 0) {
 
-				SpleggOG.getPlugin().chat.sendMessage(player, "Plugin created by MrLuangamer, updated by Hraponssi, now maintained by NotAlexNoyle for true-og.net. For more information: /splegg help");
+				SpleggOG.getPlugin().chat.sendMessage(player, "&aPlugin created by MrLuangamer, updated by Hraponssi, now maintained by NotAlexNoyle for true-og.net. &6For more information: /splegg help");
+
 			}
 			else if (args.length == 1) {
 
@@ -36,19 +37,27 @@ public class SpleggCommand implements CommandExecutor {
 
 					if (player.hasPermission("splegg.join")) {
 
-						if (u.getGame() != null && u.isAlive()) {
+						if (u.getGame() != null && u.isAlive() && u.getGame().getLobbyCount() > 0) {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are already playing.");
-
-						}
-						else if (isLobby(u)) {
-
-							player.teleport(SpleggOG.getPlugin().config.getLobby(player));
+							player.teleport(u.getGame().getMap().getLobby());
 
 						}
 						else {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cSplegg is incorrectly setup! Ask an admin to set the lobby.");
+							// Test to see if the user entered any text or not. If they didn't, an ArrayIndexOutOfBoundsException is thrown.
+							try {
+
+								String gameThatWasNotFound = args[1];
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: Failed to start game: &6" + gameThatWasNotFound + "&c! &eSyntax: /splegg join &6mapname.");
+
+							}
+							catch(ArrayIndexOutOfBoundsException error) {
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The game to join was unspecified! &6Syntax: &e/splegg join mapname.");
+
+							}
+
 
 						}
 
@@ -65,9 +74,14 @@ public class SpleggCommand implements CommandExecutor {
 					if (u.getGame() != null && u.isAlive()) {
 
 						Game game = u.getGame();
-						game.leaveGame(u.getPlayer());
+						game.leaveGame(u);
 
 						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.LeaveGame").replaceAll("&", "§").replaceAll("%map%", game.getMap().getName()));
+
+					}
+					else {
+
+						SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: You are not in a game!");
 
 					}
 
@@ -78,19 +92,19 @@ public class SpleggCommand implements CommandExecutor {
 
 						if (u.getGame() == null) {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are not in a game.");
+							SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: You are not in a game!");
 
 						}
 						else if (u.getGame().getStatus() == Status.LOBBY) {
 
 							SpleggOG.getPlugin().game.startGame(u.getGame());
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&eGame started!");
+							SpleggOG.getPlugin().chat.sendMessage(player, "&aGame started!");
 
 						}
 						else if (u.getGame().getStatus() == Status.INGAME) {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cGame has already begun.");
+							SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The game has already begun!");
 
 						}
 
@@ -108,12 +122,12 @@ public class SpleggCommand implements CommandExecutor {
 
 						if (u.getGame() == null) {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are not in a game.");
+							SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: You are not in a game!");
 
 						}
 						else if (u.getGame().getStatus() == Status.LOBBY) {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&cThe game has not begun yet!");
+							SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The game has not begun yet!");
 
 						}
 						else if (u.getGame().getStatus() == Status.INGAME) {
@@ -122,7 +136,7 @@ public class SpleggCommand implements CommandExecutor {
 
 							SpleggOG.getPlugin().game.stopGame(u.getGame(), 1);
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&eYou have stopped the game.");
+							SpleggOG.getPlugin().chat.sendMessage(player, "&6You have stopped the game.");
 
 						}
 
@@ -140,7 +154,7 @@ public class SpleggCommand implements CommandExecutor {
 
 						SpleggOG.getPlugin().config.setLobby(player.getLocation());
 
-						SpleggOG.getPlugin().chat.sendMessage(player, "&aYou have set the splegg lobby.");
+						SpleggOG.getPlugin().chat.sendMessage(player, "&aThe lobby has been set.");
 
 					}
 					else {
@@ -152,7 +166,7 @@ public class SpleggCommand implements CommandExecutor {
 				}
 				else if (!args[0].equalsIgnoreCase("")) {
 
-					SpleggOG.getPlugin().chat.sendMessage(player, "&cIncorrect Usage. &6Applicable commands are: &e/" + tag + " &6<&ejoin&6, &eleave&6, &ehelp&6>");
+					SpleggOG.getPlugin().chat.sendMessage(player, "&cIncorrect Usage! &6Applicable commands are: &e/" + tag + " &6<&ejoin&6, &eleave&6, &ehelp&6>");
 
 				}
 
@@ -192,12 +206,12 @@ public class SpleggCommand implements CommandExecutor {
 
 												map.setSpawn(map, secondUserCommandArgumentIsInteger, player.getLocation());
 
-												SpleggOG.getPlugin().chat.sendMessage(player, "&aYou have re-set the spawn point &6" + secondUserCommandArgumentIsInteger + " &afor map: &e" + firstUserCommandArgument + "&a.");
+												SpleggOG.getPlugin().chat.sendMessage(player, "&aThe spawn point &6" + secondUserCommandArgumentIsInteger + " &afor map: &e" + firstUserCommandArgument + "&a has been re-set.");
 
 											}
 											else {
 
-												SpleggOG.getPlugin().chat.sendMessage(player, "&cThe spawn point: &6" + secondUserCommandArgumentIsInteger + " &cdoes not yet exist for map: &e" + map.getName() + "&c.");
+												SpleggOG.getPlugin().chat.sendMessage(player, "&ERROR: The spawn point: &6" + secondUserCommandArgumentIsInteger + " &cdoes not yet exist for map: &e" + map.getName() + "&c.");
 												usageMessage(player, tag);
 
 											}
@@ -205,8 +219,6 @@ public class SpleggCommand implements CommandExecutor {
 										}
 										catch(Exception error) {
 
-											// TODO: Remove dev logger
-											SpleggOG.getPlugin().getLogger().info(error.getMessage());
 											usageMessage(player, tag);
 
 										}
@@ -217,7 +229,7 @@ public class SpleggCommand implements CommandExecutor {
 								catch(ArrayIndexOutOfBoundsException error) {
 
 									map.addSpawn(player.getLocation(), SpleggOG.getPlugin().games.getGame(map.getName()));
-									SpleggOG.getPlugin().chat.sendMessage(player, "&aSpawn &6" + map.getSpawnCount() + " &aset for map: &e" + map.getName() + "&a.");
+									SpleggOG.getPlugin().chat.sendMessage(player, "&aThe spawn: &6" + map.getSpawnCount() + " &ahas been set for the map: &e" + map.getName() + "&a.");
 
 								}
 
@@ -243,7 +255,7 @@ public class SpleggCommand implements CommandExecutor {
 							firstUserCommandArgument = args[1];
 							if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
 
-								SpleggOG.getPlugin().chat.sendMessage(player, "&cThe map: &e" + firstUserCommandArgument + " &calready exists.");
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The map: &e" + firstUserCommandArgument + " &calready exists.");
 
 							}
 							else {
@@ -304,19 +316,20 @@ public class SpleggCommand implements CommandExecutor {
 								game = SpleggOG.getPlugin().games.getGame(firstUserCommandArgument);
 								if (game == null) {
 
-									SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are not in a game.");
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: You are not in a game!");
 
 								}
 								else if (game.getStatus() == Status.LOBBY) {
 
-									SpleggOG.getPlugin().chat.sendMessage(player, "&eStarting " + firstUserCommandArgument + "...");
+									SpleggOG.getPlugin().chat.sendMessage(player, "&eStarting Game " + firstUserCommandArgument + "...");
 
 									SpleggOG.getPlugin().game.startGame(game);
 
 								}
 								else if (game.getStatus() == Status.INGAME) {
 
-									SpleggOG.getPlugin().chat.sendMessage(player, "&cThe match has already begun.");
+									// TODO: Change this for spectator mode when it is implemented.
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The game has already begun.");
 
 								}
 
@@ -344,12 +357,12 @@ public class SpleggCommand implements CommandExecutor {
 								game = SpleggOG.getPlugin().games.getGame(firstUserCommandArgument);
 								if (game == null) {
 
-									SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are not in a game.");
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: You are not in a game!");
 
 								}
 								else if (game.getStatus() == Status.LOBBY) {
 
-									SpleggOG.getPlugin().chat.sendMessage(player, "&cGame has not begun yet!");
+									SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The game has not begun yet!");
 
 								}
 								else if (game.getStatus() == Status.INGAME) {
@@ -358,7 +371,7 @@ public class SpleggCommand implements CommandExecutor {
 
 									SpleggOG.getPlugin().game.stopGame(game, 1);
 
-									SpleggOG.getPlugin().chat.sendMessage(player, "&eYou have stopped the game.");
+									SpleggOG.getPlugin().chat.sendMessage(player, "&6You have stopped the game.");
 
 								}
 
@@ -385,7 +398,7 @@ public class SpleggCommand implements CommandExecutor {
 							if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
 
 								SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument).setLobby(player.getLocation());
-								SpleggOG.getPlugin().chat.sendMessage(player, "&aLobby for map: &e" + firstUserCommandArgument + "&a has been set to: &2" + player.getLocation() + "&a.");
+								SpleggOG.getPlugin().chat.sendMessage(player, "&aThe lobby for map: &e" + firstUserCommandArgument + "&a has been set to: &2" + player.getLocation() + "&a.");
 
 							}
 							else {
@@ -425,7 +438,7 @@ public class SpleggCommand implements CommandExecutor {
 
 								if (sel == null) {
 
-									SpleggOG.getPlugin().chat.sendMessage(player, "&5Please select an area with worldedit.");
+									SpleggOG.getPlugin().chat.sendMessage(player, "&4Please select an area with worldedit.");
 
 								}
 								else {
@@ -455,9 +468,9 @@ public class SpleggCommand implements CommandExecutor {
 
 						if (player.hasPermission("splegg.join")) {
 
-							if (u.getGame() != null && u.isAlive()) {
+							if (u.getGame() != null) {
 
-								SpleggOG.getPlugin().chat.sendMessage(player, "&cYou are already playing.");
+								SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: You are already playing.");
 
 							}
 							else {
@@ -473,7 +486,7 @@ public class SpleggCommand implements CommandExecutor {
 									}
 									else {
 
-										SpleggOG.getPlugin().chat.sendMessage(player, "&cThe map: &e" + firstUserCommandArgument + " &cis incorrectly set up.");
+										SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: The map: &e" + firstUserCommandArgument + " &cis incorrectly set up. &6Please read the README.md file for instructions.");
 
 									}
 
@@ -496,7 +509,7 @@ public class SpleggCommand implements CommandExecutor {
 					}
 					else if (args[0].equalsIgnoreCase("leave")) {
 
-						SpleggOG.getPlugin().chat.sendMessage(player, "Please use &e/" + tag + " leave");
+						SpleggOG.getPlugin().chat.sendMessage(player, "&4Please use &e/" + tag + " leave");
 
 					}
 					else {
@@ -519,31 +532,16 @@ public class SpleggCommand implements CommandExecutor {
 		return false;
 
 	}
-	
-	private boolean isLobby(UtilPlayer u) {
-		
-		if(u.getGame().getLobbyCount() > 0) {
-			
-			return true;
-			
-		}
-		else {
-			
-			return false;
-			
-		}
-		
-	}
 
 	void permissionMessage(Player player) {
 
-		SpleggOG.getPlugin().chat.sendMessage(player, "&cYou do not have permission to do that.");
+		SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: You do not have permission to do that.");
 
 	}
 
 	void usageMessage(Player player, String tag) {
 
-		SpleggOG.getPlugin().chat.sendMessage(player, "&cUse the command: &e/splegg setspawn [MAPNAME] &cto create spawn points.");
+		SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: Incorrect syntax. &6Use the command: &e/splegg setspawn [MAPNAME] &6to create spawn points.");
 
 	}
 

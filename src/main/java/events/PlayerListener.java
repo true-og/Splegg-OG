@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import main.SpleggOG;
+import managers.Game;
 import utils.UtilPlayer;
 
 public class PlayerListener implements Listener {
@@ -71,7 +72,11 @@ public class PlayerListener implements Listener {
 		UtilPlayer u = new UtilPlayer(player);
 		if (u.getGame() != null && u.isAlive()) {
 
-			u.getGame().leaveGame(player);
+			// TODO: Remove dev logger
+			SpleggOG.getPlugin().getLogger().info("Player leaving game onQuit: " + u.getGame() + " with map " + u.getGame().getMap().getName());
+
+			Game game = u.getGame();
+			game.leaveGame(u);
 
 		}
 
@@ -98,11 +103,11 @@ public class PlayerListener implements Listener {
 
 		Player player = e.getPlayer();
 		UtilPlayer u = new UtilPlayer(player);
-		if (u.getGame() != null && u.isAlive() && !e.getMessage().startsWith("/splegg") && ! player.hasPermission("splegg.admin")) {
+		if (u.getGame() != null && u.isAlive() && ! e.getMessage().startsWith("/splegg") && ! player.hasPermission("splegg.admin")) {
 
 			e.setCancelled(true);
 
-			SpleggOG.getPlugin().chat.sendMessage(player, "&6You cannot use commands in &3Splegg&6!");
+			SpleggOG.getPlugin().chat.sendMessage(player, "&6You cannot use that command in &3Splegg&6!");
 
 		}
 

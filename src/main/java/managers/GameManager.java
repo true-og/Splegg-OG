@@ -16,16 +16,16 @@ import utils.Utils;
 public class GameManager {
 
 	SpleggOG splegg;
-	
+
 	public GameManager() {
 
-		this.splegg = SpleggOG.getPlugin();
-		
+		splegg = SpleggOG.getPlugin();
+
 	}
 
 	public void startGame(Game game) {
 
-		this.splegg.chat.log("New game commencing..");
+		splegg.chat.log("New game commencing..");
 		game.startGameTimer();
 		Bukkit.getScheduler().cancelTask(game.counter);
 		game.status = Status.INGAME;
@@ -105,13 +105,13 @@ public class GameManager {
 
 		game.getSign().update(map, false);
 
-		this.splegg.chat.bc(this.splegg.getConfig().getString("Messages.InstructionsGame").replaceAll("&", "§"), game);
+		splegg.chat.bc(splegg.getConfig().getString("Messages.InstructionsGame").replaceAll("&", "§"), game);
 
 	}
 
 	public void stopGame(Game game, int r) {
 
-		this.splegg.chat.log("Commencing shutdown of " + game.getMap().getName() + ".");
+		SpleggOG.getPlugin().getLogger().info("Commencing shutdown of " + game.getMap().getName() + ".");
 
 		game.status = Status.ENDING;
 		game.stopGameTimer();
@@ -122,24 +122,16 @@ public class GameManager {
 		game.data.clear();
 		game.floor.clear();
 		game.setStarting(false);
-		HashMap<String, SpleggPlayer> h = new HashMap<String, SpleggPlayer>(game.players);
 		game.players.clear();
+		// game.leaveGame(game.getPlayers().);
 
-		Iterator<?> var5 = h.values().iterator();
-		while(var5.hasNext()) {
-
-			SpleggPlayer sp = (SpleggPlayer) var5.next();
-			game.leaveGame(sp.getPlayer());
-
-		}
-
-		if (! this.splegg.disabling) {
+		if (! splegg.disabling) {
 
 			game.getSign().update(game.map, true);
 
 		}
 
-		this.splegg.chat.log("Map " + game.map.getName() + " was reset.");
+		splegg.chat.log("Map " + game.map.getName() + " was reset.");
 
 	}
 
@@ -162,7 +154,7 @@ public class GameManager {
 		while(playersInGame.hasNext()) {
 
 			SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
-			this.splegg.chat.sendMessage(sp.getPlayer(), "&6Splegg is ending in §5§l" + this.splegg.game.getDigitTime(count));
+			splegg.chat.sendMessage(sp.getPlayer(), "&6Splegg is ending in §5§l" + splegg.game.getDigitTime(count));
 
 		}
 
