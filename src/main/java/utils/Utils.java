@@ -181,7 +181,7 @@ public class Utils {
 
 		// TODO: Save this inventory and give it back to the player after the game.
 		PlayerInventory pInv = player.getInventory();
-		Kit preGameInventory = pInv;
+		Kit preGameInventory;
 		pInv.setArmorContents((ItemStack[]) null);
 		pInv.clear();
 

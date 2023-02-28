@@ -46,6 +46,13 @@ repositories {
 
 	}
 
+	maven { // Import Paper Repository (EssentialsX API Dependency)
+    
+		name "papermc"
+    	url "https://papermc.io/repo/repository/maven-public/"
+    
+	}
+
 	maven { // Import Maven Repository.
 
 		name "essentialsx-releases"
