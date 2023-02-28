@@ -69,22 +69,29 @@ GUI:
     Size: 10
     GoldShovel:
       Name: '&e&lGolden Shovel'
-      Description: '&6Impress your SO with this fancy &eGolden &6shovel! Price: &B%price% Diamonds&6.'
+      Description: '&6Impress your SO with this fancy &eGolden Shovel&6! Price: &B%price% Diamonds&6.'
       Price: 500
     DiamondShovel:
       Name: '&b&lDiamond Shovel'
-      Description: '&6The Diamond Shovel shoots 2 eggs at a time! Price: &B%price% Diamonds'
+      Description: '&6The illustrious &BDiamond Shovel &6shoots TWO eggs at a time! Price: &B%price% Diamonds'
       Price: 1000
-Shop:
+Guide:
   Item: ENCHANTED_BOOK
   Slot: 0
-  Name: 'Splegg Guide'
-  Lore: '&eLearn how to play!'
+  Name: '&eSplegg Guide'
+  Lore: '&6Learn how to play!'
+Shop:
   Item: DIAMOND
+  Slot: 1
+  Name: '&BSplegg Shop'
+  Lore: '&BBuy fancy new shovels!'
+Cosmetics:
+  Item: SUNFLOWER
   Slot: 4
-  Name: 'Splegg Shop'
-  Lore: '&eBuy fancy new shovels!'
+  Name: '&3Cosmetics Menu'
+  Lore: '&5Upgrade your look!'
+Leave:
   Item: SLIME_BALL
   Slot: 8
-  Name: 'Exit Game'
+  Name: '&4Leave Game'
   Lore: '&eReturn to &2True&4OG &2SMP&e!'

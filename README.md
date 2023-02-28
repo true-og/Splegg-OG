@@ -18,7 +18,7 @@ Dependencies: WorldEdit, Vault.
 
 `/splegg setlobby my-map` Set a lobby area for the map during the voting/warm-up period.
 
-`//wand` Summon a wand with WorldEdit and then use it to select two points. These represent the corners of your floor.
+`//wand` Summon a wand with WorldEdit and then use it to select two points on a one-dimensional plane. The points you select will represent parallel corners of your floor.
 
 `/splegg addfloor my-map` Add the area you just selected with WorldEdit as a floor. You can add as many as you like.
 
@@ -38,28 +38,46 @@ The resulting .jar file will be in build/libs/
 
 **Known Bugs:**
 
-- Floors below 0 y-level do not function.
+- The game startup is broken (regression).
 
-- Slimeball does not work and is not labeled.
+- The grace period is broken (regression).
 
-- The game does not end when 1 player is remaining.
+- The game does not end cleanly when only 1 player is remaining.
 
-- It is possible to start a game with only 1 player.
+- The game ends when a player goes below y level 0.
 
-- Pre-game inventory is not preserved.
+- Block destruction particles are displayed for the egg instead of for the block that was hit.
+
+- Players pre-game inventory is not always preserved.
+
+- Hard-quitting the game does not cleanly remove players from the game.
 
 **Planned Features:**
 
-- Better lobby inventory
+- Finished lobby menus.
 
-- Better splegg shop
+- All shovels in the Splegg shop.
 
-- Diamond shard integration with DiamondBank-OG
+- Diamond shard integration with DiamondBank-OG.
 
-- Multiverse Integration
+- Multiverse integration.
 
-- Spectator Mode
+- Improved map setup UX.
 
-- Leaderboards
+- Power ups.
+
+- Spectator Mode.
+
+- In-lobby map voting.
+
+- Better join sign UI/UX.
+
+- Leaderboards.
+
+- PlaceholderAPI support.
+
+- Lobby scoreboard.
+
+- In-Game scoreboard.
 
 **Licensed under the GPLv3.**

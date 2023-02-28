@@ -2,6 +2,7 @@ package events;
 
 import java.util.Iterator;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -61,10 +62,10 @@ public class SpleggEvents implements Listener {
 
 					e.getEntity().getWorld().createExplosion(e.getEntity().getLocation(), 3.0F);
 
-					Iterator<?> var7 = e.getEntity().getWorld().getEntities().iterator();
-					while(var7.hasNext()) {
+					Iterator<?> entityIterator = e.getEntity().getWorld().getEntities().iterator();
+					while(entityIterator.hasNext()) {
 
-						Entity drop = (Entity) var7.next();
+						Entity drop = (Entity) entityIterator.next();
 
 						if (drop.getType() == EntityType.DROPPED_ITEM) {
 
@@ -81,17 +82,19 @@ public class SpleggEvents implements Listener {
 
 				}
 
-				if (u.getGame().getFloor().contains(hit.getLocation())) {
+				Location hitLocation = hit.getLocation();
+				if (u.getGame().getFloor().contains(hitLocation)) {
 
 					Game game = u.getGame();
 					// If the game is in-progress, do this.
 					if (game.getStatus() == Status.INGAME) {
 
 						// Play chicken egg sound upon block hit for every player nearby the event.
-						player.getWorld().playSound(hit.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1.0F, 1.0F);
+						player.getWorld().playSound(hitLocation, Sound.ENTITY_CHICKEN_EGG, 1.0F, 1.0F);
 
 						// Spawn spell particles when a block is destroyed to indicate vaporization.
-						player.getWorld().spawnParticle(Particle.SPELL, hit.getLocation(), 10);
+						player.getWorld().spawnParticle(Particle.SPELL, hitLocation, 12);
+						player.getWorld().spawnParticle(Particle.BLOCK_DUST, hitLocation, 6, hit.getBlockData());
 
 						// Destroy the block that was hit by an egg.
 						hit.setType(Material.AIR);
@@ -111,23 +114,27 @@ public class SpleggEvents implements Listener {
 
 		Player player = e.getPlayer();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		if (u.getGame() != null && u.isAlive() && ((double) player.getLocation().getBlockY() < -5.0D || player.getLocation().getBlockY() < u.getGame().getLowestPossible()) && u.getGame().getStatus() == Status.INGAME) {
+		Game game = u.getGame();
+		if (game != null && u.isAlive() && game.getStatus() == Status.INGAME) {
 
-			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining").replaceAll("&", "§").replaceAll("%count%", String.valueOf(u.getGame().getPlayers().size() - 1)), u.getGame());
+			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining").replaceAll("&", "§").replaceAll("%count%", String.valueOf(game.getPlayers().size())), game);
 
 			Listeners.launchEggs.remove(player.getName());
+			Listeners.manager.remove(player.getName());
+			Listeners.shopmanager.remove(player.getName());
+			Listeners.goldspade.remove(player.getName());
+			Listeners.diamondspade.remove(player.getName());
+			Listeners.moneymanager.remove(player.getName());
 
-			// TODO: Remove dev logger
-			SpleggOG.getPlugin().getLogger().info("Player leaving game onKnockout: " + u.getGame() + " with map " + u.getGame().getMap().getName());
+			game.leaveGame(game.getPlayers());
 
-			Game game = u.getGame();
-			game.leaveGame(u);
-
-			player.setFallDistance(1.0F);
+			player.setFallDistance(0.5F);
 
 		}
 
 	}
+	
+	// TODO: Implement spectator compass here.
 
 	@EventHandler
 	public void eggHatch(PlayerEggThrowEvent e) {

@@ -29,12 +29,12 @@ public class LobbyCountdown implements Runnable {
 			this.game.setLobbyCount(this.lobbycount);
 
 			SpleggPlayer sp;
-			Iterator<?> var2 = this.game.getPlayers().values().iterator();
-			while(var2.hasNext()) {
+			Iterator<?> playersInGameIterator = this.game.getPlayers().values().iterator();
+			while(playersInGameIterator.hasNext()) {
 
-				sp = (SpleggPlayer) var2.next();
+				sp = (SpleggPlayer) playersInGameIterator.next();
 				sp.getPlayer().setLevel(this.lobbycount);
-				sp.getPlayer().setExp((float)((double) this.game.getLobbyCount() * 0.008D));
+				sp.getPlayer().setExp((float) ((double) this.game.getLobbyCount() * 0.008D));
 
 			}
 
@@ -50,10 +50,10 @@ public class LobbyCountdown implements Runnable {
 
 				SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.LobbyTimer").replaceAll("&", "§").replaceAll("%timer%", String.valueOf(this.lobbycount)), this.game);
 
-				var2 = this.game.getPlayers().values().iterator();
-				while(var2.hasNext()) {
+				playersInGameIterator = this.game.getPlayers().values().iterator();
+				while(playersInGameIterator.hasNext()) {
 
-					sp = (SpleggPlayer) var2.next();
+					sp = (SpleggPlayer) playersInGameIterator.next();
 					sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 1.0F, 1.0F);
 
 				}
@@ -62,17 +62,17 @@ public class LobbyCountdown implements Runnable {
 
 			if (this.lobbycount <= 0) {
 
-				var2 = this.game.getPlayers().values().iterator();
-				while(var2.hasNext()) {
+				playersInGameIterator = this.game.getPlayers().values().iterator();
+				while(playersInGameIterator.hasNext()) {
 
-					sp = (SpleggPlayer) var2.next();
+					sp = (SpleggPlayer) playersInGameIterator.next();
 
 				}
 
 			}
 
 		}
-		else if (this.game.getPlayers().size() > 1) {
+		else if ((this.game.getPlayers().size()) >= 2) {
 
 			Bukkit.getScheduler().cancelTask(this.game.getCounterID());
 			SpleggOG.getPlugin().game.startGame(this.game);
@@ -83,7 +83,6 @@ public class LobbyCountdown implements Runnable {
 			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughPlayers").replaceAll("&", "§"), this.game);
 			Bukkit.getScheduler().cancelTask(this.game.getCounterID());
 
-			this.game.setLobbyCount(31);
 			this.game.setStarting(false);
 			this.game.getSign().update(this.game.getMap(), false);
 			this.game.startCountdown();

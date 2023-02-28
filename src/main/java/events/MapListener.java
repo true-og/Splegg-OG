@@ -41,7 +41,7 @@ public class MapListener implements Listener {
 	@EventHandler
 	public void hangingEntityBreak(HangingBreakByEntityEvent e) {
 
-		Player player = (Player)e.getRemover();
+		Player player = (Player) e.getRemover();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 		if (u.getGame() != null && u.isAlive()) {
 

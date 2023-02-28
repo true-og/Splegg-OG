@@ -26,6 +26,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 
+import com.earth2me.essentials.Kit;
+
 import main.SpleggOG;
 import managers.Game;
 import managers.Status;
@@ -179,6 +181,7 @@ public class Utils {
 
 		// TODO: Save this inventory and give it back to the player after the game.
 		PlayerInventory pInv = player.getInventory();
+		Kit preGameInventory = pInv;
 		pInv.setArmorContents((ItemStack[]) null);
 		pInv.clear();
 
@@ -204,9 +207,19 @@ public class Utils {
 
 		ItemStack stack = new ItemStack(material, 1);
 		ItemMeta meta = stack.getItemMeta();
+		TextComponent nameContainer = null;
+		TextComponent loreContainer = null;
+		try {
 
-		TextComponent nameContainer = Component.text(name);
-		TextComponent loreContainer = Component.text(lore);
+			nameContainer = Component.text(name);
+			loreContainer = Component.text(lore);
+
+		}
+		catch(NullPointerException error) {
+
+			SpleggOG.getPlugin().getLogger().severe("Failed to get Item information for: " + material + ".");
+
+		}
 
 		meta.displayName(nameContainer);
 		meta.lore(Arrays.asList(loreContainer));
@@ -216,76 +229,44 @@ public class Utils {
 
 	}
 
-	public static void fireEgg(PlayerInteractEvent event) {
+	public static void fireEgg(PlayerInteractEvent event, UtilPlayer u, Player player, ItemStack itemInHand) {
 
-		Player player = event.getPlayer();
-		ItemStack hand = player.getInventory().getItemInMainHand();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-
-		if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
+		if(u.getGame() != null) {
 
 			if(u.getGame().getStatus().equals(Status.INGAME) && u.isAlive()) {
 
-				switch(hand.getType()) {
-				case WOODEN_SHOVEL:
-					player.launchProjectile(Egg.class);
-					eggSound(player);
-					break;
-				case STONE_SHOVEL:
-					player.launchProjectile(Egg.class);
-					eggSound(player);
-					break;
-				case IRON_SHOVEL:
-					player.launchProjectile(Egg.class);
-					eggSound(player);
-					break;
-				case GOLDEN_SHOVEL:
-					player.launchProjectile(Egg.class);
-					eggSound(player);
-					break;
-				case DIAMOND_SHOVEL:
-					for(int i = 0; i < 2; i = i + 1) {
+				if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
 
+					switch(itemInHand.getType()) {
+
+					case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL:
 						player.launchProjectile(Egg.class);
+					eggSound(player);
+					break;
+					case DIAMOND_SHOVEL:
+						for(int i = 0; i < 2; i = i + 1) {
+
+							player.launchProjectile(Egg.class);
+
+						}
+						eggSound(player);
+						break;
+					case NETHERITE_SHOVEL:
+						for(int i = 0; i < 3; i = i + 1) {
+
+							player.launchProjectile(Egg.class);
+
+						}
+						eggSound(player);
+						break;
+					default:
+						break;
 
 					}
-					eggSound(player);
-					break;
-				case NETHERITE_SHOVEL:
-					for(int i = 0; i < 3; i = i + 1) {
 
-						player.launchProjectile(Egg.class);
-
-					}
-					eggSound(player);
-					break;
-				default:
-					break;
 				}
 
 			}
-
-		}
-
-		if (hand.getType() == Material.COMPASS) {
-
-			player.openInventory(getSpecInventory());
-
-		}
-
-		if (hand.getType() == Material.SLIME_BALL) {
-
-			// TODO: Remove dev logger
-			SpleggOG.getPlugin().getLogger().info("Player leaving game slimeball: " + u.getGame() + " with map " + u.getGame().getMap().getName());
-
-			Game game = u.getGame();
-			game.leaveGame(u);
-
-		}
-
-		if (hand.getType() == Material.getMaterial(SpleggOG.getPlugin().getConfig().getString("Shop.Item"))) {
-
-			player.openInventory(getShopInventory());
 
 		}
 
@@ -297,7 +278,7 @@ public class Utils {
 
 	}
 
-	private static Inventory getShopInventory() {
+	public static Inventory getShopInventory() {
 
 		TextComponent shopTitle = Component.text(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title").replaceAll("&", "§"));
 		Inventory shop = Bukkit.createInventory((InventoryHolder) null, InventoryType.CHEST, shopTitle);
@@ -309,13 +290,14 @@ public class Utils {
 
 	}
 
-	private static Inventory getSpecInventory() {
+	// TODO: Spectator mode in listener
+	/*private static Inventory getSpecInventory() {
 
 		TextComponent spectatorTitle = Component.text("Splegg - Spectators");
 		Inventory spec = Bukkit.createInventory((InventoryHolder) null, InventoryType.CHEST, spectatorTitle);
 
 		return spec;
 
-	}
+	}*/
 
 }

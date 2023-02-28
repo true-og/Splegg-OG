@@ -1,3 +1,11 @@
+**1.3:**
+
+- Fixed slimeball for leaving the game.
+
+- Restored lobby inventory to be like it was on Hive Java.
+
+- It is no longer possible to start a game with only 1 player in the lobby.
+
 **1.2:**
 
 - Fixed the shovel being given in the lobby.

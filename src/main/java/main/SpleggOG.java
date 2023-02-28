@@ -1,6 +1,5 @@
 package main;
 
-import java.io.File;
 import java.util.Iterator;
 
 import org.bukkit.Bukkit;
@@ -40,7 +39,6 @@ public class SpleggOG extends JavaPlugin {
 	public Utils config;
 	public boolean updateOut = false;
 	public String newVer = "";
-	public File updateFile = this.getFile();
 	public boolean disabling = false;
 	boolean economy = true;
 

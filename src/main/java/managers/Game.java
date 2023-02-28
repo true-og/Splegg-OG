@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -43,12 +42,11 @@ public class Game {
 	int time;
 	int y1;
 	int y2;
-	int small;
-	int counter = 0;
-	int timer = 0;
+	int counter;
+	int timer;
 	boolean starting;
 	LobbySign sign;
-	
+
 	// Enable the conversion of text from config.yml to objects.
 	public FileConfiguration config = SpleggOG.getPlugin().getConfig();
 
@@ -65,7 +63,6 @@ public class Game {
 		this.lobbycount = 31;
 		this.y1 = 0;
 		this.y2 = 0;
-		this.small = -1;
 
 		this.setSign(new LobbySign(map, splegg));
 
@@ -232,7 +229,8 @@ public class Game {
 				Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
 				Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
 
-				player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
+				saveInv(player);
+				setLobbyInv(player);
 
 				this.splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
 
@@ -283,7 +281,9 @@ public class Game {
 
 				}
 
-				player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
+				saveInv(player);
+				setLobbyInv(player);
+
 				Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
 				Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
 
@@ -309,6 +309,24 @@ public class Game {
 
 	}
 
+	private void saveInv(Player player) {
+
+		
+
+	}
+
+	private void setLobbyInv(Player player) {
+
+		player.closeInventory();
+		player.getInventory().clear();
+
+		player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
+		player.getInventory().setItem(splegg.getConfig().getInt("Guide.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Guide.Item")), splegg.getConfig().getString("Guide.Name").replaceAll("&", "§"), splegg.getConfig().getString("Guide.Lore").replaceAll("&", "§")));
+		player.getInventory().setItem(splegg.getConfig().getInt("Cosmetics.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Cosmetics.Item")), splegg.getConfig().getString("Cosmetics.Name").replaceAll("&", "§"), splegg.getConfig().getString("Cosmetics.Lore").replaceAll("&", "§")));
+		player.getInventory().setItem(splegg.getConfig().getInt("Leave.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Leave.Item")), splegg.getConfig().getString("Leave.Name").replaceAll("&", "§"), splegg.getConfig().getString("Leave.Lore").replaceAll("&", "§")));
+
+	}
+
 	public void startCountdown() {
 
 		Bukkit.getScheduler().cancelTask(this.counter);
@@ -330,41 +348,56 @@ public class Game {
 
 	}
 
-	// TODO: Fix Me
-	public void leaveGame(UtilPlayer u) {
-		SpleggPlayer sp = this.getPlayer(u.getPlayer());
-		if (this.status == Status.ENDING || this.status == Status.INGAME) {
-			this.splegg.chat.sendMessage(u.getPlayer(), splegg.getConfig().getString("Messages.Youbrokeblocks").replaceAll("&", "§").replaceAll("%broke%", String.valueOf(sp.getBroken())));
+	public void leaveGame(HashMap<String, SpleggPlayer> playersInGame) {
+
+		while(playersInGame.values().iterator().hasNext()) {
+
+			SpleggPlayer sp = playersInGame.values().iterator().next();
+			UtilPlayer u = sp.getUtilPlayer();
+
+			if (this.status == Status.ENDING || this.status == Status.INGAME) {
+
+				splegg.chat.sendMessage(u.getPlayer(), splegg.getConfig().getString("Messages.Youbrokeblocks").replaceAll("&", "§").replaceAll("%broke%", String.valueOf(sp.getBroken())));
+
+			}
+
+			SpleggOG.getPlugin().chat.sendMessage(sp.getPlayer(), SpleggOG.getPlugin().getConfig().getString("Messages.LeaveGame").replaceAll("&", "§").replaceAll("%map%", u.getGame().getMap().getName()));
+
+			this.players.remove(u.getName());
+
+			// TODO: Consider adjusting fall distance here.
+			Listeners.launchEggs.remove(sp.getPlayer().getName());
+			Listeners.shopmanager.remove(sp.getPlayer().getName());
+			Listeners.manager.remove(sp.getPlayer().getName());
+			Listeners.goldspade.remove(sp.getPlayer().getName());
+			Listeners.diamondspade.remove(sp.getPlayer().getName());
+			Listeners.moneymanager.remove(sp.getPlayer().getName());
+
+			// End of game location.
+			u.getPlayer().teleport(u.getGame().getMap().getLobby());
+			u.setGame((Game) null);
+			u.setAlive(false);
+			u.getPlayer().setHealth(20.0D);
+
+			InvStore store = u.getStore();
+			store.load();
+			store.reset();
+
 		}
 
-		//      if (Splegg.getSplegg().getConfig().getString("BarAPI.Enabled").equalsIgnoreCase("true")) {
-		//         BarAPI.removeBar(sp.getPlayer());
-		//      }
-
-		this.players.remove(u.getName());
-		Listeners.launchEggs.remove(sp.getPlayer().getName());
-		Listeners.shopmanager.remove(sp.getPlayer().getName());
-		Listeners.manager.remove(sp.getPlayer().getName());
-		Listeners.goldspade.remove(sp.getPlayer().getName());
-		Listeners.diamondspade.remove(sp.getPlayer().getName());
-		Listeners.moneymanager.remove(sp.getPlayer().getName());
-		// End of game location.
-		u.getPlayer().teleport(u.getGame().getMap().getLobby());
-		u.setGame((Game) null);
-		u.setAlive(false);
-		u.getPlayer().setHealth(20.0D);
-		InvStore store = u.getStore();
-		store.load();
-		store.reset();
-		u.getPlayer().setFallDistance(0.0F);
 		for(Player p : Bukkit.getOnlinePlayers()) {
+
 			if (Listeners.moneymanager.contains(p.getName())) {
-				p.sendMessage(ChatColor.GREEN + "!!! You received " + splegg.getConfig().getInt("Money.KillPlayer") +" coins!");
+
+				p.sendMessage(("&BYou received " + splegg.getConfig().getInt("Money.KillPlayer") + " &BDiamonds!").replaceAll("&", "§"));
+
 				splegg.econ.depositPlayer(p, splegg.getConfig().getInt("Money.KillPlayer"));
+
 			}
 		}
 
-		if (!this.splegg.disabling) {
+		if (! this.splegg.disabling) {
+
 			this.getSign().update(this.map, false);
 		}
 
@@ -379,12 +412,6 @@ public class Game {
 	public int getCount() {
 
 		return this.time;
-
-	}
-
-	public int getLowestPossible() {
-
-		return this.small;
 
 	}
 
@@ -417,7 +444,6 @@ public class Game {
 				int maxY = max.getBlockY();
 				this.y2 = maxY;
 				int maxZ = max.getBlockZ();
-				this.small = Math.min(this.y1, this.y2);
 
 				for(int x = minX; x <= maxX; ++x) {
 

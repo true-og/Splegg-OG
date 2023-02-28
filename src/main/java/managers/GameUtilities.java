@@ -6,6 +6,7 @@ import java.util.Iterator;
 
 import org.bukkit.entity.Player;
 
+import main.SpleggOG;
 import utils.SpleggPlayer;
 
 public class GameUtilities {
@@ -100,10 +101,14 @@ public class GameUtilities {
 
 	public void checkWinner(Game game) {
 
-		if (game.players.size() < 2) {
+		int amountOfPlayersInGame = game.players.size();
 
-			// TODO: Assign winner here.
-			game.splegg.game.stopGame(game, game.players.size());
+		if (amountOfPlayersInGame <= 1) {
+
+			// TODO: Remove Dev Log.
+			SpleggOG.getPlugin().getLogger().info("Game stopping from checkWinner");
+
+			game.splegg.game.stopGame(game, amountOfPlayersInGame);
 
 		}
 

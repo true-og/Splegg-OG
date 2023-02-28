@@ -74,9 +74,7 @@ public class SpleggCommand implements CommandExecutor {
 					if (u.getGame() != null && u.isAlive()) {
 
 						Game game = u.getGame();
-						game.leaveGame(u);
-
-						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.LeaveGame").replaceAll("&", "§").replaceAll("%map%", game.getMap().getName()));
+						game.leaveGame(game.getPlayers());
 
 					}
 					else {
@@ -93,13 +91,21 @@ public class SpleggCommand implements CommandExecutor {
 						if (u.getGame() == null) {
 
 							SpleggOG.getPlugin().chat.sendMessage(player, "&cERROR: You are not in a game!");
-
 						}
 						else if (u.getGame().getStatus() == Status.LOBBY) {
 
-							SpleggOG.getPlugin().game.startGame(u.getGame());
+							if(u.getGame().getPlayers().size() >= 2) {
 
-							SpleggOG.getPlugin().chat.sendMessage(player, "&aGame started!");
+								SpleggOG.getPlugin().game.startGame(u.getGame());
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "&aGame started!");
+
+							}
+							else {
+
+								SpleggOG.getPlugin().chat.sendMessage(player, "&CERROR: There are not enough players in the lobby to start the game. &6Players required: &e" + u.getGame().getMap().getSpawnCount() + "&6.");
+
+							}
 
 						}
 						else if (u.getGame().getStatus() == Status.INGAME) {
@@ -289,7 +295,7 @@ public class SpleggCommand implements CommandExecutor {
 
 								SpleggOG.getPlugin().maps.deleteMap(firstUserCommandArgument);
 
-								SpleggOG.getPlugin().chat.sendMessage(player, "&aThe map: &e" + firstUserCommandArgument + " has been deleted.");
+								SpleggOG.getPlugin().chat.sendMessage(player, "&aThe map: &e" + firstUserCommandArgument + " &ahas been deleted.");
 
 							}
 							else {
@@ -321,9 +327,13 @@ public class SpleggCommand implements CommandExecutor {
 								}
 								else if (game.getStatus() == Status.LOBBY) {
 
-									SpleggOG.getPlugin().chat.sendMessage(player, "&eStarting Game " + firstUserCommandArgument + "...");
+									if(u.getGame().getPlayers().size() >= 2) {
 
-									SpleggOG.getPlugin().game.startGame(game);
+										SpleggOG.getPlugin().chat.sendMessage(player, "&eStarting Game " + firstUserCommandArgument + "...");
+
+										SpleggOG.getPlugin().game.startGame(game);
+
+									}
 
 								}
 								else if (game.getStatus() == Status.INGAME) {

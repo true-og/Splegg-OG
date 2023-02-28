@@ -60,7 +60,6 @@ public class GameManager {
 
 				if (Listeners.goldspade.contains(sp.getPlayer().getName())) {
 
-					sp.getPlayer().getInventory().clear();
 					sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, splegg.getConfig().getString("Shovels.Gold.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Gold.Lore").replaceAll("&", "§")));
 					sp.getPlayer().updateInventory();
 
@@ -115,7 +114,9 @@ public class GameManager {
 
 		game.status = Status.ENDING;
 		game.stopGameTimer();
-		game.setLobbyCount(31);
+
+		game.leaveGame(game.getPlayers());
+
 		game.time = 601;
 		game.setStatus(Status.LOBBY);
 		game.resetArena();
@@ -123,7 +124,6 @@ public class GameManager {
 		game.floor.clear();
 		game.setStarting(false);
 		game.players.clear();
-		// game.leaveGame(game.getPlayers().);
 
 		if (! splegg.disabling) {
 
