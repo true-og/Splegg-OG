@@ -78,7 +78,7 @@ public class SpleggOG extends JavaPlugin {
 
 			String noWorldEditError = "\"ERROR: WorldEdit not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
 			this.getLogger().severe(noWorldEditError);
-			this.chat.log(noWorldEditError);
+			this.getLogger().info(noWorldEditError);
 
 			Bukkit.getPluginManager().disablePlugin(this);
 

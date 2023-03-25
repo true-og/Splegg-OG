@@ -27,24 +27,24 @@ import utils.UtilPlayer;
 public class SpleggEvents implements Listener {
 
 	@EventHandler
-	public void eggLand(ProjectileHitEvent e) {
+	public void eggLand(ProjectileHitEvent event) {
 
-		ProjectileSource shooter = e.getEntity().getShooter();
-		if (shooter instanceof Player && e.getEntity() instanceof Egg) {
+		ProjectileSource shooter = event.getEntity().getShooter();
+		if (shooter instanceof Player && event.getEntity() instanceof Egg) {
 
 			Player player = (Player) shooter;
 			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
 
 				// If the egg hit an entity, do this.
-				if(e.getHitEntity() != null) {
+				if(event.getHitEntity() != null) {
 
 					// Cancel the hit.
-					e.setCancelled(true);
+					event.setCancelled(true);
 
 				}
 
-				BlockIterator bi = new BlockIterator(e.getEntity().getWorld(), e.getEntity().getLocation().toVector(), e.getEntity().getVelocity().normalize(), 0.0D, 4);
+				BlockIterator bi = new BlockIterator(event.getEntity().getWorld(), event.getEntity().getLocation().toVector(), event.getEntity().getVelocity().normalize(), 0.0D, 4);
 				Block hit = null;
 				while(bi.hasNext()) {
 
@@ -60,9 +60,9 @@ public class SpleggEvents implements Listener {
 
 				if (hit.getType() == Material.TNT) {
 
-					e.getEntity().getWorld().createExplosion(e.getEntity().getLocation(), 3.0F);
+					event.getEntity().getWorld().createExplosion(event.getEntity().getLocation(), 3.0F);
 
-					Iterator<?> entityIterator = e.getEntity().getWorld().getEntities().iterator();
+					Iterator<?> entityIterator = event.getEntity().getWorld().getEntities().iterator();
 					while(entityIterator.hasNext()) {
 
 						Entity drop = (Entity) entityIterator.next();
@@ -110,9 +110,9 @@ public class SpleggEvents implements Listener {
 	}
 
 	@EventHandler
-	public void onKnockout(PlayerMoveEvent e) {
+	public void onKnockout(PlayerMoveEvent event) {
 
-		Player player = e.getPlayer();
+		Player player = event.getPlayer();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 		Game game = u.getGame();
 		if (game != null && u.isAlive() && game.getStatus() == Status.INGAME) {
@@ -133,18 +133,18 @@ public class SpleggEvents implements Listener {
 		}
 
 	}
-	
+
 	// TODO: Implement spectator compass here.
 
 	@EventHandler
-	public void eggHatch(PlayerEggThrowEvent e) {
+	public void eggHatch(PlayerEggThrowEvent event) {
 
-		Player player = e.getPlayer();
+		Player player = event.getPlayer();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 
 		if (u.getGame() != null && u.isAlive()) {
 
-			e.setHatching(false);
+			event.setHatching(false);
 
 		}
 

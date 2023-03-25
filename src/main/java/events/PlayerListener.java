@@ -78,11 +78,11 @@ public class PlayerListener implements Listener {
 		Game game = u.getGame();
 
 		SpleggOG.getPlugin().pm.PLAYERS.remove(player.getName());
-		player.getInventory().clear();
-		// TODO: Restore pre-game inventory here.
 
 		if (game != null) {
 
+			// TODO: REMOVE DEV LOG!
+			SpleggOG.getPlugin().getLogger().info("Leave game event triggered via onQuit.");
 			game.leaveGame(game.getPlayers());
 
 		}
@@ -120,46 +120,49 @@ public class PlayerListener implements Listener {
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
 
-		boolean keepGoing = true;
-		EquipmentSlot playerHand = null;
-		try {
+		Player player = (Player) event.getPlayer();
+		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+		Game game = u.getGame();
+		if (game != null) {
 
-			playerHand = event.getHand();
+			boolean keepGoing = true;
+			EquipmentSlot playerHand = null;
+			try {
 
-		}
-		catch(NullPointerException error) {
+				playerHand = event.getHand();
 
-			keepGoing = false;
+			}
+			catch(NullPointerException error) {
 
-		}
+				keepGoing = false;
 
-		if(keepGoing) {
+			}
 
-			if(playerHand.equals(EquipmentSlot.HAND)) {
+			if(keepGoing) {
 
-				Player player = (Player) event.getPlayer();
-				ItemStack itemInHand = player.getInventory().getItemInMainHand();
-				UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-				Game game = u.getGame();
-				switch(itemInHand.getType()) {
+				if(playerHand.equals(EquipmentSlot.HAND)) {
 
-				case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL, DIAMOND_SHOVEL, NETHERITE_SHOVEL:
-					Utils.fireEgg(event, u, player, itemInHand);
-				break;
-				case SLIME_BALL:
-					if (game != null) {
+					ItemStack itemInHand = player.getInventory().getItemInMainHand();
+					switch(itemInHand.getType()) {
 
-						game.leaveGame(game.getPlayers());
-
-					}
+					case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL, DIAMOND_SHOVEL, NETHERITE_SHOVEL:
+						Utils.fireEgg(event, u, player, itemInHand);
 					break;
-				default:
-					if(game != null && itemInHand.getType() == Material.getMaterial(SpleggOG.getPlugin().getConfig().getString("Shop.Item"))) {
+					case SLIME_BALL:
 
-						player.openInventory(Utils.getShopInventory());
+							game.leaveGame(game.getPlayers());
 
+						break;
+					default:
+
+						if(itemInHand.getType() == Material.getMaterial(SpleggOG.getPlugin().getConfig().getString("Shop.Item"))) {
+
+							player.openInventory(Utils.getShopInventory());
+
+						}
+
+						break;
 					}
-					break;
 
 				}
 

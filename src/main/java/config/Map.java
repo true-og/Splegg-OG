@@ -36,7 +36,7 @@ public class Map {
 
 	public void load() {
 
-		SpleggOG.getPlugin().chat.log("Loading map " + this.name + "...");
+		SpleggOG.getPlugin().getLogger().info("Loading map " + this.name + "...");
 
 		this.file = new File(SpleggOG.getPlugin().getDataFolder(), this.name + ".yml");
 		try {

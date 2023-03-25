@@ -105,9 +105,6 @@ public class GameUtilities {
 
 		if (amountOfPlayersInGame <= 1) {
 
-			// TODO: Remove Dev Log.
-			SpleggOG.getPlugin().getLogger().info("Game stopping from checkWinner");
-
 			game.splegg.game.stopGame(game, amountOfPlayersInGame);
 
 		}

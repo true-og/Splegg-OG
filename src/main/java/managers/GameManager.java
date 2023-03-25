@@ -25,7 +25,7 @@ public class GameManager {
 
 	public void startGame(Game game) {
 
-		splegg.chat.log("New game commencing..");
+		SpleggOG.getPlugin().getLogger().info("New game commencing..");
 		game.startGameTimer();
 		Bukkit.getScheduler().cancelTask(game.counter);
 		game.status = Status.INGAME;
@@ -58,6 +58,10 @@ public class GameManager {
 			// TODO: Add all available shovels here.
 			if (! Listeners.manager.contains(sp.getPlayer().getName())) {
 
+				// TODO: REMOVE DEV LOG!
+				SpleggOG.getPlugin().getLogger().info("Clear inventory event triggered by game manager.");
+				sp.getPlayer().getInventory().clear();
+
 				if (Listeners.goldspade.contains(sp.getPlayer().getName())) {
 
 					sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, splegg.getConfig().getString("Shovels.Gold.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Gold.Lore").replaceAll("&", "§")));
@@ -73,7 +77,6 @@ public class GameManager {
 
 				if (Listeners.diamondspade.contains(sp.getPlayer().getName())) {
 
-					sp.getPlayer().getInventory().clear();
 					sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.DIAMOND_SHOVEL, splegg.getConfig().getString("Shovels.Diamond.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Diamond.Lore").replaceAll("&", "§")));
 					sp.getPlayer().updateInventory();
 
@@ -88,7 +91,6 @@ public class GameManager {
 			}
 			else {
 
-				sp.getPlayer().getInventory().clear();
 				sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.IRON_SHOVEL, splegg.getConfig().getString("Shovels.Iron.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Iron.Lore").replaceAll("&", "§")));
 				sp.getPlayer().updateInventory();
 
@@ -131,7 +133,7 @@ public class GameManager {
 
 		}
 
-		splegg.chat.log("Map " + game.map.getName() + " was reset.");
+		SpleggOG.getPlugin().getLogger().info("Map " + game.map.getName() + " was reset.");
 
 	}
 

@@ -15,6 +15,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import com.earth2me.essentials.Essentials;
+import com.earth2me.essentials.Kit;
+import com.earth2me.essentials.Kits;
+import com.earth2me.essentials.User;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 
@@ -206,7 +210,7 @@ public class Game {
 				sp = new SpleggPlayer(playerWhoIsJoining);
 				playerWhoIsJoining.setAlive(true);
 				playerWhoIsJoining.getStore().save();
-				this.splegg.utils.clearInventory(player);
+				SpleggOG.getPlugin().utils.clearAndSaveInventory(player);
 				player.setHealth(20.0D);
 				player.setFoodLevel(20);
 				player.setLevel(0);
@@ -258,8 +262,7 @@ public class Game {
 				sp = new SpleggPlayer(playerWhoIsJoining);
 				playerWhoIsJoining.setAlive(true);
 				playerWhoIsJoining.getStore().save();
-
-				splegg.utils.clearInventory(player);
+				SpleggOG.getPlugin().utils.clearAndSaveInventory(player);
 
 				player.setHealth(20.0D);
 				player.setFoodLevel(20);
@@ -311,14 +314,13 @@ public class Game {
 
 	private void saveInv(Player player) {
 
-		
+
 
 	}
 
 	private void setLobbyInv(Player player) {
 
 		player.closeInventory();
-		player.getInventory().clear();
 
 		player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
 		player.getInventory().setItem(splegg.getConfig().getInt("Guide.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Guide.Item")), splegg.getConfig().getString("Guide.Name").replaceAll("&", "§"), splegg.getConfig().getString("Guide.Lore").replaceAll("&", "§")));
@@ -329,7 +331,7 @@ public class Game {
 
 	public void startCountdown() {
 
-		Bukkit.getScheduler().cancelTask(this.counter);
+		Bukkit.getScheduler().cancelTask(counter);
 		if (this.status == Status.LOBBY) {
 
 			this.lobbycount = config.getInt("Options.Timer");
@@ -342,7 +344,7 @@ public class Game {
 
 			}
 
-			this.counter = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.splegg, new LobbyCountdown(splegg, this, this.getLobbyCount()), 0L, 20L);
+			counter = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.splegg, new LobbyCountdown(splegg, this, this.getLobbyCount()), 0L, 20L);
 
 		}
 
@@ -354,30 +356,59 @@ public class Game {
 
 			SpleggPlayer sp = playersInGame.values().iterator().next();
 			UtilPlayer u = sp.getUtilPlayer();
+			Player player = u.getPlayer();
+
+			Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+			User user = new User(player, ess);
 
 			if (this.status == Status.ENDING || this.status == Status.INGAME) {
 
-				splegg.chat.sendMessage(u.getPlayer(), splegg.getConfig().getString("Messages.Youbrokeblocks").replaceAll("&", "§").replaceAll("%broke%", String.valueOf(sp.getBroken())));
+				splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.Youbrokeblocks").replaceAll("&", "§").replaceAll("%broke%", String.valueOf(sp.getBroken())));
 
 			}
 
 			SpleggOG.getPlugin().chat.sendMessage(sp.getPlayer(), SpleggOG.getPlugin().getConfig().getString("Messages.LeaveGame").replaceAll("&", "§").replaceAll("%map%", u.getGame().getMap().getName()));
 
-			this.players.remove(u.getName());
+			players.remove(player.getName());
 
 			// TODO: Consider adjusting fall distance here.
-			Listeners.launchEggs.remove(sp.getPlayer().getName());
-			Listeners.shopmanager.remove(sp.getPlayer().getName());
-			Listeners.manager.remove(sp.getPlayer().getName());
-			Listeners.goldspade.remove(sp.getPlayer().getName());
-			Listeners.diamondspade.remove(sp.getPlayer().getName());
-			Listeners.moneymanager.remove(sp.getPlayer().getName());
+			Listeners.launchEggs.remove(player.getName());
+			Listeners.shopmanager.remove(player.getName());
+			Listeners.manager.remove(player.getName());
+			Listeners.goldspade.remove(player.getName());
+			Listeners.diamondspade.remove(player.getName());
+			Listeners.moneymanager.remove(player.getName());
 
 			// End of game location.
-			u.getPlayer().teleport(u.getGame().getMap().getLobby());
+			player.teleport(u.getGame().getMap().getLobby());
 			u.setGame((Game) null);
 			u.setAlive(false);
-			u.getPlayer().setHealth(20.0D);
+			player.setHealth(20.0D);
+
+			Kits essentialsKitList = new Kits(ess);
+			Kit playersKitToRestoreAfterMatch = (Kit) essentialsKitList.getKit(player.getName());
+			player.getInventory().clear();
+			if(playersKitToRestoreAfterMatch != null) {
+
+				try {
+
+					playersKitToRestoreAfterMatch.expandItems(user);
+
+
+				}
+				catch (Exception error) {
+
+					SpleggOG.getPlugin().getLogger().severe(error.getMessage());
+
+				}
+
+			}
+			else {
+
+				// TODO: REMOVE DEV LOGGER!
+				SpleggOG.getPlugin().getLogger().info("Kit could not be restored! playersKitToRestoreAfterMatch is null.");
+
+			}
 
 			InvStore store = u.getStore();
 			store.load();

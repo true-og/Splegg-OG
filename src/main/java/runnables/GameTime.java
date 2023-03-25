@@ -17,35 +17,37 @@ public class GameTime implements Runnable {
 
 	public void run() {
 
-		if (this.game.getCount() > 0) {
+		if (game.getCount() > 0) {
 
-			this.splegg.games.checkWinner(this.game);
+			splegg.games.checkWinner(game);
 
-			if (this.game.getCount() % 300 == 0) {
+			if (game.getCount() % 300 == 0) {
 
-				this.splegg.game.ingameTimer(this.game.getCount(), this.game.getPlayers());
-
-			}
-
-			if (this.game.getCount() % 30 == 0 && this.game.getCount() < 60) {
-
-				this.splegg.game.ingameTimer(this.game.getCount(), this.game.getPlayers());
+				splegg.game.ingameTimer(game.getCount(), game.getPlayers());
 
 			}
 
-			if (this.game.getCount() <= 5 && this.game.getCount() >= 1) {
+			if (game.getCount() % 30 == 0 && game.getCount() < 60) {
 
-				this.splegg.chat.bc(splegg.getConfig().getString("Messages.EndingTimer").replaceAll("&", "§").replaceAll("%timer%", String.valueOf(this.game.getCount())), this.game);
+				splegg.game.ingameTimer(game.getCount(), game.getPlayers());
+
+			}
+
+			if (game.getCount() <= 5 && game.getCount() >= 1) {
+
+				splegg.chat.bc(splegg.getConfig().getString("Messages.EndingTimer").replaceAll("&", "§").replaceAll("%timer%", String.valueOf(game.getCount())), game);
 
 			}
 
 		}
 		else {
 
-			this.game.stopGameTimer();
+			SpleggOG.getPlugin().getLogger().severe("Server tried to end the game but was foiled.");
 
-			this.splegg.chat.bc(splegg.getConfig().getString("Messages.Timelimitreached"), this.game);
-			this.splegg.game.stopGame(this.game, 1);
+			//game.stopGameTimer();
+
+			//splegg.chat.bc(splegg.getConfig().getString("Messages.Timelimitreached"), game);
+			//splegg.game.stopGame(game, 1);
 
 		}
 
