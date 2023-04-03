@@ -74,7 +74,7 @@ public class SpleggCommand implements CommandExecutor {
 					if (u.getGame() != null && u.isAlive()) {
 
 						Game game = u.getGame();
-						game.leaveGame(game.getPlayers());
+						game.leaveGame(u);
 
 					}
 					else {
@@ -140,7 +140,7 @@ public class SpleggCommand implements CommandExecutor {
 
 							SpleggOG.getPlugin().chat.bc("&5" + player.getName() + "&6 has stopped the game.", u.getGame());
 
-							SpleggOG.getPlugin().game.stopGame(u.getGame(), 1);
+							SpleggOG.getPlugin().game.stopGame(u.getGame(), u.getGame().players.size());
 
 							SpleggOG.getPlugin().chat.sendMessage(player, "&6You have stopped the game.");
 
@@ -379,7 +379,7 @@ public class SpleggCommand implements CommandExecutor {
 
 									SpleggOG.getPlugin().chat.bc("&5" + player.getName() + "&6 has stopped the game.", game);
 
-									SpleggOG.getPlugin().game.stopGame(game, 1);
+									SpleggOG.getPlugin().game.stopGame(game, u.getGame().players.size());
 
 									SpleggOG.getPlugin().chat.sendMessage(player, "&6You have stopped the game.");
 

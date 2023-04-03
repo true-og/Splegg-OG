@@ -1,10 +1,30 @@
 **1.3:**
 
-- Fixed slimeball for leaving the game.
+- It is no longer possible to start a match with only 1 player in the lobby.
 
-- Restored lobby inventory to be like it was on Hive Java.
+- Match startup is fixed.
 
-- It is no longer possible to start a game with only 1 player in the lobby.
+- The formatting of the shop items is fixed.
+
+- Right clicking items in the lobby inventory is fixed.
+
+- The shovel is now given only after the grace period is over.
+
+- Players pre-game inventory is now saved and restored using EssentialsX kits.
+
+- Inventory saving now still works upon leaving the server during a match.
+
+- The game leave message now displays slightly differently to the individual who left.
+
+- The game leave message is now only displayed to players that are in the game.
+
+- The game leave message now displays when someone quits the server completely.
+
+- Leaving the server in the lobby now properly removes players from the game.
+
+- Restored lobby inventory layout to be like it was on Hive Java.
+
+- The lobby items now properly go away when a game starts.
 
 **1.2:**
 

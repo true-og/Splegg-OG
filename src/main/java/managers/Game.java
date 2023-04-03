@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,10 +15,11 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import com.earth2me.essentials.Essentials;
-import com.earth2me.essentials.Kit;
 import com.earth2me.essentials.Kits;
 import com.earth2me.essentials.User;
 import com.sk89q.worldedit.math.BlockVector3;
@@ -65,8 +68,8 @@ public class Game {
 		this.data = new ArrayList<Rollback>();
 		this.time = 601;
 		this.lobbycount = 31;
-		this.y1 = 0;
-		this.y2 = 0;
+		this.y1 = -64;
+		this.y2 = -64;
 
 		this.setSign(new LobbySign(map, splegg));
 
@@ -87,20 +90,62 @@ public class Game {
 	public void startGameTimer() {
 
 		int grace = config.getInt("Options.GraceTime");
-		this.splegg.chat.bc(config.getString("Messages.GraceTimeStart").replaceAll("&", "§").replaceAll("%grace%", String.valueOf(grace)), this);
+		this.splegg.chat.bc(config.getString("Messages.GraceTimeStart").replaceAll("%grace%", String.valueOf(grace)), this);
 
 		(new BukkitRunnable() {
 
 			public void run() {
 
-				Game.this.splegg.chat.bc(config.getString("Messages.GraceTimeFinish").replaceAll("&", "§"), Game.this);
+				Game.this.splegg.chat.bc(config.getString("Messages.GraceTimeFinish"), Game.this);
 
 				Iterator<?> PlayersInGame = players.values().iterator();
 				while(PlayersInGame.hasNext()) {
 
 					SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
-					sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
-					Listeners.launchEggs.add(sp.getPlayer().getName());
+					sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.2F);
+
+					// TODO: Add all available shovels here.
+					if (! Listeners.manager.contains(sp.getPlayer().getName())) {
+
+						if (Listeners.goldspade.contains(sp.getPlayer().getName())) {
+
+							sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Shovels.Gold.Name")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Shovels.Gold.Lore"))));
+							sp.getPlayer().updateInventory();
+
+							Listeners.manager.remove(sp.getPlayer().getName());
+							Listeners.goldspade.remove(sp.getPlayer().getName());
+							Listeners.diamondspade.remove(sp.getPlayer().getName());
+							Listeners.shopmanager.remove(sp.getPlayer().getName());
+							Listeners.moneymanager.add(sp.getPlayer().getName());
+
+						}
+
+						if (Listeners.diamondspade.contains(sp.getPlayer().getName())) {
+
+							sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.DIAMOND_SHOVEL, ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Shovels.Diamond.Name")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Shovels.Diamond.Lore"))));
+							sp.getPlayer().updateInventory();
+
+							Listeners.manager.remove(sp.getPlayer().getName());
+							Listeners.goldspade.remove(sp.getPlayer().getName());
+							Listeners.diamondspade.remove(sp.getPlayer().getName());
+							Listeners.shopmanager.remove(sp.getPlayer().getName());
+							Listeners.moneymanager.add(sp.getPlayer().getName());
+
+						}
+
+					}
+					else {
+
+						sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.IRON_SHOVEL, ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Shovels.Iron.Name")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Shovels.Iron.Lore"))));
+						sp.getPlayer().updateInventory();
+
+						Listeners.manager.remove(sp.getPlayer().getName());
+						Listeners.goldspade.remove(sp.getPlayer().getName());
+						Listeners.diamondspade.remove(sp.getPlayer().getName());
+						Listeners.shopmanager.remove(sp.getPlayer().getName());
+						Listeners.moneymanager.add(sp.getPlayer().getName());
+
+					}
 
 				}
 
@@ -191,12 +236,12 @@ public class Game {
 		Player player = playerWhoIsJoining.getPlayer();
 		if (playerWhoIsJoining.getGame() != null) {
 
-			this.splegg.chat.sendMessage(player, config.getString("Messages.AlreadyInGame").replaceAll("&", "§"));
+			this.splegg.chat.sendMessage(player, config.getString("Messages.AlreadyInGame"));
 
 		}
 		else if (this.players.containsKey(player.getName())) {
 
-			this.splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.AlreadyInLobby").replaceAll("&", "§"));
+			this.splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.AlreadyInLobby"));
 
 		}
 		else if (this.status == Status.LOBBY) {
@@ -210,8 +255,10 @@ public class Game {
 				sp = new SpleggPlayer(playerWhoIsJoining);
 				playerWhoIsJoining.setAlive(true);
 				playerWhoIsJoining.getStore().save();
-				SpleggOG.getPlugin().utils.clearAndSaveInventory(player);
+				Listeners.launchEggs.add(sp.getPlayer().getName());
+				saveInv(player);
 				player.setHealth(20.0D);
+				player.setFallDistance(1);
 				player.setFoodLevel(20);
 				player.setLevel(0);
 				player.setExp(0.0F);
@@ -233,10 +280,9 @@ public class Game {
 				Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
 				Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
 
-				saveInv(player);
 				setLobbyInv(player);
 
-				this.splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
+				this.splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
 
 				if (this.players.size() >= config.getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
 
@@ -248,22 +294,22 @@ public class Game {
 			}
 			else if (size >= max && ! player.hasPermission("splegg.joinfull")) {
 
-				this.splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.VIPPrivilege").replaceAll("&", "§"));
+				this.splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.VIPPrivilege"));
 
 			}
 			else {
 
 				if (size >= max) {
 
-					this.splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.VIPJoinGame").replaceAll("&", "§"));
+					this.splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.VIPJoinGame"));
 
 				}
 
 				sp = new SpleggPlayer(playerWhoIsJoining);
 				playerWhoIsJoining.setAlive(true);
 				playerWhoIsJoining.getStore().save();
-				SpleggOG.getPlugin().utils.clearAndSaveInventory(player);
-
+				Listeners.launchEggs.add(sp.getPlayer().getName());
+				saveInv(player);
 				player.setHealth(20.0D);
 				player.setFoodLevel(20);
 				player.setLevel(0);
@@ -284,13 +330,13 @@ public class Game {
 
 				}
 
-				saveInv(player);
+				player.getInventory().clear();
 				setLobbyInv(player);
 
 				Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
 				Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
 
-				splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("&", "§").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
+				splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("%player%", player.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
 
 				if (players.size() >= config.getInt("Options.AutoStartPlayers") && ! this.isStarting()) {
 
@@ -306,7 +352,7 @@ public class Game {
 		}
 		else if (this.status == Status.DISABLED) {
 
-			splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.Mapdisabled").replaceAll("&", "§"));
+			splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.Mapdisabled"));
 
 		}
 
@@ -314,18 +360,83 @@ public class Game {
 
 	private void saveInv(Player player) {
 
+		Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+		Kits preGameKit = new Kits(ess);
 
+		ArrayList<String> itemsAsListOfStrings = new ArrayList<String>(player.getInventory().getSize());
+		for(ItemStack item: player.getInventory().getContents()) {
+
+			if(item != null) {
+
+				itemsAsListOfStrings.add(item.serialize().toString());
+
+			}
+			else {
+
+				itemsAsListOfStrings.add("");
+
+			}
+
+		}
+		preGameKit.addKit(player.getName(), (List<String>) itemsAsListOfStrings, 0);
+		SpleggOG.getPlugin().getLogger().info("The pre-game inventory: " + preGameKit.matchKit(player.getName()) + " has been saved.");
+
+		player.closeInventory();
+		player.clearActiveItem();
+		player.getInventory().clear();
+		player.updateInventory();
+		player.setFireTicks(0);
+
+		Iterator<?> activePotionEffects = player.getActivePotionEffects().iterator();
+		while(activePotionEffects.hasNext()) {
+
+			PotionEffect effect = (PotionEffect) activePotionEffects.next();
+
+			player.removePotionEffect(effect.getType());
+
+		}
 
 	}
 
 	private void setLobbyInv(Player player) {
 
-		player.closeInventory();
+		int[] slotsDeclaredInConfigFile = new int[42];
+		for(int i = 0; i < slotsDeclaredInConfigFile.length; i++) {
 
-		player.getInventory().setItem(splegg.getConfig().getInt("Shop.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), splegg.getConfig().getString("Shop.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shop.Lore").replaceAll("&", "§")));
-		player.getInventory().setItem(splegg.getConfig().getInt("Guide.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Guide.Item")), splegg.getConfig().getString("Guide.Name").replaceAll("&", "§"), splegg.getConfig().getString("Guide.Lore").replaceAll("&", "§")));
-		player.getInventory().setItem(splegg.getConfig().getInt("Cosmetics.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Cosmetics.Item")), splegg.getConfig().getString("Cosmetics.Name").replaceAll("&", "§"), splegg.getConfig().getString("Cosmetics.Lore").replaceAll("&", "§")));
-		player.getInventory().setItem(splegg.getConfig().getInt("Leave.Slot"), Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Leave.Item")), splegg.getConfig().getString("Leave.Name").replaceAll("&", "§"), splegg.getConfig().getString("Leave.Lore").replaceAll("&", "§")));
+			setInventorySlotItem(player, i);
+
+		}
+
+	}
+
+	private void setInventorySlotItem(Player player, int slotNumber) {
+
+
+		if(slotNumber == splegg.getConfig().getInt("Shop.Slot")) {
+
+			player.getInventory().setItem(slotNumber, Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Shop.Item")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Shop.Name")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Shop.Lore"))));
+
+		}
+		else if(slotNumber == splegg.getConfig().getInt("Guide.Slot")) {
+
+			player.getInventory().setItem(slotNumber, Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Guide.Item")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Guide.Name")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Guide.Lore"))));
+
+		}
+		else if(slotNumber == splegg.getConfig().getInt("Cosmetics.Slot")) {
+
+			player.getInventory().setItem(slotNumber, Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Cosmetics.Item")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Cosmetics.Name")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Cosmetics.Lore"))));
+
+		}
+		else if(slotNumber == splegg.getConfig().getInt("Leave.Slot")) {
+
+			player.getInventory().setItem(slotNumber, Utils.getItem(Material.getMaterial(splegg.getConfig().getString("Leave.Item")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Leave.Name")), ChatColor.translateAlternateColorCodes('&', splegg.getConfig().getString("Leave.Lore"))));
+
+		}
+		else {
+
+			player.getInventory().clear(slotNumber);
+
+		}
 
 	}
 
@@ -350,81 +461,81 @@ public class Game {
 
 	}
 
-	public void leaveGame(HashMap<String, SpleggPlayer> playersInGame) {
+	public void leaveGame(UtilPlayer u) {
 
-		while(playersInGame.values().iterator().hasNext()) {
+		Player player = u.getPlayer();
+		Game game = u.getGame();
+		if (game != null) {
 
-			SpleggPlayer sp = playersInGame.values().iterator().next();
-			UtilPlayer u = sp.getUtilPlayer();
-			Player player = u.getPlayer();
+			// Tell player that left about their current state.
+			SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.IndividualLeaveGame").replaceAll("%map%", u.getGame().getMap().getName()));
 
-			Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
-			User user = new User(player, ess);
+			this.players.remove(player.getName());
+			Listeners.manager.remove(u.getName());
+			Listeners.shopmanager.remove(u.getName());
+			Listeners.goldspade.remove(u.getName());
+			Listeners.diamondspade.remove(u.getName());
+			Listeners.launchEggs.remove(u.getName());
+			Listeners.moneymanager.remove(u.getName());
 
-			if (this.status == Status.ENDING || this.status == Status.INGAME) {
-
-				splegg.chat.sendMessage(player, splegg.getConfig().getString("Messages.Youbrokeblocks").replaceAll("&", "§").replaceAll("%broke%", String.valueOf(sp.getBroken())));
-
-			}
-
-			SpleggOG.getPlugin().chat.sendMessage(sp.getPlayer(), SpleggOG.getPlugin().getConfig().getString("Messages.LeaveGame").replaceAll("&", "§").replaceAll("%map%", u.getGame().getMap().getName()));
-
-			players.remove(player.getName());
-
-			// TODO: Consider adjusting fall distance here.
-			Listeners.launchEggs.remove(player.getName());
-			Listeners.shopmanager.remove(player.getName());
-			Listeners.manager.remove(player.getName());
-			Listeners.goldspade.remove(player.getName());
-			Listeners.diamondspade.remove(player.getName());
-			Listeners.moneymanager.remove(player.getName());
-
-			// End of game location.
 			player.teleport(u.getGame().getMap().getLobby());
 			u.setGame((Game) null);
 			u.setAlive(false);
 			player.setHealth(20.0D);
-
-			Kits essentialsKitList = new Kits(ess);
-			Kit playersKitToRestoreAfterMatch = (Kit) essentialsKitList.getKit(player.getName());
-			player.getInventory().clear();
-			if(playersKitToRestoreAfterMatch != null) {
-
-				try {
-
-					playersKitToRestoreAfterMatch.expandItems(user);
-
-
-				}
-				catch (Exception error) {
-
-					SpleggOG.getPlugin().getLogger().severe(error.getMessage());
-
-				}
-
-			}
-			else {
-
-				// TODO: REMOVE DEV LOGGER!
-				SpleggOG.getPlugin().getLogger().info("Kit could not be restored! playersKitToRestoreAfterMatch is null.");
-
-			}
-
-			InvStore store = u.getStore();
-			store.load();
-			store.reset();
+			player.setFallDistance(1);
 
 		}
 
+		String playerWhoOnlyNeedsIndividualLeaveGameMessage = new String();
+
+		Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+		User user = new User(player, ess);
+
+		playerWhoOnlyNeedsIndividualLeaveGameMessage = player.getName();
+
+		Kits essentialsKitList = new Kits(ess);
+		if(essentialsKitList != null) {
+
+			try {
+
+				essentialsKitList.getKit(user.getName());
+
+
+			}
+			catch (Exception error) {
+
+				SpleggOG.getPlugin().getLogger().severe(error.getMessage());
+
+			}
+
+		}
+
+		InvStore store = u.getStore();
+		store.load();
+		store.reset();
+
 		for(Player p : Bukkit.getOnlinePlayers()) {
+
+			if(p.getName() != playerWhoOnlyNeedsIndividualLeaveGameMessage) {
+
+				UtilPlayer playerRemainingInGame = SpleggOG.getPlugin().pm.getPlayer(p);
+				if(playerRemainingInGame.getGame() != null) {
+
+					// Tell the rest of the people in the lobby that the player has left.
+					SpleggOG.getPlugin().chat.sendMessage(p, config.getString("Messages.LeaveGame").replaceAll("%player%", p.getName()).replaceAll("%count%", String.valueOf(this.players.size())).replaceAll("%maxcount%", String.valueOf(this.map.getSpawnCount())));
+
+				}
+
+			}
 
 			if (Listeners.moneymanager.contains(p.getName())) {
 
-				p.sendMessage(("&BYou received " + splegg.getConfig().getInt("Money.KillPlayer") + " &BDiamonds!").replaceAll("&", "§"));
+				p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&BYou received " + splegg.getConfig().getInt("Money.KillPlayer") + " &BDiamonds!"));
 
 				splegg.econ.depositPlayer(p, splegg.getConfig().getInt("Money.KillPlayer"));
 
 			}
+
 		}
 
 		if (! this.splegg.disabling) {

@@ -35,19 +35,13 @@ public class GameTime implements Runnable {
 
 			if (game.getCount() <= 5 && game.getCount() >= 1) {
 
-				splegg.chat.bc(splegg.getConfig().getString("Messages.EndingTimer").replaceAll("&", "§").replaceAll("%timer%", String.valueOf(game.getCount())), game);
+				splegg.chat.bc(splegg.getConfig().getString("Messages.EndingTimer").replaceAll("%timer%", String.valueOf(game.getCount())), game);
 
 			}
 
-		}
-		else {
+			game.stopGameTimer();
 
-			SpleggOG.getPlugin().getLogger().severe("Server tried to end the game but was foiled.");
-
-			//game.stopGameTimer();
-
-			//splegg.chat.bc(splegg.getConfig().getString("Messages.Timelimitreached"), game);
-			//splegg.game.stopGame(game, 1);
+			splegg.chat.bc(splegg.getConfig().getString("Messages.Timelimitreached"), game);
 
 		}
 

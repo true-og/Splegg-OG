@@ -14,14 +14,14 @@ import managers.Game;
 import managers.Status;
 
 public class Map {
-	
+
 	SpleggOG splegg;
 	String name;
 	File file;
 	int spawncount;
 	int floorcount;
 	boolean usable;
-	
+
 	// Enable the conversion of text from config.yml to objects.
 	public FileConfiguration config = SpleggOG.getPlugin().getConfig();
 
@@ -135,7 +135,7 @@ public class Map {
 		config.set("Spawns." + id + ".yaw", yaw);
 
 		this.save();
-		
+
 		usableDecider(map);
 
 	}

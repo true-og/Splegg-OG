@@ -105,6 +105,8 @@ public class GameUtilities {
 
 		if (amountOfPlayersInGame <= 1) {
 
+			SpleggOG.getPlugin().getLogger().info("Check winner concluding with: " + amountOfPlayersInGame + " players.");
+
 			game.splegg.game.stopGame(game, amountOfPlayersInGame);
 
 		}

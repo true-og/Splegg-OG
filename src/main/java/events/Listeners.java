@@ -9,15 +9,19 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import com.destroystokyo.paper.event.player.PlayerAdvancementCriterionGrantEvent;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
 import main.SpleggOG;
+import managers.Game;
 import net.milkbowl.vault.economy.EconomyResponse;
 import utils.UtilPlayer;
+import utils.Utils;
 
 public class Listeners implements Listener {
 
@@ -33,27 +37,15 @@ public class Listeners implements Listener {
 
 		Player player = (Player) event.getWhoClicked();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		ItemStack stack = event.getCurrentItem();
 		if (event.getView().title().toString().equals(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title"))) {
 
 			if (shopmanager.contains(player.getName())) {
 
 				EconomyResponse r;
-				Material selectedType;
-				try {
 
-					selectedType = stack.getType();
+				if (event.getCurrentItem().getType() == Material.GOLDEN_SHOVEL) {
 
-				}
-				catch(NullPointerException error) {
-
-					selectedType = null;
-
-				}
-
-				if (selectedType == Material.GOLDEN_SHOVEL) {
-
-					event.getInventory().close();
+					player.getInventory().close();
 
 					if (SpleggOG.getPlugin().econ.getBalance(player) >= (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")) {
 
@@ -65,7 +57,7 @@ public class Listeners implements Listener {
 							shopmanager.remove(player.getName());
 							manager.remove(player.getName());
 
-							SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyGoldShovel").replaceAll("&", "§"));
+							SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyGoldShovel"));
 
 						}
 						else {
@@ -82,17 +74,17 @@ public class Listeners implements Listener {
 					}
 					else {
 
-						event.getInventory().close();
+						player.getInventory().close();
 
-						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney").replaceAll("&", "§"));
+						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
 
 					}
 
 				}
 
-				if (selectedType == Material.DIAMOND_SHOVEL) {
+				if (event.getCurrentItem().getType() == Material.DIAMOND_SHOVEL) {
 
-					event.getInventory().close();
+					player.getInventory().close();
 
 					if (SpleggOG.getPlugin().econ.getBalance(player) >= (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price")) {
 
@@ -104,7 +96,7 @@ public class Listeners implements Listener {
 							shopmanager.remove(player.getName());
 							manager.remove(player.getName());
 
-							SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyDiamondShovel").replaceAll("&", "§"));
+							SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyDiamondShovel"));
 
 						}
 						else {
@@ -121,9 +113,9 @@ public class Listeners implements Listener {
 					}
 					else {
 
-						event.getInventory().close();
+						player.getInventory().close();
 
-						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney").replaceAll("&", "§"));
+						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
 
 					}
 
@@ -132,9 +124,9 @@ public class Listeners implements Listener {
 			}
 			else {
 
-				event.getInventory().close();
+				player.getInventory().close();
 
-				SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought").replaceAll("&", "§"));
+				SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought"));
 
 			}
 
@@ -152,13 +144,14 @@ public class Listeners implements Listener {
 	public void onPlayerQuit(PlayerQuitEvent event) {
 
 		Player player = event.getPlayer();
+		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+		Game game = u.getGame();
 
-		manager.remove(player.getName());
-		shopmanager.remove(player.getName());
-		goldspade.remove(player.getName());
-		diamondspade.remove(player.getName());
-		launchEggs.remove(player.getName());
-		moneymanager.remove(player.getName());
+		if(game != null) { 
+
+			game.leaveGame(u);
+
+		}
 
 	}
 
@@ -187,6 +180,56 @@ public class Listeners implements Listener {
 		if(u.getGame() != null && u.isAlive()) {
 
 			event.setCancelled(true);
+
+		}
+
+	}
+
+	@EventHandler
+	public void onPlayerInteract(PlayerInteractEvent event) {
+
+		Player player = (Player) event.getPlayer();
+		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+		Game game = u.getGame();
+		if (game != null && Listeners.launchEggs.contains(u.getName())) {
+
+			EquipmentSlot playerHand = null;
+			try {
+
+				playerHand = event.getHand();
+
+			}
+			catch(NullPointerException error) {
+
+				SpleggOG.getPlugin().getLogger().severe("ERROR: Player's hand returned null.");
+
+			}
+
+			if(playerHand.equals(EquipmentSlot.HAND)) {
+
+				ItemStack itemInHand = player.getInventory().getItemInMainHand();
+				switch(itemInHand.getType()) {
+
+				case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL, DIAMOND_SHOVEL, NETHERITE_SHOVEL:
+					Utils.fireEgg(event, u, player, itemInHand);
+				break;
+				case SLIME_BALL:
+
+					game.leaveGame(u);
+
+					break;
+				default:
+
+					if(itemInHand.getType() == Material.getMaterial(SpleggOG.getPlugin().getConfig().getString("Shop.Item"))) {
+
+						player.openInventory(Utils.getShopInventory());
+
+					}
+
+					break;
+				}
+
+			}
 
 		}
 

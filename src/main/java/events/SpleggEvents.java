@@ -13,6 +13,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerEggThrowEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -109,31 +110,6 @@ public class SpleggEvents implements Listener {
 
 	}
 
-	@EventHandler
-	public void onKnockout(PlayerMoveEvent event) {
-
-		Player player = event.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		Game game = u.getGame();
-		if (game != null && u.isAlive() && game.getStatus() == Status.INGAME) {
-
-			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining").replaceAll("&", "§").replaceAll("%count%", String.valueOf(game.getPlayers().size())), game);
-
-			Listeners.launchEggs.remove(player.getName());
-			Listeners.manager.remove(player.getName());
-			Listeners.shopmanager.remove(player.getName());
-			Listeners.goldspade.remove(player.getName());
-			Listeners.diamondspade.remove(player.getName());
-			Listeners.moneymanager.remove(player.getName());
-
-			game.leaveGame(game.getPlayers());
-
-			player.setFallDistance(0.5F);
-
-		}
-
-	}
-
 	// TODO: Implement spectator compass here.
 
 	@EventHandler
@@ -149,4 +125,39 @@ public class SpleggEvents implements Listener {
 		}
 
 	}
+
+	@EventHandler
+	public void onFall(EntityDamageEvent event) {
+
+		if (event.getEntity() instanceof Player) {
+
+			Player player = (Player) event.getEntity();
+			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+
+			if (u.getGame() != null && u.isAlive()) {
+
+				event.setCancelled(true);
+
+			}
+
+
+		}
+
+	}
+
+	public void playerMove(PlayerMoveEvent event) {
+
+		Player player = event.getPlayer();
+		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+		if (player.getLocation().getY() <= -64) {
+
+			SpleggOG.getPlugin().getLogger().info("Player: + " + player.getName() + " should have died.");
+
+			player.setHealth(0);
+			u.getGame().leaveGame(u);
+
+		}
+
+	}
+
 }

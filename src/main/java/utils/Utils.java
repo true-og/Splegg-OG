@@ -2,11 +2,9 @@ package utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -24,10 +22,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionEffect;
-
-import com.earth2me.essentials.Essentials;
-import com.earth2me.essentials.Kits;
 
 import main.SpleggOG;
 import managers.Game;
@@ -42,7 +36,7 @@ public class Utils {
 
 	public HashMap<String, UtilPlayer> PLAYERS = new HashMap<String, UtilPlayer>();
 	private File f;
-	private String prefix = config.getString("Messages.Prefix").replaceAll("&", "§");
+	private String prefix = config.getString("Messages.Prefix");
 
 	public String getPrefix() {
 
@@ -52,13 +46,13 @@ public class Utils {
 
 	public void sendMessage(Player player, String s) {
 
-		player.sendMessage(this.prefix + ChatColor.translateAlternateColorCodes('&', s));
+		player.sendMessage(ChatColor.translateAlternateColorCodes('&', this.prefix) + ChatColor.translateAlternateColorCodes('&', s));
 
 	}
 
 	public void bc(String s) {
 
-		TextComponent prefixContainer = Component.text(this.prefix + ChatColor.translateAlternateColorCodes('&', s));
+		TextComponent prefixContainer = Component.text(ChatColor.translateAlternateColorCodes('&', this.prefix)  + ChatColor.translateAlternateColorCodes('&', s));
 		Bukkit.broadcast(prefixContainer);
 
 	}
@@ -172,51 +166,6 @@ public class Utils {
 
 	}
 
-	public void clearAndSaveInventory(Player player) {
-
-		Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
-		Kits preGameKit = new Kits(ess);
-
-		// TODO: Check Material.isItem on materials before adding them to item stack.
-		ArrayList<String> itemsAsListOfStrings = new ArrayList<String>(player.getInventory().getSize());
-		int i = 0;
-		for(ItemStack item: player.getInventory().getContents()) {
-
-			i++;
-
-			if(item != null) {
-
-				itemsAsListOfStrings.add(item.serializeAsBytes().toString());
-				// TODO: REMOVE DEV LOGGER!
-				SpleggOG.getPlugin().getLogger().info("Item " + item.getDisplayName() + "added to kit from slot" + i + ".");
-
-			}
-
-		}
-		preGameKit.addKit(player.getName(), (List<String>) itemsAsListOfStrings, 0);
-		player.getInventory().setArmorContents((ItemStack[]) null);
-		player.getInventory().clear();
-
-		SpleggOG.getPlugin().getLogger().info("The pre-game inventory: " + preGameKit.getFile().getName() + " has been saved for: " + player.getName());
-
-		player.setFireTicks(0);
-		clearPotions(player);
-
-	}
-
-	public void clearPotions(Player player) {
-
-		Iterator<?> activePotionEffects = player.getActivePotionEffects().iterator();
-		while(activePotionEffects.hasNext()) {
-
-			PotionEffect effect = (PotionEffect) activePotionEffects.next();
-
-			player.removePotionEffect(effect.getType());
-
-		}
-
-	}
-
 	public static ItemStack getItem(Material material, String name, String lore) {
 
 		ItemStack stack = new ItemStack(material, 1);
@@ -294,11 +243,11 @@ public class Utils {
 
 	public static Inventory getShopInventory() {
 
-		TextComponent shopTitle = Component.text(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title").replaceAll("&", "§"));
+		TextComponent shopTitle = Component.text(ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title")));
 		Inventory shop = Bukkit.createInventory((InventoryHolder) null, 9, shopTitle);
 
-		shop.setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Name").replaceAll("&", "§"), SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Description").replaceAll("&", "§").replaceAll("%price%", String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")))));
-		shop.setItem(1, Utils.getItem(Material.DIAMOND_SHOVEL, SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Name").replaceAll("&", "§"), SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Description").replaceAll("&", "§").replaceAll("%price%", String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price")))));
+		shop.setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Name")), ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Description")).replaceAll("%price%", ChatColor.translateAlternateColorCodes('&', "&B" + String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price"))))));
+		shop.setItem(1, Utils.getItem(Material.DIAMOND_SHOVEL, ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Name")), ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Description")).replaceAll("%price%", ChatColor.translateAlternateColorCodes('&', "&B" + String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price"))))));
 
 		return shop;
 

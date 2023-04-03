@@ -2,7 +2,8 @@ Messages:
   Prefix: '&8[&2Splegg&8-&4OG&8] &3'
   NoPermission: '&cYou do not have permission!'
   JoinGame: '&6%player% has joined the game. &7[&e%count%/%maxcount%&7]'
-  LeaveGame: '&6You have left the lobby for map &a%map%&6.'
+  LeaveGame: '&6%player% has left the game. &7[&e%count%/%maxcount%&7]'
+  IndividualLeaveGame: '&6You have left the lobby for map &a%map%&6.'
   LobbyTimer: '&6Match starting &f%timer% &6seconds.'
   InstructionsGame: '&3Use your shovel to throw eggs and make the other players fall!'
   GraceTimeStart: '&aGrace Period (&6%grace% &aseconds)'
@@ -65,7 +66,7 @@ Shovels:
     Lore: '&e&lRight-Click to launch eggs!'
 GUI:
   Shop:
-    Title: '&lSplegg Shop'
+    Title: '&3&lSplegg Shop'
     Size: 10
     GoldShovel:
       Name: '&e&lGolden Shovel'
@@ -73,7 +74,7 @@ GUI:
       Price: 500
     DiamondShovel:
       Name: '&b&lDiamond Shovel'
-      Description: '&6The illustrious &BDiamond Shovel &6shoots TWO eggs at a time! Price: &B%price% Diamonds'
+      Description: '&6The illustrious &BDiamond Shovel &6shoots TWO eggs at a time! Price: &B%price% Diamonds&6.'
       Price: 1000
 Guide:
   Item: ENCHANTED_BOOK

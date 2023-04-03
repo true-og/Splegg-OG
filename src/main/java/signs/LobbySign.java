@@ -101,7 +101,7 @@ public class LobbySign {
 			String[] sign;
 			if (force) {
 
-				String[] array = new String[]{splegg.getConfig().getString("Sings.Restarting.1").replaceAll("&", "§").replaceAll("#", "§"), splegg.getConfig().getString("Sings.Restarting.2").replaceAll("&", "§"), splegg.getConfig().getString("Sings.Restarting.3").replaceAll("&", "§").replaceAll("%map%", map.getName()), splegg.getConfig().getString("Sings.Restarting.4").replaceAll("&", "§").replaceAll("#", "§")};
+				String[] array = new String[]{splegg.getConfig().getString("Sings.Restarting.1"), splegg.getConfig().getString("Sings.Restarting.2"), splegg.getConfig().getString("Sings.Restarting.3").replaceAll("%map%", map.getName()), splegg.getConfig().getString("Sings.Restarting.4")};
 				this.setSign(array, s);
 				sign = new String[4];
 				Game game = this.splegg.games.getGame(map.getName());
@@ -115,10 +115,10 @@ public class LobbySign {
 				}
 				else {
 
-					sign[0] = splegg.getConfig().getString("Sings.Format.1").replaceAll("&", "§").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game));
-					sign[1] = splegg.getConfig().getString("Sings.Format.2").replaceAll("&", "§").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game));
-					sign[2] = splegg.getConfig().getString("Sings.Format.3").replaceAll("&", "§").replaceAll("%map%", map.getName()).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%count%/%maxcount%", this.getPlayers(game));
-					sign[3] = splegg.getConfig().getString("Sings.Format.4").replaceAll("&", "§").replaceAll("%count%/%maxcount%", this.getPlayers(game)).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName());
+					sign[0] = splegg.getConfig().getString("Sings.Format.1").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game));
+					sign[1] = splegg.getConfig().getString("Sings.Format.2").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game));
+					sign[2] = splegg.getConfig().getString("Sings.Format.3").replaceAll("%map%", map.getName()).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%count%/%maxcount%", this.getPlayers(game));
+					sign[3] = splegg.getConfig().getString("Sings.Format.4").replaceAll("%count%/%maxcount%", this.getPlayers(game)).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName());
 
 				}
 
@@ -128,7 +128,7 @@ public class LobbySign {
 			else {
 
 				Game game = this.splegg.games.getGame(map.getName());
-				sign = new String[]{splegg.getConfig().getString("Sings.Format.1").replaceAll("&", "§").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.2").replaceAll("&", "§").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.3").replaceAll("&", "§").replaceAll("%map%", map.getName()).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.4").replaceAll("&", "§").replaceAll("%count%/%maxcount%", this.getPlayers(game)).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName())};
+				sign = new String[]{splegg.getConfig().getString("Sings.Format.1").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.2").replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.3").replaceAll("%map%", map.getName()).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%count%/%maxcount%", this.getPlayers(game)), splegg.getConfig().getString("Sings.Format.4").replaceAll("%count%/%maxcount%", this.getPlayers(game)).replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName())};
 				this.setSign(sign, s);
 
 			}
@@ -181,24 +181,24 @@ public class LobbySign {
 
 			if (game.isStarting()) {
 
-				status = splegg.getConfig().getString("Sings.Status.Join").replaceAll("&", "§");
+				status = splegg.getConfig().getString("Sings.Status.Join");
 
 			}
 			else {
 
-				status = splegg.getConfig().getString("Sings.Status.Join").replaceAll("&", "§");
+				status = splegg.getConfig().getString("Sings.Status.Join");
 
 			}
 
 		}
 		else if (st == Status.DISABLED) {
 
-			status = splegg.getConfig().getString("Sings.Status.Disabled").replaceAll("&", "§");
+			status = splegg.getConfig().getString("Sings.Status.Disabled");
 
 		}
 		else if (st == Status.INGAME) {
 
-			status = splegg.getConfig().getString("Sings.Status.Started").replaceAll("&", "§");
+			status = splegg.getConfig().getString("Sings.Status.Started");
 
 		}
 		else {

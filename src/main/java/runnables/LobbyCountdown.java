@@ -42,13 +42,13 @@ public class LobbyCountdown implements Runnable {
 
 			if (this.lobbycount % 25 == 0) {
 
-				SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.LobbyTimer").replaceAll("&", "§").replaceAll("%timer%", String.valueOf(this.lobbycount)), this.game);
+				SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.LobbyTimer").replaceAll("%timer%", String.valueOf(this.lobbycount)), this.game);
 
 			}
 
 			if (this.lobbycount <= 10 && this.lobbycount >= 1) {
 
-				SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.LobbyTimer").replaceAll("&", "§").replaceAll("%timer%", String.valueOf(this.lobbycount)), this.game);
+				SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.LobbyTimer").replaceAll("%timer%", String.valueOf(this.lobbycount)), this.game);
 
 				playersInGameIterator = this.game.getPlayers().values().iterator();
 				while(playersInGameIterator.hasNext()) {
@@ -80,7 +80,7 @@ public class LobbyCountdown implements Runnable {
 		}
 		else {
 
-			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughPlayers").replaceAll("&", "§"), this.game);
+			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughPlayers"), this.game);
 			Bukkit.getScheduler().cancelTask(this.game.getCounterID());
 
 			this.game.setStarting(false);

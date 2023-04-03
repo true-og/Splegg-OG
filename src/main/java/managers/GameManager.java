@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 
@@ -11,6 +12,7 @@ import config.Map;
 import events.Listeners;
 import main.SpleggOG;
 import utils.SpleggPlayer;
+import utils.UtilPlayer;
 import utils.Utils;
 
 public class GameManager {
@@ -25,7 +27,8 @@ public class GameManager {
 
 	public void startGame(Game game) {
 
-		SpleggOG.getPlugin().getLogger().info("New game commencing..");
+		Map map = game.getMap();
+		SpleggOG.getPlugin().getLogger().info("New game commencing in map: " + map);
 		game.startGameTimer();
 		Bukkit.getScheduler().cancelTask(game.counter);
 		game.status = Status.INGAME;
@@ -33,13 +36,13 @@ public class GameManager {
 		game.setLobbyCount(31);
 		int c = 1;
 		game.loadFloors();
-		Map map = game.getMap();
 
 		Iterator<?> playersInGame = game.players.values().iterator();
 		SpleggPlayer sp;
 		while(playersInGame.hasNext()) {
 
 			sp = (SpleggPlayer) playersInGame.next();
+
 			sp.getPlayer().setLevel(0);
 			sp.getUtilPlayer().setAlive(true);
 
@@ -54,71 +57,22 @@ public class GameManager {
 			sp.getPlayer().setLevel(0);
 			sp.getPlayer().setExp(0.0F);
 			sp.getPlayer().setGameMode(GameMode.ADVENTURE);
-
-			// TODO: Add all available shovels here.
-			if (! Listeners.manager.contains(sp.getPlayer().getName())) {
-
-				// TODO: REMOVE DEV LOG!
-				SpleggOG.getPlugin().getLogger().info("Clear inventory event triggered by game manager.");
-				sp.getPlayer().getInventory().clear();
-
-				if (Listeners.goldspade.contains(sp.getPlayer().getName())) {
-
-					sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, splegg.getConfig().getString("Shovels.Gold.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Gold.Lore").replaceAll("&", "§")));
-					sp.getPlayer().updateInventory();
-
-					Listeners.manager.remove(sp.getPlayer().getName());
-					Listeners.goldspade.remove(sp.getPlayer().getName());
-					Listeners.diamondspade.remove(sp.getPlayer().getName());
-					Listeners.shopmanager.remove(sp.getPlayer().getName());
-					Listeners.moneymanager.add(sp.getPlayer().getName());
-
-				}
-
-				if (Listeners.diamondspade.contains(sp.getPlayer().getName())) {
-
-					sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.DIAMOND_SHOVEL, splegg.getConfig().getString("Shovels.Diamond.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Diamond.Lore").replaceAll("&", "§")));
-					sp.getPlayer().updateInventory();
-
-					Listeners.manager.remove(sp.getPlayer().getName());
-					Listeners.goldspade.remove(sp.getPlayer().getName());
-					Listeners.diamondspade.remove(sp.getPlayer().getName());
-					Listeners.shopmanager.remove(sp.getPlayer().getName());
-					Listeners.moneymanager.add(sp.getPlayer().getName());
-
-				}
-
-			}
-			else {
-
-				sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.IRON_SHOVEL, splegg.getConfig().getString("Shovels.Iron.Name").replaceAll("&", "§"), splegg.getConfig().getString("Shovels.Iron.Lore").replaceAll("&", "§")));
-				sp.getPlayer().updateInventory();
-
-				Listeners.manager.remove(sp.getPlayer().getName());
-				Listeners.goldspade.remove(sp.getPlayer().getName());
-				Listeners.diamondspade.remove(sp.getPlayer().getName());
-				Listeners.shopmanager.remove(sp.getPlayer().getName());
-				Listeners.moneymanager.add(sp.getPlayer().getName());
-
-			}
+			sp.getPlayer().getInventory().clear();
 
 		}
 
 		game.getSign().update(map, false);
 
-		splegg.chat.bc(splegg.getConfig().getString("Messages.InstructionsGame").replaceAll("&", "§"), game);
+		splegg.chat.bc(splegg.getConfig().getString("Messages.InstructionsGame"), game);
 
 	}
 
 	public void stopGame(Game game, int r) {
 
-		SpleggOG.getPlugin().getLogger().info("Commencing shutdown of " + game.getMap().getName() + ".");
+		SpleggOG.getPlugin().getLogger().info("Commencing shutdown of: " + game.getMap().getName() + ".");
 
 		game.status = Status.ENDING;
 		game.stopGameTimer();
-
-		game.leaveGame(game.getPlayers());
-
 		game.time = 601;
 		game.setStatus(Status.LOBBY);
 		game.resetArena();
@@ -126,6 +80,15 @@ public class GameManager {
 		game.floor.clear();
 		game.setStarting(false);
 		game.players.clear();
+
+		Iterator<?> playersInGame = game.players.values().iterator();
+		while(playersInGame.hasNext()) {
+
+			SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
+			UtilPlayer u = sp.getUtilPlayer();
+			game.leaveGame(u);
+
+		}
 
 		if (! splegg.disabling) {
 
@@ -156,7 +119,7 @@ public class GameManager {
 		while(playersInGame.hasNext()) {
 
 			SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
-			splegg.chat.sendMessage(sp.getPlayer(), "&6Splegg is ending in §5§l" + splegg.game.getDigitTime(count));
+			splegg.chat.sendMessage(sp.getPlayer(), "&6Splegg is ending in... " + splegg.game.getDigitTime(count));
 
 		}
 

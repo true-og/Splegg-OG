@@ -33,7 +33,7 @@ public class SignListener implements Listener {
 				LobbySign ls = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
 				ls.create(e.getBlock().getLocation(), SpleggOG.getPlugin().maps.getMap(map));
 
-				SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("&", "§").replaceAll("%map%", map));
+				SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("%map%", map));
 
 			}
 
@@ -70,7 +70,7 @@ public class SignListener implements Listener {
 
 			Sign s = (Sign)e.getClickedBlock().getState();
 			Player player = e.getPlayer();
-			if (s.line(0).toString().equalsIgnoreCase(SpleggOG.getPlugin().getConfig().getString("Sings.Format.1").replaceAll("&", "§"))) {
+			if (s.line(0).toString().equalsIgnoreCase(SpleggOG.getPlugin().getConfig().getString("Sings.Format.1"))) {
 
 				String map = ChatColor.stripColor(s.line(2).toString());
 
@@ -84,7 +84,7 @@ public class SignListener implements Listener {
 				}
 				else {
 
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist").replaceAll("&", "§"));
+					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist"));
 
 					e.setCancelled(true);
 
@@ -112,14 +112,14 @@ public class SignListener implements Listener {
 					LobbySign sign = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
 					sign.delete(e.getBlock().getLocation());
 
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign").replaceAll("&", "§").replaceAll("%map%", map));
+					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign").replaceAll("%map%", map));
 
 				}
 				else {
 
 					e.setCancelled(true);
 
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign").replaceAll("&", "§"));
+					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign"));
 
 				}
 

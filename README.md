@@ -38,25 +38,23 @@ The resulting .jar file will be in build/libs/
 
 **Known Bugs:**
 
-- The game startup is broken (regression).
+- The game does not end in a way that removes all players from the lobby.
 
-- The grace period is broken (regression).
+- Match ending is not triggered when a player goes below the minimum floor Y level.
 
-- The game does not end cleanly when only 1 player is remaining.
-
-- The game ends when a player goes below y level 0.
+- The splegg shop is non-functional.
 
 - Block destruction particles are displayed for the egg instead of for the block that was hit.
 
-- Players pre-game inventory is not always preserved.
-
-- Hard-quitting the game does not cleanly remove players from the game.
-
 **Planned Features:**
 
-- Finished lobby menus.
+- Better victory/loss messages at the end of a game.
 
-- All shovels in the Splegg shop.
+- 3, 2, 1 countdowns in chat.
+
+- More complete lobby menus.
+
+- All available shovels in the Splegg shop.
 
 - Diamond shard integration with DiamondBank-OG.
 

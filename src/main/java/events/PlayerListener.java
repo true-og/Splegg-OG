@@ -1,7 +1,5 @@
 package events;
 
-import org.bukkit.Material;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -9,16 +7,15 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
+
+import com.earth2me.essentials.Essentials;
+import com.earth2me.essentials.Kit;
+import com.earth2me.essentials.Kits;
+import com.earth2me.essentials.User;
 
 import main.SpleggOG;
-import managers.Game;
 import utils.UtilPlayer;
-import utils.Utils;
 
 public class PlayerListener implements Listener {
 
@@ -45,10 +42,9 @@ public class PlayerListener implements Listener {
 	@EventHandler
 	public void entityDamage(EntityDamageEvent e) {
 
-		Entity ent = e.getEntity();
-		if (ent instanceof Player) {
+		if (e.getEntity() instanceof Player) {
 
-			Player player = (Player) ent;
+			Player player = (Player) e.getEntity();
 			UtilPlayer u = new UtilPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
 
@@ -68,105 +64,58 @@ public class PlayerListener implements Listener {
 
 		SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
 
-	}
+		Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+		User user = new User(player, ess);
 
-	@EventHandler
-	public void onQuit(PlayerQuitEvent e) {
+		Kits essentialsKitList = new Kits(ess);
+		Kit playersKitToRestoreAfterMatch = (Kit) essentialsKitList.getKit(player.getName());
+		if(playersKitToRestoreAfterMatch != null) {
 
-		Player player = e.getPlayer();
-		UtilPlayer u = new UtilPlayer(player);
-		Game game = u.getGame();
+			try {
 
-		SpleggOG.getPlugin().pm.PLAYERS.remove(player.getName());
+				playersKitToRestoreAfterMatch.expandItems(user);
 
-		if (game != null) {
 
-			// TODO: REMOVE DEV LOG!
-			SpleggOG.getPlugin().getLogger().info("Leave game event triggered via onQuit.");
-			game.leaveGame(game.getPlayers());
+			}
+			catch (Exception error) {
+
+				SpleggOG.getPlugin().getLogger().severe(error.getMessage());
+
+			}
 
 		}
+		else {
+
+			SpleggOG.getPlugin().getLogger().severe("ERROR: Kit for player: " + player.getName() + " was not found during the restore attempt!");
+
+		}
+
 	}
 
 	@EventHandler
-	public void dropItem(PlayerDropItemEvent e) {
+	public void dropItem(PlayerDropItemEvent event) {
 
-		Player player = e.getPlayer();
+		Player player = event.getPlayer();
 		UtilPlayer u = new UtilPlayer(player);
 
 		if (u.getGame() != null && u.isAlive()) {
 
-			e.setCancelled(true);
+			event.setCancelled(true);
 
 		}
 
 	}
 
 	@EventHandler
-	public void onCommand(PlayerCommandPreprocessEvent e) {
+	public void onCommand(PlayerCommandPreprocessEvent event) {
 
-		Player player = e.getPlayer();
+		Player player = event.getPlayer();
 		UtilPlayer u = new UtilPlayer(player);
-		if (u.getGame() != null && u.isAlive() && ! e.getMessage().startsWith("/splegg") && ! player.hasPermission("splegg.admin")) {
+		if (u.getGame() != null && u.isAlive() && ! event.getMessage().startsWith("/splegg") && ! player.hasPermission("splegg.admin")) {
 
-			e.setCancelled(true);
+			event.setCancelled(true);
 
 			SpleggOG.getPlugin().chat.sendMessage(player, "&6You cannot use that command in &3Splegg&6!");
-
-		}
-
-	}
-
-	@EventHandler
-	public void onPlayerInteract(PlayerInteractEvent event) {
-
-		Player player = (Player) event.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		Game game = u.getGame();
-		if (game != null) {
-
-			boolean keepGoing = true;
-			EquipmentSlot playerHand = null;
-			try {
-
-				playerHand = event.getHand();
-
-			}
-			catch(NullPointerException error) {
-
-				keepGoing = false;
-
-			}
-
-			if(keepGoing) {
-
-				if(playerHand.equals(EquipmentSlot.HAND)) {
-
-					ItemStack itemInHand = player.getInventory().getItemInMainHand();
-					switch(itemInHand.getType()) {
-
-					case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL, DIAMOND_SHOVEL, NETHERITE_SHOVEL:
-						Utils.fireEgg(event, u, player, itemInHand);
-					break;
-					case SLIME_BALL:
-
-							game.leaveGame(game.getPlayers());
-
-						break;
-					default:
-
-						if(itemInHand.getType() == Material.getMaterial(SpleggOG.getPlugin().getConfig().getString("Shop.Item"))) {
-
-							player.openInventory(Utils.getShopInventory());
-
-						}
-
-						break;
-					}
-
-				}
-
-			}
 
 		}
 
