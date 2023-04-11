@@ -1,3 +1,9 @@
+**1.3.1:**
+
+- Fixed dust particles coming off of egg instead of the block that was hit.
+
+- Fixed match not ending when players get below the minimum level.
+
 **1.3:**
 
 - It is no longer possible to start a match with only 1 player in the lobby.

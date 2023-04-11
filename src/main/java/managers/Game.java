@@ -49,6 +49,7 @@ public class Game {
 	int time;
 	int y1;
 	int y2;
+	int small;
 	int counter;
 	int timer;
 	boolean starting;
@@ -70,6 +71,7 @@ public class Game {
 		this.lobbycount = 31;
 		this.y1 = -64;
 		this.y2 = -64;
+		this.small = -64;
 
 		this.setSign(new LobbySign(map, splegg));
 
@@ -228,6 +230,12 @@ public class Game {
 	public Map getMap() {
 
 		return this.map;
+
+	}
+
+	public int getLowestPossible() {
+
+		return this.small;
 
 	}
 
@@ -586,6 +594,7 @@ public class Game {
 				int maxY = max.getBlockY();
 				this.y2 = maxY;
 				int maxZ = max.getBlockZ();
+				this.small = Math.min(this.y2, this.y2);
 
 				for(int x = minX; x <= maxX; ++x) {
 

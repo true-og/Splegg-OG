@@ -38,13 +38,11 @@ The resulting .jar file will be in build/libs/
 
 **Known Bugs:**
 
-- The game does not end in a way that removes all players from the lobby.
+- The winner is not removed from the game.
 
-- Match ending is not triggered when a player goes below the minimum floor Y level.
+- The lower limit is y=-1 instead of y=-64.
 
-- The splegg shop is non-functional.
-
-- Block destruction particles are displayed for the egg instead of for the block that was hit.
+- The splegg shop doesn't work.
 
 **Planned Features:**
 

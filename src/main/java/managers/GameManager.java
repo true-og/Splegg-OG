@@ -4,16 +4,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
-import org.bukkit.Material;
 
 import config.Map;
-import events.Listeners;
 import main.SpleggOG;
 import utils.SpleggPlayer;
 import utils.UtilPlayer;
-import utils.Utils;
 
 public class GameManager {
 
@@ -79,7 +75,6 @@ public class GameManager {
 		game.data.clear();
 		game.floor.clear();
 		game.setStarting(false);
-		game.players.clear();
 
 		Iterator<?> playersInGame = game.players.values().iterator();
 		while(playersInGame.hasNext()) {
@@ -95,6 +90,8 @@ public class GameManager {
 			game.getSign().update(game.map, true);
 
 		}
+
+		game.players.clear();
 
 		SpleggOG.getPlugin().getLogger().info("Map " + game.map.getName() + " was reset.");
 

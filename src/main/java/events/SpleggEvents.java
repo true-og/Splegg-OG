@@ -2,6 +2,7 @@ package events;
 
 import java.util.Iterator;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -35,17 +36,11 @@ public class SpleggEvents implements Listener {
 
 			Player player = (Player) shooter;
 			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+			Block hitBlock = event.getHitBlock();
+			Location hitLocation = null;
+			BlockIterator bi = new BlockIterator(hitBlock.getWorld(), event.getEntity().getLocation().toVector(), event.getEntity().getVelocity().normalize(), 0.0D, 4);
 			if (u.getGame() != null && u.isAlive()) {
 
-				// If the egg hit an entity, do this.
-				if(event.getHitEntity() != null) {
-
-					// Cancel the hit.
-					event.setCancelled(true);
-
-				}
-
-				BlockIterator bi = new BlockIterator(event.getEntity().getWorld(), event.getEntity().getLocation().toVector(), event.getEntity().getVelocity().normalize(), 0.0D, 4);
 				Block hit = null;
 				while(bi.hasNext()) {
 
@@ -56,25 +51,32 @@ public class SpleggEvents implements Listener {
 						break;
 
 					}
+					else {
+
+						// Get location if it is a block.
+						hitLocation = hitBlock.getLocation();
+
+						// Cancel the collision.
+						event.setCancelled(true);
+
+						// Deletes the egg entity.
+						event.getEntity().remove();
+
+					}
 
 				}
 
 				if (hit.getType() == Material.TNT) {
 
-					event.getEntity().getWorld().createExplosion(event.getEntity().getLocation(), 3.0F);
+					hitBlock.getWorld().createExplosion(hitLocation, 3.0F);
 
-					Iterator<?> entityIterator = event.getEntity().getWorld().getEntities().iterator();
+					Iterator<?> entityIterator = hitBlock.getWorld().getEntities().iterator();
 					while(entityIterator.hasNext()) {
 
 						Entity drop = (Entity) entityIterator.next();
 
 						if (drop.getType() == EntityType.DROPPED_ITEM) {
 
-							drop.remove();
-							drop.remove();
-							drop.remove();
-							drop.remove();
-							drop.remove();
 							drop.remove();
 
 						}
@@ -83,10 +85,9 @@ public class SpleggEvents implements Listener {
 
 				}
 
-				Location hitLocation = hit.getLocation();
-				if (u.getGame().getFloor().contains(hitLocation)) {
+				Game game = u.getGame();
+				if (game.getFloor().contains(hitLocation)) {
 
-					Game game = u.getGame();
 					// If the game is in-progress, do this.
 					if (game.getStatus() == Status.INGAME) {
 
@@ -145,19 +146,22 @@ public class SpleggEvents implements Listener {
 
 	}
 
-	public void playerMove(PlayerMoveEvent event) {
+	@EventHandler
+	public void onKnockout(PlayerMoveEvent event) {
 
 		Player player = event.getPlayer();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		if (player.getLocation().getY() <= -64) {
+		Game game = u.getGame();
+		if (game != null && u.isAlive() && ((double) player.getLocation().getBlockY() < -5.0D || player.getLocation().getBlockY() < game.getLowestPossible()) && game.getStatus() == Status.INGAME) {
 
-			SpleggOG.getPlugin().getLogger().info("Player: + " + player.getName() + " should have died.");
-
-			player.setHealth(0);
-			u.getGame().leaveGame(u);
+			SpleggOG.getPlugin().chat.bc(ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("Messages.KnockoutPlayer")).replaceAll("%player%", player.getName()));
+			SpleggOG.getPlugin().chat.bc(ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining")).replaceAll("%count%", String.valueOf(game.getPlayers().size() - 1)), game);
+			player.setFallDistance(1.0F);
+			game.leaveGame(u);
 
 		}
 
 	}
+
 
 }
