@@ -40,8 +40,6 @@ The resulting .jar file will be in build/libs/
 
 - The winner is not removed from the game.
 
-- The lower limit is y=-1 instead of y=-64.
-
 - The splegg shop doesn't work.
 
 **Planned Features:**
