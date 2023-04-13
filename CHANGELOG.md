@@ -1,3 +1,11 @@
+**1.4:**:
+
+- The splegg shop is fixed.
+
+- The winner is now removed from the game.
+
+- The floor now resets correctly after a match.
+
 **1.3.1:**
 
 - Fixed dust particles coming off of egg instead of the block that was hit.

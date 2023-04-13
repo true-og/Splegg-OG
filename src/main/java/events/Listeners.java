@@ -37,98 +37,95 @@ public class Listeners implements Listener {
 
 		Player player = (Player) event.getWhoClicked();
 		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		if (event.getView().title().toString().equals(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title"))) {
 
-			if (shopmanager.contains(player.getName())) {
+		if (shopmanager.contains(player.getName())) {
 
-				EconomyResponse r;
+			EconomyResponse r;
 
-				if (event.getCurrentItem().getType() == Material.GOLDEN_SHOVEL) {
-
-					player.getInventory().close();
-
-					if (SpleggOG.getPlugin().econ.getBalance(player) >= (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")) {
-
-						r = SpleggOG.getPlugin().econ.withdrawPlayer(player, (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price"));
-						if (r.transactionSuccess()) {
-
-							goldspade.add(player.getName());
-							diamondspade.remove(player.getName());
-							shopmanager.remove(player.getName());
-							manager.remove(player.getName());
-
-							SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyGoldShovel"));
-
-						}
-						else {
-
-							player.sendMessage(String.format("An error occured: %s", r.errorMessage));
-
-							shopmanager.add(player.getName());
-							manager.add(player.getName());
-							goldspade.remove(player.getName());
-							diamondspade.remove(player.getName());
-
-						}
-
-					}
-					else {
-
-						player.getInventory().close();
-
-						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
-
-					}
-
-				}
-
-				if (event.getCurrentItem().getType() == Material.DIAMOND_SHOVEL) {
-
-					player.getInventory().close();
-
-					if (SpleggOG.getPlugin().econ.getBalance(player) >= (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price")) {
-
-						r = SpleggOG.getPlugin().econ.withdrawPlayer(player, (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price"));
-						if (r.transactionSuccess()) {
-
-							goldspade.remove(player.getName());
-							diamondspade.add(player.getName());
-							shopmanager.remove(player.getName());
-							manager.remove(player.getName());
-
-							SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyDiamondShovel"));
-
-						}
-						else {
-
-							player.sendMessage(String.format("An error occured: %s", r.errorMessage));
-
-							shopmanager.add(player.getName());
-							manager.add(player.getName());
-							goldspade.remove(player.getName());
-							diamondspade.remove(player.getName());
-
-						}
-
-					}
-					else {
-
-						player.getInventory().close();
-
-						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
-
-					}
-
-				}
-
-			}
-			else {
+			if (event.getCurrentItem().getType() == Material.GOLDEN_SHOVEL) {
 
 				player.getInventory().close();
 
-				SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought"));
+				if (SpleggOG.getPlugin().econ.getBalance(player) >= (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")) {
+
+					r = SpleggOG.getPlugin().econ.withdrawPlayer(player, (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price"));
+					if (r.transactionSuccess()) {
+
+						goldspade.add(player.getName());
+						diamondspade.remove(player.getName());
+						shopmanager.remove(player.getName());
+						manager.remove(player.getName());
+
+						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyGoldShovel"));
+
+					}
+					else {
+
+						player.sendMessage(String.format("An error occured: %s", r.errorMessage));
+
+						shopmanager.add(player.getName());
+						manager.add(player.getName());
+						goldspade.remove(player.getName());
+						diamondspade.remove(player.getName());
+
+					}
+
+				}
+				else {
+
+					player.getInventory().close();
+
+					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
+
+				}
 
 			}
+
+			if (event.getCurrentItem().getType() == Material.DIAMOND_SHOVEL) {
+
+				player.getInventory().close();
+
+				if (SpleggOG.getPlugin().econ.getBalance(player) >= (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price")) {
+
+					r = SpleggOG.getPlugin().econ.withdrawPlayer(player, (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price"));
+					if (r.transactionSuccess()) {
+
+						goldspade.remove(player.getName());
+						diamondspade.add(player.getName());
+						shopmanager.remove(player.getName());
+						manager.remove(player.getName());
+
+						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyDiamondShovel"));
+
+					}
+					else {
+
+						player.sendMessage(String.format("An error occured: %s", r.errorMessage));
+
+						shopmanager.add(player.getName());
+						manager.add(player.getName());
+						goldspade.remove(player.getName());
+						diamondspade.remove(player.getName());
+
+					}
+
+				}
+				else {
+
+					player.getInventory().close();
+
+					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
+
+				}
+
+			}
+
+		}
+		else {
+
+			player.getInventory().close();
+
+			SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought"));
 
 		}
 

@@ -102,12 +102,30 @@ public class GameUtilities {
 	public void checkWinner(Game game) {
 
 		int amountOfPlayersInGame = game.players.size();
-
 		if (amountOfPlayersInGame <= 1) {
 
-			SpleggOG.getPlugin().getLogger().info("Check winner concluding with: " + amountOfPlayersInGame + " players.");
+			if (amountOfPlayersInGame == 0) {
 
-			game.splegg.game.stopGame(game, amountOfPlayersInGame);
+				game.splegg.game.stopGame(game, 0);
+
+			}
+			else {
+
+				Iterator<?> playersLeft = game.players.values().iterator();
+				while(playersLeft.hasNext()) {
+
+					SpleggPlayer sp = (SpleggPlayer) playersLeft.next();
+
+					SpleggOG.getPlugin().getLogger().info("Winner who should be removed from the game: " + sp.getPlayer().getName());
+
+					game.leaveGame(sp.getUtilPlayer());
+					game.players.clear();
+
+				}
+
+				game.splegg.game.stopGame(game, 5);
+
+			}
 
 		}
 
