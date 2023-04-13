@@ -1,4 +1,4 @@
-**1.4:**:
+**1.4:**
 
 - The splegg shop is fixed.
 
