@@ -36,15 +36,9 @@ Dependencies: WorldEdit, Vault.
 
 The resulting .jar file will be in build/libs/
 
-**Known Bugs:**
-
-- The winner is not removed from the game.
-
-- The lower limit is y=-1 instead of y=-64.
-
-- The splegg shop doesn't work.
-
 **Planned Features:**
+
+- Database to remember shop purchases.
 
 - Better victory/loss messages at the end of a game.
 
