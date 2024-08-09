@@ -3,7 +3,6 @@ package events;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
@@ -18,22 +17,23 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import main.SpleggOG;
 import signs.LobbySign;
 import signs.LobbySignUtils;
+import utils.Utils;
 
 public class SignListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void signPlace(SignChangeEvent e) {
+	public void signPlace(SignChangeEvent event) {
 
-		Player player = e.getPlayer();
-		if (e.line(0).toString().equalsIgnoreCase("[splegg]") && e.line(1).toString().equalsIgnoreCase("join") && player.hasPermission("splegg.admin")) {
+		Player player = event.getPlayer();
+		if (event.line(0).toString().equalsIgnoreCase("[splegg]") && event.line(1).toString().equalsIgnoreCase("join") && player.hasPermission("splegg.admin")) {
 
-			String map = e.line(2).toString();
+			String map = event.line(2).toString();
 			if (SpleggOG.getPlugin().maps.mapExists(map)) {
 
 				LobbySign ls = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
-				ls.create(e.getBlock().getLocation(), SpleggOG.getPlugin().maps.getMap(map));
+				ls.create(event.getBlock().getLocation(), SpleggOG.getPlugin().maps.getMap(map));
 
-				SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("%map%", map));
+				Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("%map%", map));
 
 			}
 
@@ -68,11 +68,11 @@ public class SignListener implements Listener {
 
 		if (e.hasBlock() && signMaterials.contains(e.getClickedBlock().getType()) && e.getAction() == Action.RIGHT_CLICK_BLOCK) {
 
-			Sign s = (Sign)e.getClickedBlock().getState();
+			Sign s = (Sign) e.getClickedBlock().getState();
 			Player player = e.getPlayer();
 			if (s.line(0).toString().equalsIgnoreCase(SpleggOG.getPlugin().getConfig().getString("Sings.Format.1"))) {
 
-				String map = ChatColor.stripColor(s.line(2).toString());
+				String map = s.line(2).toString();
 
 				if (SpleggOG.getPlugin().maps.mapExists(map)) {
 
@@ -84,7 +84,7 @@ public class SignListener implements Listener {
 				}
 				else {
 
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist"));
+					Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist"));
 
 					e.setCancelled(true);
 
@@ -104,7 +104,7 @@ public class SignListener implements Listener {
 
 			Sign s = (Sign) e.getBlock().getState();
 			String[] lines = (String[]) s.lines().toArray();
-			String map = ChatColor.stripColor(lines[1]);
+			String map = lines[1];
 			if (LobbySignUtils.get().isLobbySign(e.getBlock().getLocation(), map)) {
 
 				if (player.hasPermission("splegg.admin")) {
@@ -112,14 +112,14 @@ public class SignListener implements Listener {
 					LobbySign sign = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
 					sign.delete(e.getBlock().getLocation());
 
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign").replaceAll("%map%", map));
+					Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign").replaceAll("%map%", map));
 
 				}
 				else {
 
 					e.setCancelled(true);
 
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign"));
+					Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign"));
 
 				}
 

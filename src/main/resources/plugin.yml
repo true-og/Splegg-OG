@@ -1,8 +1,16 @@
 name: Splegg-OG
 main: main.SpleggOG
-version: 1.4
+version: '${version}'
 authors: [Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle]
-api-version: 1.18
+api-version: '${apiVersion}'
 depend: [Vault, WorldEdit]
+
 commands:
   splegg:
+    description: The command prefix for all Splegg-OG commands.
+    aliases: [sp]
+    
+permissions:
+  splegg.use:
+    description: Permission to run Splegg-OG commands.
+    default: op

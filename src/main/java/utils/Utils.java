@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -28,31 +27,19 @@ import managers.Game;
 import managers.Status;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class Utils {
 
 	// Enable the conversion of text from config.yml to objects.
 	public FileConfiguration config = SpleggOG.getPlugin().getConfig();
-
 	public HashMap<String, UtilPlayer> PLAYERS = new HashMap<String, UtilPlayer>();
 	private File f;
-	private String prefix = config.getString("Messages.Prefix");
-
-	public String getPrefix() {
-
-		return this.prefix;
-
-	}
-
-	public void sendMessage(Player player, String s) {
-
-		player.sendMessage(ChatColor.translateAlternateColorCodes('&', this.prefix) + ChatColor.translateAlternateColorCodes('&', s));
-
-	}
+	public static String prefix = "&7[&eSplegg&f-&4OG&7] ";
 
 	public void bc(String s) {
 
-		TextComponent prefixContainer = Component.text(ChatColor.translateAlternateColorCodes('&', this.prefix)  + ChatColor.translateAlternateColorCodes('&', s));
+		TextComponent prefixContainer = legacySerializerAnyCase(prefix + s);
 		Bukkit.broadcast(prefixContainer);
 
 	}
@@ -65,7 +52,7 @@ public class Utils {
 			UtilPlayer u = (UtilPlayer) playerIterator.next();
 			if (u.getGame() == game && u.isAlive()) {
 
-				sendMessage(u.getPlayer(), string);
+				spleggOGMessage(u.getPlayer(), string);
 
 			}
 
@@ -166,6 +153,86 @@ public class Utils {
 
 	}
 
+	// Sends a formatted message to the player (including name replacement).
+	public static void spleggOGMessage(Player p, String message) {
+
+		p.sendMessage(legacySerializerAnyCase(prefix + message));
+
+	}
+
+	public static TextComponent legacySerializerAnyCase(String subject) {
+
+		int count = 0;
+		// Count the number of '&' characters to determine the size of the array
+		for (char c : subject.toCharArray()) {
+
+			if (c == '&') {
+
+				count++;
+
+			}
+
+		}
+
+		// Create an array to store the positions of '&' characters
+		int[] positions = new int[count];
+		int index = 0;
+		// Find the positions of '&' characters and store in the array
+		for (int i = 0; i < subject.length(); i++) {
+
+			if (subject.charAt(i) == '&') {
+
+				if (isUpperBukkitCode(subject.charAt(i + 1))) {
+
+					subject = replaceCharAtIndex(subject, (i + 1), Character.toLowerCase(subject.charAt(i + 1)));
+
+				}
+
+				positions[index++] = i;
+
+			}
+
+		}
+
+		return LegacyComponentSerializer.legacyAmpersand().deserialize(subject);
+
+	}
+
+	private static boolean isUpperBukkitCode(char input) {
+
+		char[] bukkitColorCodes = {'A', 'B', 'C', 'D', 'E', 'F', 'K', 'L', 'M', 'N', 'O', 'R'};
+		boolean match = false;
+
+		// Loop through each character in the array.
+		for (char c : bukkitColorCodes) {
+			// Check if the current character in the array is equal to the input character.
+			if (c == input) {
+
+				match = true;
+
+			}
+
+		}
+
+		return match;
+
+	}
+
+	private static String replaceCharAtIndex(String original, int index, char newChar) {
+
+		// Check if the index is valid
+		if (index >= 0 && index < original.length()) {
+
+			// Create a new string with the replaced character
+			return original.substring(0, index) + newChar + original.substring(index + 1);
+
+		}
+
+		// If the index is invalid, return the original string
+		return original;
+
+	}
+
 	public static ItemStack getItem(Material material, String name, String lore) {
 
 		ItemStack stack = new ItemStack(material, 1);
@@ -243,17 +310,40 @@ public class Utils {
 
 	public static Inventory getShopInventory() {
 
-		TextComponent shopTitle = Component.text(ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title")));
-		Inventory shop = Bukkit.createInventory((InventoryHolder) null, 9, shopTitle);
+		// Create the GUI title.
+		TextComponent shopTitleComponent = legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title"));
+		String shopTitle = LegacyComponentSerializer.legacyAmpersand().serialize(shopTitleComponent);
 
-		shop.setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Name")), ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Description")).replaceAll("%price%", ChatColor.translateAlternateColorCodes('&', "&B" + String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price"))))));
-		shop.setItem(1, Utils.getItem(Material.DIAMOND_SHOVEL, ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Name")), ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Description")).replaceAll("%price%", ChatColor.translateAlternateColorCodes('&', "&B" + String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price"))))));
+		// Create the inventory.
+		Inventory shop = Bukkit.createInventory((InventoryHolder) null, 9, Component.text(shopTitle));
 
+		// Get the item names and descriptions, then serialize them back to Strings.
+		String goldShovelNameComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
+				legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Name"))
+				);
+		String goldShovelDescriptionComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
+				legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Description")
+						.replaceAll("%price%", "&B" + String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price"))))
+				);
+
+		String diamondShovelNameComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
+				legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Name"))
+				);
+		String diamondShovelDescriptionComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
+				legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Description")
+						.replaceAll("%price%", "&B" + String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price"))))
+				);
+
+		// Present the serialized Strings to the user on the items.
+		shop.setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, goldShovelNameComponent, goldShovelDescriptionComponent));
+		shop.setItem(1, Utils.getItem(Material.DIAMOND_SHOVEL, diamondShovelNameComponent, diamondShovelDescriptionComponent));
+
+		// Pass the shop to the player.
 		return shop;
 
 	}
 
-	// TODO: Spectator mode in listener
+	// TODO: Spectator mode in listener.
 	/*private static Inventory getSpecInventory() {
 
 		TextComponent spectatorTitle = Component.text("Splegg - Spectators");

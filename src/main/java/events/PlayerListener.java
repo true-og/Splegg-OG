@@ -16,22 +16,23 @@ import com.earth2me.essentials.User;
 
 import main.SpleggOG;
 import utils.UtilPlayer;
+import utils.Utils;
 
 public class PlayerListener implements Listener {
 
 	String[] cmds = new String[]{""};
 
 	@EventHandler
-	public void onFood(FoodLevelChangeEvent e) {
+	public void onFood(FoodLevelChangeEvent event) {
 
-		if (e.getEntity() instanceof Player) {
+		if (event.getEntity() instanceof Player) {
 
-			Player player = (Player) e.getEntity();
+			Player player = (Player) event.getEntity();
 			UtilPlayer u = new UtilPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
 
-				e.setCancelled(true);
-				e.setFoodLevel(20);
+				event.setCancelled(true);
+				event.setFoodLevel(20);
 
 			}
 
@@ -40,15 +41,15 @@ public class PlayerListener implements Listener {
 	}
 
 	@EventHandler
-	public void entityDamage(EntityDamageEvent e) {
+	public void entityDamage(EntityDamageEvent event) {
 
-		if (e.getEntity() instanceof Player) {
+		if (event.getEntity() instanceof Player) {
 
-			Player player = (Player) e.getEntity();
+			Player player = (Player) event.getEntity();
 			UtilPlayer u = new UtilPlayer(player);
 			if (u.getGame() != null && u.isAlive()) {
 
-				e.setCancelled(true);
+				event.setCancelled(true);
 
 			}
 
@@ -57,9 +58,9 @@ public class PlayerListener implements Listener {
 	}
 
 	@EventHandler
-	public void onJoin(PlayerJoinEvent e) {
+	public void onJoin(PlayerJoinEvent event) {
 
-		Player player = e.getPlayer();
+		Player player = event.getPlayer();
 		UtilPlayer u = new UtilPlayer(player);
 
 		SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
@@ -115,7 +116,7 @@ public class PlayerListener implements Listener {
 
 			event.setCancelled(true);
 
-			SpleggOG.getPlugin().chat.sendMessage(player, "&6You cannot use that command in &3Splegg&6!");
+			Utils.spleggOGMessage(player, "&6You cannot use that command in &3Splegg&6!");
 
 		}
 

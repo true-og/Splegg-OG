@@ -56,7 +56,7 @@ public class Listeners implements Listener {
 						shopmanager.remove(player.getName());
 						manager.remove(player.getName());
 
-						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyGoldShovel"));
+						Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyGoldShovel"));
 
 					}
 					else {
@@ -75,7 +75,7 @@ public class Listeners implements Listener {
 
 					player.getInventory().close();
 
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
+					Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
 
 				}
 
@@ -95,7 +95,7 @@ public class Listeners implements Listener {
 						shopmanager.remove(player.getName());
 						manager.remove(player.getName());
 
-						SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyDiamondShovel"));
+						Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyDiamondShovel"));
 
 					}
 					else {
@@ -114,7 +114,7 @@ public class Listeners implements Listener {
 
 					player.getInventory().close();
 
-					SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
+					Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
 
 				}
 
@@ -125,7 +125,7 @@ public class Listeners implements Listener {
 
 			player.getInventory().close();
 
-			SpleggOG.getPlugin().chat.sendMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought"));
+			Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought"));
 
 		}
 

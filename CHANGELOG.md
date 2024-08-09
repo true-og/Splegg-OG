@@ -1,4 +1,8 @@
-**1.4:**
+**0.7:**
+
+- 1.19.4 Support.
+
+**0.6:**
 
 - The splegg shop is fixed.
 
@@ -6,13 +10,13 @@
 
 - The floor now resets correctly after a match.
 
-**1.3.1:**
+**0.5:**
 
 - Fixed dust particles coming off of egg instead of the block that was hit.
 
 - Fixed match not ending when players get below the minimum level.
 
-**1.3:**
+**0.4:**
 
 - It is no longer possible to start a match with only 1 player in the lobby.
 
@@ -40,7 +44,7 @@
 
 - The lobby items now properly go away when a game starts.
 
-**1.2:**
+**0.3**
 
 - Fixed the shovel being given in the lobby.
 
@@ -56,7 +60,7 @@
 
 - Fixed a few NullPointerException errors.
 
-**1.1:**
+**0.2**
 
 - In-game players can no longer be hit with eggs.
 
@@ -76,6 +80,6 @@
 
 - Fixed an infinite loop upon a player dying.
 
-**1.0:**
+**0.1**
 
 - Initial Release of Splegg-OG.

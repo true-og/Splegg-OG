@@ -1,8 +1,8 @@
-# Splegg-OG
+# Splegg-OG BETA
 
 ![Icon](https://raw.githubusercontent.com/NotAlexNoyle/Splegg-OG/master/assets/splegg-logo.png)
 
-**Splegg-OG** is a Splegg plugin originally made by MrLuangamer, updated for Worldedit 7.2 and Spigot 1.16.4 by Hraponssi, then updated for Purpur 1.18.2 for use by [TrueOG](https://true-og.net/) by [NotAlexNoyle](https://github.com/NotAlexNoyle/).
+**Splegg-OG** is a Splegg plugin originally made by MrLuangamer, updated for Worldedit 7.2 and Spigot 1.16.4 by Hraponssi, then updated for Purpur 1.19.4 for use at [TrueOG Network](https://true-og.net/) by [NotAlexNoyle](https://github.com/NotAlexNoyle/).
 
 Dependencies: WorldEdit, Vault.
 

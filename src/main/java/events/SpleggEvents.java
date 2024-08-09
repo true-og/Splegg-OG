@@ -2,7 +2,6 @@ package events;
 
 import java.util.Iterator;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -115,7 +114,6 @@ public class SpleggEvents implements Listener {
 	}
 
 	// TODO: Implement spectator compass here.
-
 	@EventHandler
 	public void eggHatch(PlayerEggThrowEvent event) {
 
@@ -157,8 +155,8 @@ public class SpleggEvents implements Listener {
 		Game game = u.getGame();
 		if (game != null && u.isAlive() && ((double) player.getLocation().getBlockY() < -5.0D || player.getLocation().getBlockY() < game.getLowestPossible()) && game.getStatus() == Status.INGAME) {
 
-			SpleggOG.getPlugin().chat.bc(ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("Messages.KnockoutPlayer")).replaceAll("%player%", player.getName()));
-			SpleggOG.getPlugin().chat.bc(ChatColor.translateAlternateColorCodes('&', SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining")).replaceAll("%count%", String.valueOf(game.getPlayers().size() - 1)), game);
+			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.KnockoutPlayer").replaceAll("%player%", player.getName()));
+			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining").replaceAll("%count%", String.valueOf(game.getPlayers().size() - 1)), game);
 
 			player.setFallDistance(0.0F);
 			game.leaveGame(u);
@@ -168,6 +166,5 @@ public class SpleggEvents implements Listener {
 		}
 
 	}
-
 
 }

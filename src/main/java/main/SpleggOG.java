@@ -109,7 +109,7 @@ public class SpleggOG extends JavaPlugin {
 			if (! this.setupEconomy()) {
 
 				// Inform the user that the plugin will not work due to a missing vault dependency.
-				this.getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", this.getDescription().getName()));
+				this.getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", this.getPluginMeta().getName()));
 
 				// Disable Splegg-OG for this instance because Vault (a crucial dependency) was not found.
 				this.getServer().getPluginManager().disablePlugin(this);

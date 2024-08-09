@@ -10,6 +10,7 @@ import config.Map;
 import main.SpleggOG;
 import utils.SpleggPlayer;
 import utils.UtilPlayer;
+import utils.Utils;
 
 public class GameManager {
 
@@ -116,7 +117,7 @@ public class GameManager {
 		while(playersInGame.hasNext()) {
 
 			SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
-			splegg.chat.sendMessage(sp.getPlayer(), "&6Splegg is ending in... " + splegg.game.getDigitTime(count));
+			Utils.spleggOGMessage(sp.getPlayer(), ("&6Splegg is ending in... " + splegg.game.getDigitTime(count)));
 
 		}
 

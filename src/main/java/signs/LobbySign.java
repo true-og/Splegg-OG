@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
@@ -108,8 +107,8 @@ public class LobbySign {
 				if (game == null) {
 
 					sign[0] = "";
-					sign[1] = ChatColor.DARK_RED + "Please remove";
-					sign[2] = ChatColor.DARK_RED + "this sign";
+					sign[1] = "&cPlease remove";
+					sign[2] = "&4this sign";
 					sign[3] = "";
 
 				}
@@ -203,7 +202,7 @@ public class LobbySign {
 		}
 		else {
 
-			status = ChatColor.DARK_GREEN + st.toString().toLowerCase();
+			status = "&2" + st.toString().toLowerCase();
 
 		}
 
