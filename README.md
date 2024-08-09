@@ -28,7 +28,7 @@ Dependencies: WorldEdit, Vault.
 
 [Original Bukkit Page](https://dev.bukkit.org/projects/splegg-minigame).
 
-*The current Gradle build target is Purpur 1.18.2*
+*The current Gradle build target is Purpur 1.19.4
 
 **To Build:**
 
