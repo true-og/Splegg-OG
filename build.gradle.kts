@@ -1,8 +1,8 @@
 plugins {
+    id("com.gradleup.shadow") version "8.3.6" // Import shadow API.
     java // Tell gradle this is a java project.
-    id("io.github.goooler.shadow") version "8.1.8"
     eclipse // Import eclipse plugin for IDE integration.
-    kotlin("jvm") version "1.9.23" // Import kotlin jvm plugin for kotlin/java integration.
+    kotlin("jvm") version "2.1.21" // Import kotlin jvm plugin for kotlin/java integration.
 }
 
 java {
@@ -25,27 +25,26 @@ tasks.named<ProcessResources>("processResources") {
     filesMatching("plugin.yml") {
         expand(props)
     }
+    from("LICENSE") { // Bundle license into .jars.
+        into("/")
+    }
 }
 
 repositories {
     mavenCentral()
-
+    gradlePluginPortal()
     maven {
         url = uri("https://repo.purpurmc.org/snapshots")
     }
-    
     maven {
     	url = uri("https://jitpack.io") // Jitpack for Vault API.
     }
-    
     maven {
     	url = uri("https://papermc.io/repo/repository/maven-public/") // Paper repository for EssentialsX API.
     }
-    
     maven {
     	url = uri("https://repo.essentialsx.net/releases/") // EssentialsX API repository.
     }
-    
     maven {
     	url = uri("https://maven.enginehub.org/repo") // WorldEdit API repository.
     }
@@ -56,34 +55,29 @@ dependencies {
     compileOnly("io.github.miniplaceholders:miniplaceholders-api:2.2.3") // Import MiniPlaceholders API.
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") // Import Vault API.
     compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.0-SNAPSHOT") // Import WorldEdit API.
-    
     implementation("net.essentialsx:EssentialsX:2.20.1") // Import EssentialsX API.
+    compileOnly(project(":libs:Utilities-OG"))
+    compileOnly(project(":libs:GxUI-OG"))
+    compileOnly(project(":libs:DiamondBank-OG"))
 }
 
-tasks.withType<AbstractArchiveTask>().configureEach {
+tasks.withType<AbstractArchiveTask>().configureEach { // Ensure reproducible .jars
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
 }
 
 tasks.shadowJar {
     exclude("io.github.miniplaceholders.*") // Exclude the MiniPlaceholders package from being shadowed.
+    archiveClassifier.set("") // Use empty string instead of null.
     minimize()
 }
 
-tasks.jar {
+tasks.build {
     dependsOn(tasks.shadowJar)
-    archiveClassifier.set("part")
-}
-
-tasks.shadowJar {
-    archiveClassifier.set("") // Use empty string instead of null
-    from("LICENSE") {
-        into("/")
-    }
 }
 
 tasks.jar {
-    dependsOn("shadowJar")
+    archiveClassifier.set("part")
 }
 
 tasks.withType<JavaCompile>().configureEach {
