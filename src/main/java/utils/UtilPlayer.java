@@ -1,67 +1,57 @@
 package utils;
 
-import org.bukkit.entity.Player;
-
 import managers.Game;
+import org.bukkit.entity.Player;
 
 public class UtilPlayer {
 
-	Player player;
-	String name;
-	boolean alive;
-	Game game;
-	InvStore store;
+    Player player;
+    String name;
+    boolean alive;
+    Game game;
+    InvStore store;
 
-	public UtilPlayer(Player player) {
+    public UtilPlayer(Player player) {
 
-		this.player = player;
-		this.game = null;
-		this.name = player.getName();
-		this.alive = false;
-		this.store = new InvStore(player);
+        this.player = player;
+        this.game = null;
+        this.name = player.getName();
+        this.alive = false;
+        this.store = new InvStore(player);
+    }
 
-	}
+    public InvStore getStore() {
 
-	public InvStore getStore() {
+        return this.store;
+    }
 
-		return this.store;
+    public Player getPlayer() {
 
-	}
+        return this.player;
+    }
 
-	public Player getPlayer() {
+    public String getName() {
 
-		return this.player;
+        return this.name;
+    }
 
-	}
+    public boolean isAlive() {
 
-	public String getName() {
+        return this.alive;
+    }
 
-		return this.name;
+    public void setAlive(boolean a) {
 
-	}
+        this.alive = a;
+    }
 
-	public boolean isAlive() {
+    public Game getGame() {
 
-		return this.alive;
+        return this.game;
+    }
 
-	}
+    public void setGame(Game game) {
 
-	public void setAlive(boolean a) {
-
-		this.alive = a;
-
-	}
-
-	public Game getGame() {
-
-		return this.game;
-
-	}
-
-	public void setGame(Game game) {
-
-		this.game = game;
-
-	}
-
+        this.game = game;
+    }
 }

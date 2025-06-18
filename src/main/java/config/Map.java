@@ -2,323 +2,290 @@ package config;
 
 import java.io.File;
 import java.io.IOException;
-
+import main.SpleggOG;
+import managers.Game;
+import managers.Status;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import main.SpleggOG;
-import managers.Game;
-import managers.Status;
-
 public class Map {
 
-	SpleggOG splegg;
-	String name;
-	File file;
-	int spawncount;
-	int floorcount;
-	boolean usable;
+    SpleggOG splegg;
+    String name;
+    File file;
+    int spawncount;
+    int floorcount;
+    boolean usable;
 
-	// Enable the conversion of text from config.yml to objects.
-	public FileConfiguration config = SpleggOG.getPlugin().getConfig();
+    // Enable the conversion of text from config.yml to objects.
+    public FileConfiguration config = SpleggOG.getPlugin().getConfig();
 
-	public Map(SpleggOG splegg, String name) {
+    public Map(SpleggOG splegg, String name) {
 
-		this.splegg = splegg;
-		this.name = name;
-		this.floorcount = 0;
-		this.spawncount = 0;
+        this.splegg = splegg;
+        this.name = name;
+        this.floorcount = 0;
+        this.spawncount = 0;
+    }
 
-	}
+    public void load() {
 
-	public void load() {
+        SpleggOG.getPlugin().getLogger().info("Loading map " + this.name + "...");
 
-		SpleggOG.getPlugin().getLogger().info("Loading map " + this.name + "...");
+        this.file = new File(SpleggOG.getPlugin().getDataFolder(), this.name + ".yml");
+        try {
 
-		this.file = new File(SpleggOG.getPlugin().getDataFolder(), this.name + ".yml");
-		try {
+            if (!this.file.exists()) {
 
-			if (! this.file.exists()) {
+                this.file.createNewFile();
+            }
 
-				this.file.createNewFile();
+        } catch (IOException error) {
 
-			}
+            SpleggOG.getPlugin()
+                    .getLogger()
+                    .severe("ERROR: Issue creating " + this.name + ".yml: " + error.getMessage());
+        }
 
-		}
-		catch (IOException error) {
+        this.setConfig(YamlConfiguration.loadConfiguration(this.file));
+        this.save();
 
-			SpleggOG.getPlugin().getLogger().severe("ERROR: Issue creating " + this.name + ".yml: " + error.getMessage());
+        this.loadSpawns();
+        this.loadFloors();
 
-		}
+        SpleggOG.getPlugin().getLogger().info("File set: " + this.file.getName() + ".");
+    }
 
-		this.setConfig(YamlConfiguration.loadConfiguration(this.file));
-		this.save();
+    public void usableDecider(Map map) {
 
-		this.loadSpawns();
-		this.loadFloors();
+        if (this.spawncount > 0 && this.floorcount > 0) {
 
-		SpleggOG.getPlugin().getLogger().info("File set: " + this.file.getName() + ".");
+            SpleggOG.getPlugin().getLogger().info("Floor and spawn point(s) detected. The map is ready to go!");
+            this.usable = true;
+            SpleggOG.getPlugin().games.getGame(this.getName()).setStatus(Status.LOBBY);
 
-	}
+        } else {
 
-	public void usableDecider(Map map) {
+            this.usable = false;
+        }
+    }
 
-		if (this.spawncount > 0 && this.floorcount > 0) {
+    public boolean isUsable(Map map) {
 
-			SpleggOG.getPlugin().getLogger().info("Floor and spawn point(s) detected. The map is ready to go!");
-			this.usable = true;
-			SpleggOG.getPlugin().games.getGame(this.getName()).setStatus(Status.LOBBY);
+        usableDecider(map);
+        return this.usable;
+    }
 
-		}
-		else {
+    public void delete() {
 
-			this.usable = false;
+        this.file.delete();
+    }
 
-		}
+    public void savenumbers() {
 
-	}
+        config.set("Spawns.count", this.spawncount);
+        config.set("Floors.count", this.floorcount);
+    }
 
-	public boolean isUsable(Map map) {
+    public void save() {
 
-		usableDecider(map);
-		return this.usable;
+        try {
 
-	}
+            config.save(this.file);
 
-	public void delete() {
+        } catch (IOException error) {
 
-		this.file.delete();
+            SpleggOG.getPlugin().getLogger().severe("An error occured while saving " + this.name + ".yml.");
+        }
+    }
 
-	}
+    public void setSpawn(Map map, int id, Location l) {
 
-	public void savenumbers() {
+        int x = l.getBlockX();
+        int y = l.getBlockY();
+        int z = l.getBlockZ();
 
-		config.set("Spawns.count", this.spawncount);
-		config.set("Floors.count", this.floorcount);
+        float pitch = l.getPitch();
+        float yaw = l.getYaw();
 
-	}
+        String worldname = l.getWorld().getName();
 
-	public void save() {
+        config.set("Spawns." + id + ".world", worldname);
+        config.set("Spawns." + id + ".x", x);
+        config.set("Spawns." + id + ".y", y);
+        config.set("Spawns." + id + ".z", z);
+        config.set("Spawns." + id + ".pitch", pitch);
+        config.set("Spawns." + id + ".yaw", yaw);
 
-		try {
+        this.save();
 
-			config.save(this.file);
+        usableDecider(map);
+    }
 
-		}
-		catch (IOException error) {
+    public Location getSpawn(int id) {
 
-			SpleggOG.getPlugin().getLogger().severe("An error occured while saving " + this.name + ".yml.");
+        int x = config.getInt("Spawns." + id + ".x");
+        int y = config.getInt("Spawns." + id + ".y");
+        int z = config.getInt("Spawns." + id + ".z");
 
-		}
+        float yaw = (float) config.getInt("Spawns." + id + ".yaw");
+        float pitch = (float) config.getInt("Spawns." + id + ".pitch");
 
-	}
+        World world = Bukkit.getWorld(config.getString("Spawns." + id + ".world"));
 
-	public void setSpawn(Map map, int id, Location l) {
+        return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
+    }
 
-		int x = l.getBlockX();
-		int y = l.getBlockY();
-		int z = l.getBlockZ();
+    public void setSpec(Location l) {
 
-		float pitch = l.getPitch();
-		float yaw = l.getYaw();
+        int x = l.getBlockX();
+        int y = l.getBlockY();
+        int z = l.getBlockZ();
 
-		String worldname = l.getWorld().getName();
+        float pitch = l.getPitch();
+        float yaw = l.getYaw();
 
-		config.set("Spawns." + id + ".world", worldname);
-		config.set("Spawns." + id + ".x", x);
-		config.set("Spawns." + id + ".y", y);
-		config.set("Spawns." + id + ".z", z);
-		config.set("Spawns." + id + ".pitch", pitch);
-		config.set("Spawns." + id + ".yaw", yaw);
+        String worldname = l.getWorld().getName();
 
-		this.save();
+        config.set("Spec.world", worldname);
+        config.set("Spec.x", x);
+        config.set("Spec.y", y);
+        config.set("Spec.z", z);
+        config.set("Spec.pitch", pitch);
+        config.set("Spec.yaw", yaw);
+    }
 
-		usableDecider(map);
+    public Location getSpawnSpec() {
 
-	}
+        int x = config.getInt("Spec.x");
+        int y = config.getInt("Spec.y");
+        int z = config.getInt("Spec.z");
 
-	public Location getSpawn(int id) {
+        float yaw = (float) config.getInt("Spec.yaw");
+        float pitch = (float) config.getInt("Spec.pitch");
 
-		int x = config.getInt("Spawns." + id + ".x");
-		int y = config.getInt("Spawns." + id + ".y");
-		int z = config.getInt("Spawns." + id + ".z");
+        World world = Bukkit.getWorld(config.getString("Spec.world"));
 
-		float yaw = (float) config.getInt("Spawns." + id + ".yaw");
-		float pitch = (float) config.getInt("Spawns." + id + ".pitch");
+        return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
+    }
 
-		World world = Bukkit.getWorld(config.getString("Spawns." + id + ".world"));
+    public String getName() {
 
-		return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
+        return this.name;
+    }
 
-	}
+    public void loadSpawns() {
 
-	public void setSpec(Location l) {
+        this.spawncount = getCount();
+    }
 
-		int x = l.getBlockX();
-		int y = l.getBlockY();
-		int z = l.getBlockZ();
+    public void loadFloors() {
 
-		float pitch = l.getPitch();
-		float yaw = l.getYaw();
+        this.floorcount = getFloors();
+    }
 
-		String worldname = l.getWorld().getName();
+    public void addSpawn(Location l, Game game) {
 
-		config.set("Spec.world", worldname);
-		config.set("Spec.x", x);
-		config.set("Spec.y", y);
-		config.set("Spec.z", z);
-		config.set("Spec.pitch", pitch);
-		config.set("Spec.yaw", yaw);
+        this.spawncount++;
+        this.savenumbers();
+        this.setSpawn(game.getMap(), this.spawncount, l);
+    }
 
-	}
+    public void addFloor(Location p1, Location p2, Game game) {
 
-	public Location getSpawnSpec() {
+        this.floorcount++;
+        this.savenumbers();
 
-		int x = config.getInt("Spec.x");
-		int y = config.getInt("Spec.y");
-		int z = config.getInt("Spec.z");
+        this.config.set("Floors." + this.floorcount + ".p1.x", p1.getBlockX());
+        this.config.set("Floors." + this.floorcount + ".p1.y", p1.getBlockY());
+        this.config.set("Floors." + this.floorcount + ".p1.z", p1.getBlockZ());
+        this.config.set("Floors." + this.floorcount + ".p1.world", p1.getWorld().getName());
+        this.config.set("Floors." + this.floorcount + ".p2.x", p2.getBlockX());
+        this.config.set("Floors." + this.floorcount + ".p2.y", p2.getBlockY());
+        this.config.set("Floors." + this.floorcount + ".p2.z", p2.getBlockZ());
+        this.config.set("Floors." + this.floorcount + ".p2.world", p2.getWorld().getName());
 
-		float yaw = (float) config.getInt("Spec.yaw");
-		float pitch = (float) config.getInt("Spec.pitch");
+        this.save();
 
-		World world = Bukkit.getWorld(config.getString("Spec.world"));
+        usableDecider(game.getMap());
+    }
 
-		return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
+    public Location getFloor(int id, String pos) {
 
-	}
+        int x = this.config.getInt("Floors." + id + ".p" + pos + ".x");
+        int y = this.config.getInt("Floors." + id + ".p" + pos + ".y");
+        int z = this.config.getInt("Floors." + id + ".p" + pos + ".z");
 
-	public String getName() {
+        String world = this.config.getString("Floors." + id + ".p" + pos + ".world");
 
-		return this.name;
+        return new Location(Bukkit.getWorld(world), (double) x, (double) y, (double) z);
+    }
 
-	}
+    public int getCount() {
 
-	public void loadSpawns() {
+        return config.getInt("Spawns.count");
+    }
 
-		this.spawncount = getCount();
+    public int getFloors() {
 
-	}
+        return config.getInt("Floors.count");
+    }
 
-	public void loadFloors() {
+    public int getSpawnCount() {
 
-		this.floorcount = getFloors();
+        return this.spawncount;
+    }
 
-	}
+    public FileConfiguration getConfig() {
 
-	public void addSpawn(Location l, Game game) {
+        return this.config;
+    }
 
-		this.spawncount++;
-		this.savenumbers();
-		this.setSpawn(game.getMap(), this.spawncount, l);
+    public void setConfig(FileConfiguration config) {
 
-	}
+        this.config = config;
+    }
 
-	public void addFloor(Location p1, Location p2, Game game) {
+    public boolean lobbySet() {
 
-		this.floorcount++;
-		this.savenumbers();
+        return config.isString("Spawns.lobby.world");
+    }
 
-		this.config.set("Floors." + this.floorcount + ".p1.x", p1.getBlockX());
-		this.config.set("Floors." + this.floorcount + ".p1.y", p1.getBlockY());
-		this.config.set("Floors." + this.floorcount + ".p1.z", p1.getBlockZ());
-		this.config.set("Floors." + this.floorcount + ".p1.world", p1.getWorld().getName());
-		this.config.set("Floors." + this.floorcount + ".p2.x", p2.getBlockX());
-		this.config.set("Floors." + this.floorcount + ".p2.y", p2.getBlockY());
-		this.config.set("Floors." + this.floorcount + ".p2.z", p2.getBlockZ());
-		this.config.set("Floors." + this.floorcount + ".p2.world", p2.getWorld().getName());
+    public void setLobby(Location l) {
 
-		this.save();
+        int x = l.getBlockX();
+        int y = l.getBlockY();
+        int z = l.getBlockZ();
 
-		usableDecider(game.getMap());
+        float pitch = l.getPitch();
+        float yaw = l.getYaw();
 
-	}
+        String worldname = l.getWorld().getName();
 
-	public Location getFloor(int id, String pos) {
+        config.set("Spawns.lobby.world", worldname);
+        config.set("Spawns.lobby.x", x);
+        config.set("Spawns.lobby.y", y);
+        config.set("Spawns.lobby.z", z);
+        config.set("Spawns.lobby.pitch", pitch);
+        config.set("Spawns.lobby.yaw", yaw);
 
-		int x = this.config.getInt("Floors." + id + ".p" + pos + ".x");
-		int y = this.config.getInt("Floors." + id + ".p" + pos + ".y");
-		int z = this.config.getInt("Floors." + id + ".p" + pos + ".z");
+        this.save();
+    }
 
-		String world = this.config.getString("Floors." + id + ".p" + pos + ".world");
+    public Location getLobby() {
 
-		return new Location(Bukkit.getWorld(world), (double) x, (double) y, (double) z);
+        int x = config.getInt("Spawns.lobby.x");
+        int y = config.getInt("Spawns.lobby.y");
+        int z = config.getInt("Spawns.lobby.z");
 
-	}
+        float yaw = (float) config.getInt("Spawns.lobby.yaw");
+        float pitch = (float) config.getInt("Spawns.lobby.pitch");
 
-	public int getCount() {
+        World world = Bukkit.getWorld(config.getString("Spawns.lobby.world"));
 
-		return config.getInt("Spawns.count");
-
-	}
-
-	public int getFloors() {
-
-		return config.getInt("Floors.count");
-
-	}
-
-	public int getSpawnCount() {
-
-		return this.spawncount;
-
-	}
-
-	public FileConfiguration getConfig() {
-
-		return this.config;
-
-	}
-
-	public void setConfig(FileConfiguration config) {
-
-		this.config = config;
-
-	}
-
-	public boolean lobbySet() {
-
-		return config.isString("Spawns.lobby.world");
-
-	}
-
-	public void setLobby(Location l) {
-
-		int x = l.getBlockX();
-		int y = l.getBlockY();
-		int z = l.getBlockZ();
-
-		float pitch = l.getPitch();
-		float yaw = l.getYaw();
-
-		String worldname = l.getWorld().getName();
-
-		config.set("Spawns.lobby.world", worldname);
-		config.set("Spawns.lobby.x", x);
-		config.set("Spawns.lobby.y", y);
-		config.set("Spawns.lobby.z", z);
-		config.set("Spawns.lobby.pitch", pitch);
-		config.set("Spawns.lobby.yaw", yaw);
-
-		this.save();
-
-	}
-
-	public Location getLobby() {
-
-		int x = config.getInt("Spawns.lobby.x");
-		int y = config.getInt("Spawns.lobby.y");
-		int z = config.getInt("Spawns.lobby.z");
-
-		float yaw = (float) config.getInt("Spawns.lobby.yaw");
-		float pitch = (float) config.getInt("Spawns.lobby.pitch");
-
-		World world = Bukkit.getWorld(config.getString("Spawns.lobby.world"));
-
-		return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
-
-	}
-
+        return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
+    }
 }

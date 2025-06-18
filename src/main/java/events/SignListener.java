@@ -2,7 +2,7 @@ package events;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
+import main.SpleggOG;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
@@ -13,120 +13,123 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-
-import main.SpleggOG;
 import signs.LobbySign;
 import signs.LobbySignUtils;
 import utils.Utils;
 
 public class SignListener implements Listener {
 
-	@EventHandler(priority = EventPriority.HIGHEST)
-	public void signPlace(SignChangeEvent event) {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void signPlace(SignChangeEvent event) {
 
-		Player player = event.getPlayer();
-		if (event.line(0).toString().equalsIgnoreCase("[splegg]") && event.line(1).toString().equalsIgnoreCase("join") && player.hasPermission("splegg.admin")) {
+        Player player = event.getPlayer();
+        if (event.line(0).toString().equalsIgnoreCase("[splegg]")
+                && event.line(1).toString().equalsIgnoreCase("join")
+                && player.hasPermission("splegg.admin")) {
 
-			String map = event.line(2).toString();
-			if (SpleggOG.getPlugin().maps.mapExists(map)) {
+            String map = event.line(2).toString();
+            if (SpleggOG.getPlugin().maps.mapExists(map)) {
 
-				LobbySign ls = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
-				ls.create(event.getBlock().getLocation(), SpleggOG.getPlugin().maps.getMap(map));
+                LobbySign ls = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
+                ls.create(
+                        event.getBlock().getLocation(),
+                        SpleggOG.getPlugin().maps.getMap(map));
 
-				Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("%map%", map));
+                Utils.spleggOGMessage(
+                        player,
+                        SpleggOG.getPlugin()
+                                .getConfig()
+                                .getString("Messages.CreateSign")
+                                .replaceAll("%map%", map));
+            }
+        }
+    }
 
-			}
+    private static Collection<Material> signMaterials = new ArrayList<>();
 
-		}
+    static {
+        signMaterials.add(Material.ACACIA_SIGN);
+        signMaterials.add(Material.DARK_OAK_SIGN);
+        signMaterials.add(Material.OAK_SIGN);
+        signMaterials.add(Material.BIRCH_SIGN);
+        signMaterials.add(Material.SPRUCE_SIGN);
+        signMaterials.add(Material.JUNGLE_SIGN);
+        signMaterials.add(Material.CRIMSON_SIGN);
+        signMaterials.add(Material.WARPED_SIGN);
+        signMaterials.add(Material.ACACIA_WALL_SIGN);
+        signMaterials.add(Material.DARK_OAK_WALL_SIGN);
+        signMaterials.add(Material.OAK_WALL_SIGN);
+        signMaterials.add(Material.BIRCH_WALL_SIGN);
+        signMaterials.add(Material.SPRUCE_WALL_SIGN);
+        signMaterials.add(Material.JUNGLE_WALL_SIGN);
+        signMaterials.add(Material.CRIMSON_WALL_SIGN);
+        signMaterials.add(Material.WARPED_WALL_SIGN);
+    }
 
-	}
+    @EventHandler
+    public void onInteract(PlayerInteractEvent e) {
 
-	private static Collection<Material> signMaterials = new ArrayList<>();
-	static {
+        if (e.hasBlock()
+                && signMaterials.contains(e.getClickedBlock().getType())
+                && e.getAction() == Action.RIGHT_CLICK_BLOCK) {
 
-		signMaterials.add(Material.ACACIA_SIGN);
-		signMaterials.add(Material.DARK_OAK_SIGN);
-		signMaterials.add(Material.OAK_SIGN);
-		signMaterials.add(Material.BIRCH_SIGN);
-		signMaterials.add(Material.SPRUCE_SIGN);
-		signMaterials.add(Material.JUNGLE_SIGN);
-		signMaterials.add(Material.CRIMSON_SIGN);
-		signMaterials.add(Material.WARPED_SIGN);
-		signMaterials.add(Material.ACACIA_WALL_SIGN);
-		signMaterials.add(Material.DARK_OAK_WALL_SIGN);
-		signMaterials.add(Material.OAK_WALL_SIGN);
-		signMaterials.add(Material.BIRCH_WALL_SIGN);
-		signMaterials.add(Material.SPRUCE_WALL_SIGN);
-		signMaterials.add(Material.JUNGLE_WALL_SIGN);
-		signMaterials.add(Material.CRIMSON_WALL_SIGN);
-		signMaterials.add(Material.WARPED_WALL_SIGN);
+            Sign s = (Sign) e.getClickedBlock().getState();
+            Player player = e.getPlayer();
+            if (s.line(0)
+                    .toString()
+                    .equalsIgnoreCase(SpleggOG.getPlugin().getConfig().getString("Sings.Format.1"))) {
 
-	}
+                String map = s.line(2).toString();
 
-	@EventHandler
-	public void onInteract(PlayerInteractEvent e) {
+                if (SpleggOG.getPlugin().maps.mapExists(map)) {
 
-		if (e.hasBlock() && signMaterials.contains(e.getClickedBlock().getType()) && e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                    player.chat("/splegg join " + map);
+                    player.updateInventory();
 
-			Sign s = (Sign) e.getClickedBlock().getState();
-			Player player = e.getPlayer();
-			if (s.line(0).toString().equalsIgnoreCase(SpleggOG.getPlugin().getConfig().getString("Sings.Format.1"))) {
+                    e.setCancelled(true);
 
-				String map = s.line(2).toString();
+                } else {
 
-				if (SpleggOG.getPlugin().maps.mapExists(map)) {
+                    Utils.spleggOGMessage(
+                            player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist"));
 
-					player.chat("/splegg join " + map);
-					player.updateInventory();
+                    e.setCancelled(true);
+                }
+            }
+        }
+    }
 
-					e.setCancelled(true);
+    @EventHandler
+    public void signBreak(BlockBreakEvent e) {
 
-				}
-				else {
+        Player player = e.getPlayer();
+        if (signMaterials.contains(e.getBlock().getType())) {
 
-					Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist"));
+            Sign s = (Sign) e.getBlock().getState();
+            String[] lines = (String[]) s.lines().toArray();
+            String map = lines[1];
+            if (LobbySignUtils.get().isLobbySign(e.getBlock().getLocation(), map)) {
 
-					e.setCancelled(true);
+                if (player.hasPermission("splegg.admin")) {
 
-				}
+                    LobbySign sign = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
+                    sign.delete(e.getBlock().getLocation());
 
-			}
+                    Utils.spleggOGMessage(
+                            player,
+                            SpleggOG.getPlugin()
+                                    .getConfig()
+                                    .getString("Messages.RemovedSign")
+                                    .replaceAll("%map%", map));
 
-		}
+                } else {
 
-	}
+                    e.setCancelled(true);
 
-	@EventHandler
-	public void signBreak(BlockBreakEvent e) {
-
-		Player player = e.getPlayer();
-		if(signMaterials.contains(e.getBlock().getType())) {
-
-			Sign s = (Sign) e.getBlock().getState();
-			String[] lines = (String[]) s.lines().toArray();
-			String map = lines[1];
-			if (LobbySignUtils.get().isLobbySign(e.getBlock().getLocation(), map)) {
-
-				if (player.hasPermission("splegg.admin")) {
-
-					LobbySign sign = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
-					sign.delete(e.getBlock().getLocation());
-
-					Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign").replaceAll("%map%", map));
-
-				}
-				else {
-
-					e.setCancelled(true);
-
-					Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign"));
-
-				}
-
-			}
-
-		}
-
-	}
-
+                    Utils.spleggOGMessage(
+                            player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign"));
+                }
+            }
+        }
+    }
 }

@@ -1,8 +1,9 @@
 plugins {
+    id("java") // Tell gradle this is a java project.
+    id("java-library") // Import helper for source-based libraries.
+    id("com.diffplug.spotless") version "7.0.4"
     id("com.gradleup.shadow") version "8.3.6" // Import shadow API.
-    java // Tell gradle this is a java project.
     eclipse // Import eclipse plugin for IDE integration.
-    kotlin("jvm") version "2.1.21" // Import kotlin jvm plugin for kotlin/java integration.
 }
 
 java {
@@ -46,7 +47,7 @@ repositories {
     	url = uri("https://repo.essentialsx.net/releases/") // EssentialsX API repository.
     }
     maven {
-    	url = uri("https://maven.enginehub.org/repo") // WorldEdit API repository.
+        url = uri("https://maven.enginehub.org/repo") // Get WorldEdit API from EngineHub Repository.
     }
 }
 
@@ -73,6 +74,7 @@ tasks.shadowJar {
 }
 
 tasks.build {
+    dependsOn(tasks.spotlessApply)
     dependsOn(tasks.shadowJar)
 }
 
@@ -87,13 +89,16 @@ tasks.withType<JavaCompile>().configureEach {
     options.isFork = true
 }
 
-kotlin {
-    jvmToolchain(17)
-}
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
         vendor = JvmVendorSpec.GRAAL_VM
+    }
+}
+
+spotless {
+    java {
+        removeUnusedImports()
+        palantirJavaFormat()
     }
 }

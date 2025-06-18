@@ -1,74 +1,66 @@
 package signs;
 
 import java.util.List;
-
+import main.SpleggOG;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import main.SpleggOG;
-
 public class LobbySignUtils {
 
-	public static LobbySignUtils lsu = new LobbySignUtils();
+    public static LobbySignUtils lsu = new LobbySignUtils();
 
-	public static LobbySignUtils get() {
+    public static LobbySignUtils get() {
 
-		return lsu;
+        return lsu;
+    }
 
-	}
+    public boolean isLobbySign(Location location, String name) {
 
-	public boolean isLobbySign(Location location, String name) {
+        String locString = this.locationToString(location);
+        List<String> signLocs = SpleggOG.getPlugin().maps.c.maps.getStringList("Signs." + name + ".lobby");
 
-		String locString = this.locationToString(location);
-		List<String> signLocs = SpleggOG.getPlugin().maps.c.maps.getStringList("Signs." + name + ".lobby");
+        return signLocs.contains(locString);
+    }
 
-		return signLocs.contains(locString);
+    public String locationToString(Location l) {
 
-	}
+        String w = l.getWorld().getName();
 
-	public String locationToString(Location l) {
+        int x = l.getBlockX();
+        int y = l.getBlockY();
+        int z = l.getBlockZ();
 
-		String w = l.getWorld().getName();
+        return w + "." + x + "." + y + "." + z;
+    }
 
-		int x = l.getBlockX();
-		int y = l.getBlockY();
-		int z = l.getBlockZ();
+    public Location stringToLocation(String s) {
 
-		return w + "." + x + "." + y + "." + z;
+        String[] str = s.split("\\.");
 
-	}
+        World w = Bukkit.getServer().getWorld(str[0]);
 
-	public Location stringToLocation(String s) {
+        int x = Integer.parseInt(str[1]);
+        int y = Integer.parseInt(str[2]);
+        int z = Integer.parseInt(str[3]);
 
-		String[] str = s.split("\\.");
+        return new Location(w, (double) x, (double) y, (double) z);
+    }
 
-		World w = Bukkit.getServer().getWorld(str[0]);
+    public boolean compareLocations(Location one, Location two) {
 
-		int x = Integer.parseInt(str[1]);
-		int y = Integer.parseInt(str[2]);
-		int z = Integer.parseInt(str[3]);
+        String w = one.getWorld().getName();
 
-		return new Location(w, (double) x, (double) y, (double) z);
+        int x = one.getBlockX();
+        int y = one.getBlockY();
+        int z = one.getBlockZ();
 
-	}
+        String checkw = two.getWorld().getName();
 
-	public boolean compareLocations(Location one, Location two) {
+        int checkx = two.getBlockX();
+        int checky = two.getBlockY();
+        int checkz = two.getBlockZ();
 
-		String w = one.getWorld().getName();
-
-		int x = one.getBlockX();
-		int y = one.getBlockY();
-		int z = one.getBlockZ();
-
-		String checkw = two.getWorld().getName();
-
-		int checkx = two.getBlockX();
-		int checky = two.getBlockY();
-		int checkz = two.getBlockZ();
-
-		return w.equalsIgnoreCase(checkw) && x == checkx && y == checky && z == checkz;
-
-	}
-
+        return w.equalsIgnoreCase(checkw) && x == checkx && y == checky && z == checkz;
+    }
 }
