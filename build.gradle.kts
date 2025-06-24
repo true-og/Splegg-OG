@@ -52,9 +52,9 @@ dependencies {
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") // Import Vault API.
     compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.0-SNAPSHOT") // Import WorldEdit API.
     implementation("net.essentialsx:EssentialsX:2.20.1") // Import EssentialsX API.
-    compileOnlyApi(project(":libs:Utilities-OG"))
-    compileOnlyApi(project(":libs:GxUI-OG"))
-    compileOnlyApi(project(":libs:DiamondBank-OG"))
+    compileOnlyApi(project(":libs:Utilities-OG")) // Import TrueOG Network Utilities-OG API.
+    compileOnlyApi(project(":libs:GxUI-OG")) // Import TrueOG Network GxUI-OG API.
+    compileOnlyApi(project(":libs:DiamondBank-OG")) // Import TrueOG Network DiamondBank-OG API.
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach { // Ensure reproducible .jars
