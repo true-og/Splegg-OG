@@ -4,46 +4,46 @@ import org.bukkit.entity.Player;
 
 public class SpleggPlayer {
 
-	UtilPlayer u;
-	int kills;
-	int broken;
+    UtilPlayer u;
+    int kills;
+    int broken;
 
-	public SpleggPlayer(UtilPlayer u) {
+    public SpleggPlayer(UtilPlayer u) {
 
-		this.u = u;
-		this.kills = 0;
-		this.broken = 0;
+        this.u = u;
+        this.kills = 0;
+        this.broken = 0;
 
-	}
+    }
 
-	public UtilPlayer getUtilPlayer() {
+    public UtilPlayer getUtilPlayer() {
 
-		return this.u;
+        return this.u;
 
-	}
+    }
 
-	public Player getPlayer() {
+    public Player getPlayer() {
 
-		return this.u.getPlayer();
+        return this.u.getPlayer();
 
-	}
+    }
 
-	public int getKills() {
+    public int getKills() {
 
-		return this.kills;
+        return this.kills;
 
-	}
+    }
 
-	public void setKills(int i) {
+    public void setKills(int i) {
 
-		this.kills = i;
+        this.kills = i;
 
-	}
+    }
 
-	public int getBroken() {
+    public int getBroken() {
 
-		return this.broken;
+        return this.broken;
 
-	}
+    }
 
 }

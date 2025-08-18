@@ -11,124 +11,124 @@ import utils.SpleggPlayer;
 
 public class GameUtilities {
 
-	public HashMap<String, Game> GAMES = new HashMap<String, Game>();
+    public HashMap<String, Game> GAMES = new HashMap<String, Game>();
 
-	public Game getGame(String map) {
+    public Game getGame(String map) {
 
-		return (Game) this.GAMES.get(map);
+        return (Game) this.GAMES.get(map);
 
-	}
+    }
 
-	public void addGame(String map, Game game) {
+    public void addGame(String map, Game game) {
 
-		this.GAMES.put(map, game);
+        this.GAMES.put(map, game);
 
-	}
+    }
 
-	public SpleggPlayer getPlayer(Player player) {
+    public SpleggPlayer getPlayer(Player player) {
 
-		if (player == null) {
+        if (player == null) {
 
-			return null;
+            return null;
 
-		}
-		else {
+        } else {
 
-			SpleggPlayer sp = null;
-			Iterator<?> var4 = this.GAMES.values().iterator();
-			while(var4.hasNext()) {
+            SpleggPlayer sp = null;
+            Iterator<?> var4 = this.GAMES.values().iterator();
+            while (var4.hasNext()) {
 
-				Game games = (Game) var4.next();
+                Game games = (Game) var4.next();
 
-				Iterator<?> var6 = games.players.values().iterator();
-				while(var6.hasNext()) {
+                Iterator<?> var6 = games.players.values().iterator();
+                while (var6.hasNext()) {
 
-					SpleggPlayer sps = (SpleggPlayer) var6.next();
+                    SpleggPlayer sps = (SpleggPlayer) var6.next();
 
-					if (sps.getPlayer().getName().equalsIgnoreCase(player.getName())) {
+                    if (sps.getPlayer().getName().equalsIgnoreCase(player.getName())) {
 
-						sp = sps;
+                        sp = sps;
 
-					}
+                    }
 
-				}
+                }
 
-			}
+            }
 
-			return sp;
+            return sp;
 
-		}
+        }
 
-	}
+    }
 
-	public Game getMatchedGame(Player player) {
+    public Game getMatchedGame(Player player) {
 
-		Game game = null;
-		Iterator<?> var4 = this.GAMES.values().iterator();
+        Game game = null;
+        Iterator<?> var4 = this.GAMES.values().iterator();
 
-		while(var4.hasNext()) {
+        while (var4.hasNext()) {
 
-			Game g = (Game) var4.next();
-			if (g.players.containsKey(player.getName())) {
+            Game g = (Game) var4.next();
+            if (g.players.containsKey(player.getName())) {
 
-				game = g;
+                game = g;
 
-			}
+            }
 
-		}
+        }
 
-		return game;
+        return game;
 
-	}
+    }
 
-	public int howManyOpenGames() {
+    public int howManyOpenGames() {
 
-		ArrayList<Game> all = new ArrayList<Game>();
-		Iterator<?> var3 = this.GAMES.values().iterator();
-		while(var3.hasNext()) {
+        ArrayList<Game> all = new ArrayList<Game>();
+        Iterator<?> var3 = this.GAMES.values().iterator();
+        while (var3.hasNext()) {
 
-			Game games = (Game) var3.next();
-			if (games.getStatus() == Status.LOBBY) {
+            Game games = (Game) var3.next();
+            if (games.getStatus() == Status.LOBBY) {
 
-				all.add(games);
-			}
+                all.add(games);
 
-		}
+            }
 
-		return all.size();
+        }
 
-	}
+        return all.size();
 
-	public void checkWinner(Game game) {
+    }
 
-		int amountOfPlayersInGame = game.players.size();
-		if (amountOfPlayersInGame <= 1) {
+    public void checkWinner(Game game) {
 
-			if (amountOfPlayersInGame == 0) {
+        int amountOfPlayersInGame = game.players.size();
+        if (amountOfPlayersInGame <= 1) {
 
-				game.splegg.game.stopGame(game, 0);
+            if (amountOfPlayersInGame == 0) {
 
-			}
-			else {
+                game.splegg.game.stopGame(game, 0);
 
-				Iterator<?> playersLeft = game.players.values().iterator();
-				while(playersLeft.hasNext()) {
+            } else {
 
-					SpleggPlayer sp = (SpleggPlayer) playersLeft.next();
+                Iterator<?> playersLeft = game.players.values().iterator();
+                while (playersLeft.hasNext()) {
 
-					SpleggOG.getPlugin().getLogger().info("Winner who should be removed from the game: " + sp.getPlayer().getName());
+                    SpleggPlayer sp = (SpleggPlayer) playersLeft.next();
 
-					game.leaveGame(sp.getUtilPlayer());
-					game.players.clear();
+                    SpleggOG.getPlugin().getLogger()
+                            .info("Winner who should be removed from the game: " + sp.getPlayer().getName());
 
-				}
+                    game.leaveGame(sp.getUtilPlayer());
+                    game.players.clear();
 
-				game.splegg.game.stopGame(game, 5);
+                }
 
-			}
+                game.splegg.game.stopGame(game, 5);
 
-		}
+            }
 
-	}
+        }
+
+    }
 
 }

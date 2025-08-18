@@ -5,74 +5,74 @@ import org.bukkit.block.data.BlockData;
 
 public class Rollback {
 
-	private String world;
-	private Material previd;
-	private Material newid;
-	private BlockData prevdata;
-	private BlockData newdata;
-	private int x;
-	private int y;
-	private int z;
+    private String world;
+    private Material previd;
+    private Material newid;
+    private BlockData prevdata;
+    private BlockData newdata;
+    private int x;
+    private int y;
+    private int z;
 
-	public Rollback(String world, Material previd, BlockData prevdata, int x, int y, int z) {
+    public Rollback(String world, Material previd, BlockData prevdata, int x, int y, int z) {
 
-		this.world = world;
-		this.previd = previd;
-		this.prevdata = prevdata;
-		this.newid = Material.AIR;
-		this.newdata = null;
-		this.x = x;
-		this.y = y;
-		this.z = z;
+        this.world = world;
+        this.previd = previd;
+        this.prevdata = prevdata;
+        this.newid = Material.AIR;
+        this.newdata = null;
+        this.x = x;
+        this.y = y;
+        this.z = z;
 
-	}
+    }
 
-	public String getWorld() {
+    public String getWorld() {
 
-		return this.world;
+        return this.world;
 
-	}
+    }
 
-	public BlockData getPrevdata() {
+    public BlockData getPrevdata() {
 
-		return this.prevdata;
+        return this.prevdata;
 
-	}
+    }
 
-	public BlockData getNewdata() {
+    public BlockData getNewdata() {
 
-		return this.newdata;
+        return this.newdata;
 
-	}
+    }
 
-	public Material getPrevid() {
+    public Material getPrevid() {
 
-		return this.previd;
+        return this.previd;
 
-	}
+    }
 
-	public Material getNewid() {
+    public Material getNewid() {
 
-		return this.newid;
+        return this.newid;
 
-	}
+    }
 
-	public int getX() {
+    public int getX() {
 
-		return this.x;
+        return this.x;
 
-	}
+    }
 
-	public int getY() {
+    public int getY() {
 
-		return this.y;
+        return this.y;
 
-	}
+    }
 
-	public int getZ() {
+    public int getZ() {
 
-		return this.z;
+        return this.z;
 
-	}
+    }
 
 }

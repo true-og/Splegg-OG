@@ -14,113 +14,113 @@ import utils.Utils;
 
 public class GameManager {
 
-	SpleggOG splegg;
+    SpleggOG splegg;
 
-	public GameManager() {
+    public GameManager() {
 
-		splegg = SpleggOG.getPlugin();
+        splegg = SpleggOG.getPlugin();
 
-	}
+    }
 
-	public void startGame(Game game) {
+    public void startGame(Game game) {
 
-		Map map = game.getMap();
-		SpleggOG.getPlugin().getLogger().info("New game commencing in map: " + map);
-		game.startGameTimer();
-		Bukkit.getScheduler().cancelTask(game.counter);
-		game.status = Status.INGAME;
-		game.time = 901;
-		game.setLobbyCount(31);
-		int c = 1;
-		game.loadFloors();
+        Map map = game.getMap();
+        SpleggOG.getPlugin().getLogger().info("New game commencing in map: " + map);
+        game.startGameTimer();
+        Bukkit.getScheduler().cancelTask(game.counter);
+        game.status = Status.INGAME;
+        game.time = 901;
+        game.setLobbyCount(31);
+        int c = 1;
+        game.loadFloors();
 
-		Iterator<?> playersInGame = game.players.values().iterator();
-		SpleggPlayer sp;
-		while(playersInGame.hasNext()) {
+        Iterator<?> playersInGame = game.players.values().iterator();
+        SpleggPlayer sp;
+        while (playersInGame.hasNext()) {
 
-			sp = (SpleggPlayer) playersInGame.next();
+            sp = (SpleggPlayer) playersInGame.next();
 
-			sp.getPlayer().setLevel(0);
-			sp.getUtilPlayer().setAlive(true);
+            sp.getPlayer().setLevel(0);
+            sp.getUtilPlayer().setAlive(true);
 
-			if (c > map.getSpawnCount()) {
+            if (c > map.getSpawnCount()) {
 
-				c = 1;
+                c = 1;
 
-			}
+            }
 
-			sp.getPlayer().teleport(map.getSpawn(c));
-			c++;
-			sp.getPlayer().setLevel(0);
-			sp.getPlayer().setExp(0.0F);
-			sp.getPlayer().setGameMode(GameMode.ADVENTURE);
-			sp.getPlayer().getInventory().clear();
+            sp.getPlayer().teleport(map.getSpawn(c));
+            c++;
+            sp.getPlayer().setLevel(0);
+            sp.getPlayer().setExp(0.0F);
+            sp.getPlayer().setGameMode(GameMode.ADVENTURE);
+            sp.getPlayer().getInventory().clear();
 
-		}
+        }
 
-		game.getSign().update(map, false);
+        game.getSign().update(map, false);
 
-		splegg.chat.bc(splegg.getConfig().getString("Messages.InstructionsGame"), game);
+        splegg.chat.bc(splegg.getConfig().getString("Messages.InstructionsGame"), game);
 
-	}
+    }
 
-	public void stopGame(Game game, int r) {
+    public void stopGame(Game game, int r) {
 
-		SpleggOG.getPlugin().getLogger().info("Commencing shutdown of: " + game.getMap().getName() + ".");
+        SpleggOG.getPlugin().getLogger().info("Commencing shutdown of: " + game.getMap().getName() + ".");
 
-		game.status = Status.ENDING;
-		game.stopGameTimer();
-		game.time = 601;
-		game.setStatus(Status.LOBBY);
-		game.resetArena();
-		game.data.clear();
-		game.floor.clear();
-		game.setStarting(false);
+        game.status = Status.ENDING;
+        game.stopGameTimer();
+        game.time = 601;
+        game.setStatus(Status.LOBBY);
+        game.resetArena();
+        game.data.clear();
+        game.floor.clear();
+        game.setStarting(false);
 
-		Iterator<?> playersInGame = game.players.values().iterator();
-		while(playersInGame.hasNext()) {
+        Iterator<?> playersInGame = game.players.values().iterator();
+        while (playersInGame.hasNext()) {
 
-			SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
-			UtilPlayer u = sp.getUtilPlayer();
-			game.leaveGame(u);
+            SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
+            UtilPlayer u = sp.getUtilPlayer();
+            game.leaveGame(u);
 
-		}
+        }
 
-		if (! splegg.disabling) {
+        if (!splegg.disabling) {
 
-			game.getSign().update(game.map, true);
+            game.getSign().update(game.map, true);
 
-		}
+        }
 
-		game.players.clear();
+        game.players.clear();
 
-		SpleggOG.getPlugin().getLogger().info("Map " + game.map.getName() + " was reset.");
+        SpleggOG.getPlugin().getLogger().info("Map " + game.map.getName() + " was reset.");
 
-	}
+    }
 
-	public String getDigitTime(int count) {
+    public String getDigitTime(int count) {
 
-		int minutes = count / 60;
-		int seconds = count % 60;
+        int minutes = count / 60;
+        int seconds = count % 60;
 
-		String disMinu = (minutes < 10 ? "0" : "") + minutes;
-		String disSec = (seconds < 10 ? "0" : "") + seconds;
-		String formattedTime = disMinu + ":" + disSec;
+        String disMinu = (minutes < 10 ? "0" : "") + minutes;
+        String disSec = (seconds < 10 ? "0" : "") + seconds;
+        String formattedTime = disMinu + ":" + disSec;
 
-		return formattedTime;
+        return formattedTime;
 
-	}
+    }
 
-	public void ingameTimer(int count, HashMap<String, SpleggPlayer> players) {
+    public void ingameTimer(int count, HashMap<String, SpleggPlayer> players) {
 
-		Iterator<?> playersInGame = players.values().iterator();
-		while(playersInGame.hasNext()) {
+        Iterator<?> playersInGame = players.values().iterator();
+        while (playersInGame.hasNext()) {
 
-			SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
-			Utils.spleggOGMessage(sp.getPlayer(), ("&6Splegg is ending in... " + splegg.game.getDigitTime(count)));
+            SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
+            Utils.spleggOGMessage(sp.getPlayer(), ("&6Splegg is ending in... " + splegg.game.getDigitTime(count)));
 
-		}
+        }
 
-	}
+    }
 
 }

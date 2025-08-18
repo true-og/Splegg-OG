@@ -23,165 +23,170 @@ import managers.GameManager;
 import managers.GameUtilities;
 import managers.Status;
 import net.milkbowl.vault.economy.Economy;
+import net.trueog.diamondbankog.DiamondBankAPIJava;
 import utils.UtilPlayer;
 import utils.Utils;
 
 public class SpleggOG extends JavaPlugin {
 
-	private static SpleggOG plugin;
-	public Economy econ = null;
-	public Utils chat;
-	public MapUtilities maps;
-	public GameUtilities games;
-	public GameManager game;
-	public Utils pm;
-	public Utils utils;
-	public Utils config;
-	public boolean updateOut = false;
-	public String newVer = "";
-	public boolean disabling = false;
-	boolean economy = true;
+    DiamondBankAPIJava dbog;
 
-	// TODO: If a shovel in the Splegg shop is too expensive, close the inventory and tell the user about it.
-	private boolean setupEconomy() {
+    private static SpleggOG plugin;
+    public Economy econ = null;
+    public Utils chat;
+    public MapUtilities maps;
+    public GameUtilities games;
+    public GameManager game;
+    public Utils pm;
+    public Utils utils;
+    public Utils config;
+    public boolean updateOut = false;
+    public String newVer = "";
+    public boolean disabling = false;
+    boolean economy = true;
 
-		if (this.getServer().getPluginManager().getPlugin("Vault") == null) {
+    // TODO: If a shovel in the Splegg shop is too expensive, close the inventory
+    // and tell the user about it.
+    private boolean setupEconomy() {
 
-			return false;
+        if (this.getServer().getPluginManager().getPlugin("Vault") == null) {
 
-		}
-		else {
+            // ondBankAPI dbog;
 
-			RegisteredServiceProvider<Economy> rsp = this.getServer().getServicesManager().getRegistration(Economy.class);
-			if (rsp == null) {
+            return false;
 
-				return false;
+        } else {
 
-			}
-			else {
+            RegisteredServiceProvider<Economy> rsp = this.getServer().getServicesManager()
+                    .getRegistration(Economy.class);
+            if (rsp == null) {
 
-				this.econ = (Economy) rsp.getProvider();
+                return false;
 
-				return this.econ != null;
+            } else {
 
-			}
+                this.econ = (Economy) rsp.getProvider();
 
-		}
+                return this.econ != null;
 
-	}
+            }
 
-	public void onEnable() {
+        }
 
-		plugin = this;
-		this.chat = new Utils();
-		if (this.getServer().getPluginManager().getPlugin("WorldEdit") == null) {
+    }
 
-			String noWorldEditError = "\"ERROR: WorldEdit not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
-			this.getLogger().severe(noWorldEditError);
-			this.getLogger().info(noWorldEditError);
+    public void onEnable() {
 
-			Bukkit.getPluginManager().disablePlugin(this);
+        plugin = this;
+        this.chat = new Utils();
+        if (this.getServer().getPluginManager().getPlugin("WorldEdit") == null) {
 
-		}
-		else {
+            String noWorldEditError = "\"ERROR: WorldEdit not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
+            this.getLogger().severe(noWorldEditError);
+            this.getLogger().info(noWorldEditError);
 
-			this.maps = new MapUtilities();
-			this.games = new GameUtilities();
-			this.game = new GameManager();
-			this.pm = new Utils();
-			this.utils = new Utils();
-			this.config = new Utils();
+            Bukkit.getPluginManager().disablePlugin(this);
 
-			this.maps.c.setup();
-			this.config.setup();
+        } else {
 
-			this.getConfig().options().copyDefaults(true);
-			this.saveConfig();
+            this.maps = new MapUtilities();
+            this.games = new GameUtilities();
+            this.game = new GameManager();
+            this.pm = new Utils();
+            this.utils = new Utils();
+            this.config = new Utils();
 
-			this.getServer().getPluginManager().registerEvents(new MapListener(), this);
-			this.getServer().getPluginManager().registerEvents(new PlayerListener(), this);
-			this.getServer().getPluginManager().registerEvents(new SpleggEvents(), this);
-			this.getServer().getPluginManager().registerEvents(new SignListener(), this);
-			this.getServer().getPluginManager().registerEvents(new Listeners(), this);
+            this.maps.c.setup();
+            this.config.setup();
 
-			this.getCommand("splegg").setExecutor(new SpleggCommand());
+            this.getConfig().options().copyDefaults(true);
+            this.saveConfig();
 
-			if (! this.setupEconomy()) {
+            this.getServer().getPluginManager().registerEvents(new MapListener(), this);
+            this.getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+            this.getServer().getPluginManager().registerEvents(new SpleggEvents(), this);
+            this.getServer().getPluginManager().registerEvents(new SignListener(), this);
+            this.getServer().getPluginManager().registerEvents(new Listeners(), this);
 
-				// Inform the user that the plugin will not work due to a missing vault dependency.
-				this.getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", this.getPluginMeta().getName()));
+            this.getCommand("splegg").setExecutor(new SpleggCommand());
 
-				// Disable Splegg-OG for this instance because Vault (a crucial dependency) was not found.
-				this.getServer().getPluginManager().disablePlugin(this);
+            if (!this.setupEconomy()) {
 
-			}
-			else {
+                // Inform the user that the plugin will not work due to a missing vault
+                // dependency.
+                this.getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!",
+                        this.getPluginMeta().getName()));
 
-				for(Player p : Bukkit.getOnlinePlayers()) {
+                // Disable Splegg-OG for this instance because Vault (a crucial dependency) was
+                // not found.
+                this.getServer().getPluginManager().disablePlugin(this);
 
-					UtilPlayer u = new UtilPlayer(p);
+            } else {
 
-					this.pm.PLAYERS.put(p.getName(), u);
+                for (Player p : Bukkit.getOnlinePlayers()) {
 
-				}
+                    UtilPlayer u = new UtilPlayer(p);
 
-			}
+                    this.pm.PLAYERS.put(p.getName(), u);
 
-		}
+                }
 
-	}
+            }
 
-	public void onDisable() {
+        }
 
-		this.disabling = true;
+    }
 
-		HandlerList.unregisterAll(new MapListener());
-		HandlerList.unregisterAll(new PlayerListener());
-		HandlerList.unregisterAll(new SpleggEvents());
-		HandlerList.unregisterAll(new SignListener());
-		HandlerList.unregisterAll(new Listeners());
+    public void onDisable() {
 
-		int gameCounter = 0;
-		try {
+        this.disabling = true;
 
-			Iterator<?> gameIterator = this.games.GAMES.values().iterator();
-			while(gameIterator.hasNext()) {
+        HandlerList.unregisterAll(new MapListener());
+        HandlerList.unregisterAll(new PlayerListener());
+        HandlerList.unregisterAll(new SpleggEvents());
+        HandlerList.unregisterAll(new SignListener());
+        HandlerList.unregisterAll(new Listeners());
 
-				Game game = (Game) gameIterator.next();
-				if (game.getStatus() == Status.INGAME) {
+        int gameCounter = 0;
+        try {
 
-					gameCounter++;
+            Iterator<?> gameIterator = this.games.GAMES.values().iterator();
+            while (gameIterator.hasNext()) {
 
-					this.game.stopGame(game, 1);
+                Game game = (Game) gameIterator.next();
+                if (game.getStatus() == Status.INGAME) {
 
-				}
+                    gameCounter++;
 
-			}
+                    this.game.stopGame(game, 1);
 
-			this.getLogger().info("Splegg-OG Shut Down with " + gameCounter + " games running.");
+                }
 
-		}
-		catch (NullPointerException error) {
+            }
 
-			this.getLogger().info("Splegg-OG Shut Down with 0 games running.");
+            this.getLogger().info("Splegg-OG Shut Down with " + gameCounter + " games running.");
 
-		}
+        } catch (NullPointerException error) {
 
-	}
+            this.getLogger().info("Splegg-OG Shut Down with 0 games running.");
 
-	public WorldEditPlugin getWorldEdit() {
+        }
 
-		Plugin worldEdit = this.getServer().getPluginManager().getPlugin("WorldEdit");
+    }
 
-		return worldEdit instanceof WorldEditPlugin ? (WorldEditPlugin) worldEdit : null;
+    public WorldEditPlugin getWorldEdit() {
 
-	}
+        Plugin worldEdit = this.getServer().getPluginManager().getPlugin("WorldEdit");
 
-	public static SpleggOG getPlugin() {
+        return worldEdit instanceof WorldEditPlugin ? (WorldEditPlugin) worldEdit : null;
 
-		// Pass instance of main to other classes.
-		return plugin;
+    }
 
-	}
+    public static SpleggOG getPlugin() {
+
+        // Pass instance of main to other classes.
+        return plugin;
+
+    }
 
 }

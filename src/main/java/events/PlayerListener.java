@@ -20,106 +20,106 @@ import utils.Utils;
 
 public class PlayerListener implements Listener {
 
-	String[] cmds = new String[]{""};
+    String[] cmds = new String[] { "" };
 
-	@EventHandler
-	public void onFood(FoodLevelChangeEvent event) {
+    @EventHandler
+    public void onFood(FoodLevelChangeEvent event) {
 
-		if (event.getEntity() instanceof Player) {
+        if (event.getEntity() instanceof Player) {
 
-			Player player = (Player) event.getEntity();
-			UtilPlayer u = new UtilPlayer(player);
-			if (u.getGame() != null && u.isAlive()) {
+            Player player = (Player) event.getEntity();
+            UtilPlayer u = new UtilPlayer(player);
+            if (u.getGame() != null && u.isAlive()) {
 
-				event.setCancelled(true);
-				event.setFoodLevel(20);
+                event.setCancelled(true);
+                event.setFoodLevel(20);
 
-			}
+            }
 
-		}
+        }
 
-	}
+    }
 
-	@EventHandler
-	public void entityDamage(EntityDamageEvent event) {
+    @EventHandler
+    public void entityDamage(EntityDamageEvent event) {
 
-		if (event.getEntity() instanceof Player) {
+        if (event.getEntity() instanceof Player) {
 
-			Player player = (Player) event.getEntity();
-			UtilPlayer u = new UtilPlayer(player);
-			if (u.getGame() != null && u.isAlive()) {
+            Player player = (Player) event.getEntity();
+            UtilPlayer u = new UtilPlayer(player);
+            if (u.getGame() != null && u.isAlive()) {
 
-				event.setCancelled(true);
+                event.setCancelled(true);
 
-			}
+            }
 
-		}
+        }
 
-	}
+    }
 
-	@EventHandler
-	public void onJoin(PlayerJoinEvent event) {
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
 
-		Player player = event.getPlayer();
-		UtilPlayer u = new UtilPlayer(player);
+        Player player = event.getPlayer();
+        UtilPlayer u = new UtilPlayer(player);
 
-		SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
+        SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
 
-		Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
-		User user = new User(player, ess);
+        Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+        User user = new User(player, ess);
 
-		Kits essentialsKitList = new Kits(ess);
-		Kit playersKitToRestoreAfterMatch = (Kit) essentialsKitList.getKit(player.getName());
-		if(playersKitToRestoreAfterMatch != null) {
+        Kits essentialsKitList = new Kits(ess);
+        Kit playersKitToRestoreAfterMatch = (Kit) essentialsKitList.getKit(player.getName());
+        if (playersKitToRestoreAfterMatch != null) {
 
-			try {
+            try {
 
-				playersKitToRestoreAfterMatch.expandItems(user);
+                playersKitToRestoreAfterMatch.expandItems(user);
 
+            } catch (Exception error) {
 
-			}
-			catch (Exception error) {
+                SpleggOG.getPlugin().getLogger().severe(error.getMessage());
 
-				SpleggOG.getPlugin().getLogger().severe(error.getMessage());
+            }
 
-			}
+        } else {
 
-		}
-		else {
+            SpleggOG.getPlugin().getLogger().severe(
+                    "ERROR: Kit for player: " + player.getName() + " was not found during the restore attempt!");
 
-			SpleggOG.getPlugin().getLogger().severe("ERROR: Kit for player: " + player.getName() + " was not found during the restore attempt!");
+        }
 
-		}
+    }
 
-	}
+    @EventHandler
+    public void dropItem(PlayerDropItemEvent event) {
 
-	@EventHandler
-	public void dropItem(PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        UtilPlayer u = new UtilPlayer(player);
 
-		Player player = event.getPlayer();
-		UtilPlayer u = new UtilPlayer(player);
+        if (u.getGame() != null && u.isAlive()) {
 
-		if (u.getGame() != null && u.isAlive()) {
+            event.setCancelled(true);
 
-			event.setCancelled(true);
+        }
 
-		}
+    }
 
-	}
+    @EventHandler
+    public void onCommand(PlayerCommandPreprocessEvent event) {
 
-	@EventHandler
-	public void onCommand(PlayerCommandPreprocessEvent event) {
+        Player player = event.getPlayer();
+        UtilPlayer u = new UtilPlayer(player);
+        if (u.getGame() != null && u.isAlive() && !event.getMessage().startsWith("/splegg")
+                && !player.hasPermission("splegg.admin"))
+        {
 
-		Player player = event.getPlayer();
-		UtilPlayer u = new UtilPlayer(player);
-		if (u.getGame() != null && u.isAlive() && ! event.getMessage().startsWith("/splegg") && ! player.hasPermission("splegg.admin")) {
+            event.setCancelled(true);
 
-			event.setCancelled(true);
+            Utils.spleggOGMessage(player, "&6You cannot use that command in &3Splegg&6!");
 
-			Utils.spleggOGMessage(player, "&6You cannot use that command in &3Splegg&6!");
+        }
 
-		}
-
-	}
+    }
 
 }

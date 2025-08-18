@@ -14,114 +14,111 @@ import managers.Status;
 
 public class MapConfig {
 
-	public FileConfiguration maps;
-	public File f;
+    public FileConfiguration maps;
+    public File f;
 
-	public void setup() {
+    public void setup() {
 
-		this.f = new File(SpleggOG.getPlugin().getDataFolder(), "maps.yml");
-		try {
+        this.f = new File(SpleggOG.getPlugin().getDataFolder(), "maps.yml");
+        try {
 
-			this.f.createNewFile();
+            this.f.createNewFile();
 
-		}
-		catch (IOException error) {
+        } catch (IOException error) {
 
-			SpleggOG.getPlugin().getLogger().severe("An error occured while creating maps.yml.");
+            SpleggOG.getPlugin().getLogger().severe("An error occured while creating maps.yml.");
 
-		}
+        }
 
-		this.loadMaps();
-		this.saveMaps();
+        this.loadMaps();
+        this.saveMaps();
 
-		SpleggOG.getPlugin().maps.MAPS.clear();
+        SpleggOG.getPlugin().maps.MAPS.clear();
 
-		Iterator<?> enabledMapIterator = this.getEnabledMaps().iterator();
-		while(enabledMapIterator.hasNext()) {
+        Iterator<?> enabledMapIterator = this.getEnabledMaps().iterator();
+        while (enabledMapIterator.hasNext()) {
 
-			String maps = (String) enabledMapIterator.next();
-			SpleggOG.getPlugin().maps.addMap(maps);
+            String maps = (String) enabledMapIterator.next();
+            SpleggOG.getPlugin().maps.addMap(maps);
 
-			Map map = SpleggOG.getPlugin().maps.getMap(maps);
-			Game game = new Game(SpleggOG.getPlugin(), map);
-			SpleggOG.getPlugin().games.addGame(map.getName(), game);
+            Map map = SpleggOG.getPlugin().maps.getMap(maps);
+            Game game = new Game(SpleggOG.getPlugin(), map);
+            SpleggOG.getPlugin().games.addGame(map.getName(), game);
 
-			if (! map.isUsable(map)) {
+            if (!map.isUsable(map)) {
 
-				game.setStatus(Status.DISABLED);
+                game.setStatus(Status.DISABLED);
 
-			}
+            }
 
-		}
+        }
 
+    }
 
-	}
+    private void loadMaps() {
 
-	private void loadMaps() {
+        this.maps = YamlConfiguration.loadConfiguration(this.f);
 
-		this.maps = YamlConfiguration.loadConfiguration(this.f);
+    }
 
-	}
+    public void saveMaps() {
 
-	public void saveMaps() {
+        try {
 
-		try {
+            this.maps.save(this.f);
 
-			this.maps.save(this.f);
+        } catch (IOException error) {
 
-		}
-		catch (IOException error) {
+            SpleggOG.getPlugin().getLogger().severe("An error occured while saving maps.yml.");
 
-			SpleggOG.getPlugin().getLogger().severe("An error occured while saving maps.yml.");
+        }
 
-		}
+    }
 
-	}
+    public List<String> getEnabledMaps() {
 
-	public List<String> getEnabledMaps() {
+        return this.maps.getStringList("maps");
 
-		return this.maps.getStringList("maps");
+    }
 
-	}
+    public void addSign(String map, String loc) {
 
-	public void addSign(String map, String loc) {
+        List<String> signs = this.maps.getStringList("Signs." + map + ".lobby");
+        signs.add(loc);
 
-		List<String> signs = this.maps.getStringList("Signs." + map + ".lobby");
-		signs.add(loc);
+        this.maps.set("Signs." + map + ".lobby", signs);
+        this.saveMaps();
 
-		this.maps.set("Signs." + map + ".lobby", signs);
-		this.saveMaps();
+    }
 
-	}
+    public void delSign(String map, String loc) {
 
-	public void delSign(String map, String loc) {
+        List<String> signs = this.maps.getStringList("Signs." + map + ".lobby");
+        signs.remove(loc);
 
-		List<String> signs = this.maps.getStringList("Signs." + map + ".lobby");
-		signs.remove(loc);
+        this.maps.set("Signs." + map + ".lobby", signs);
+        this.saveMaps();
 
-		this.maps.set("Signs." + map + ".lobby", signs);
-		this.saveMaps();
+    }
 
-	}
+    public void addMap(String name) {
 
-	public void addMap(String name) {
+        List<String> maps = this.maps.getStringList("maps");
+        maps.add(name);
 
-		List<String> maps = this.maps.getStringList("maps");
-		maps.add(name);
+        this.maps.set("maps", maps);
+        this.saveMaps();
 
-		this.maps.set("maps", maps);
-		this.saveMaps();
+    }
 
-	}
+    public void removeMap(String name) {
 
-	public void removeMap(String name) {
+        List<String> maps = this.maps.getStringList("maps");
+        maps.remove(name);
 
-		List<String> maps = this.maps.getStringList("maps");
-		maps.remove(name);
+        this.maps.set("maps", maps);
+        this.saveMaps();
 
-		this.maps.set("maps", maps);
-		this.saveMaps();
-
-	}
+    }
 
 }

@@ -2,9 +2,6 @@ package managers;
 
 public enum Status {
 
-	DISABLED,
-	LOBBY,
-	INGAME,
-	ENDING;
+    DISABLED, LOBBY, INGAME, ENDING;
 
 }

@@ -27,144 +27,150 @@ import utils.UtilPlayer;
 
 public class SpleggEvents implements Listener {
 
-	@EventHandler
-	public void eggLand(ProjectileHitEvent event) {
+    @EventHandler
+    public void eggLand(ProjectileHitEvent event) {
 
-		ProjectileSource shooter = event.getEntity().getShooter();
-		if (shooter instanceof Player && event.getEntity() instanceof Egg) {
+        ProjectileSource shooter = event.getEntity().getShooter();
+        if (shooter instanceof Player && event.getEntity() instanceof Egg) {
 
-			Player player = (Player) shooter;
-			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-			Block hitBlock = event.getHitBlock();
-			if(hitBlock != null) {
-				Location hitLocation = null;
-				BlockIterator bi = new BlockIterator(hitBlock.getWorld(), event.getEntity().getLocation().toVector(), event.getEntity().getVelocity().normalize(), 0.0D, 4);
-				if (u.getGame() != null && u.isAlive()) {
+            Player player = (Player) shooter;
+            UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+            Block hitBlock = event.getHitBlock();
+            if (hitBlock != null) {
 
-					Block hit = null;
-					while(bi.hasNext()) {
+                Location hitLocation = null;
+                BlockIterator bi = new BlockIterator(hitBlock.getWorld(), event.getEntity().getLocation().toVector(),
+                        event.getEntity().getVelocity().normalize(), 0.0D, 4);
+                if (u.getGame() != null && u.isAlive()) {
 
-						hit = bi.next();
+                    Block hit = null;
+                    while (bi.hasNext()) {
 
-						if (hit.getType() != Material.AIR) {
+                        hit = bi.next();
 
-							break;
+                        if (hit.getType() != Material.AIR) {
 
-						}
-						else {
+                            break;
 
-							// Get location if it is a block.
-							hitLocation = hitBlock.getLocation();
+                        } else {
 
-							// Cancel the collision.
-							event.setCancelled(true);
+                            // Get location if it is a block.
+                            hitLocation = hitBlock.getLocation();
 
-							// Deletes the egg entity.
-							event.getEntity().remove();
+                            // Cancel the collision.
+                            event.setCancelled(true);
 
-						}
+                            // Deletes the egg entity.
+                            event.getEntity().remove();
 
-					}
+                        }
 
-					if (hit.getType() == Material.TNT) {
+                    }
 
-						hitBlock.getWorld().createExplosion(hitLocation, 3.0F);
+                    if (hit.getType() == Material.TNT) {
 
-						Iterator<?> entityIterator = hitBlock.getWorld().getEntities().iterator();
-						while(entityIterator.hasNext()) {
+                        hitBlock.getWorld().createExplosion(hitLocation, 3.0F);
 
-							Entity drop = (Entity) entityIterator.next();
+                        Iterator<?> entityIterator = hitBlock.getWorld().getEntities().iterator();
+                        while (entityIterator.hasNext()) {
 
-							if (drop.getType() == EntityType.DROPPED_ITEM) {
+                            Entity drop = (Entity) entityIterator.next();
 
-								drop.remove();
+                            if (drop.getType() == EntityType.DROPPED_ITEM) {
 
-							}
+                                drop.remove();
 
-						}
+                            }
 
-					}
+                        }
 
-					Game game = u.getGame();
-					if (game.getFloor().contains(hitLocation)) {
+                    }
 
-						// If the game is in-progress, do this.
-						if (game.getStatus() == Status.INGAME) {
+                    Game game = u.getGame();
+                    if (game.getFloor().contains(hitLocation)) {
 
-							// Play chicken egg sound upon block hit for every player nearby the event.
-							player.getWorld().playSound(hitLocation, Sound.ENTITY_CHICKEN_EGG, 1.0F, 1.0F);
+                        // If the game is in-progress, do this.
+                        if (game.getStatus() == Status.INGAME) {
 
-							// Spawn spell particles when a block is destroyed to indicate vaporization.
-							player.getWorld().spawnParticle(Particle.SPELL, hitLocation, 12);
-							player.getWorld().spawnParticle(Particle.BLOCK_DUST, hitLocation, 6, hit.getBlockData());
+                            // Play chicken egg sound upon block hit for every player nearby the event.
+                            player.getWorld().playSound(hitLocation, Sound.ENTITY_CHICKEN_EGG, 1.0F, 1.0F);
 
-							// Destroy the block that was hit by an egg.
-							hit.setType(Material.AIR);
+                            // Spawn spell particles when a block is destroyed to indicate vaporization.
+                            player.getWorld().spawnParticle(Particle.SPELL, hitLocation, 12);
+                            player.getWorld().spawnParticle(Particle.BLOCK_DUST, hitLocation, 6, hit.getBlockData());
 
-						}
+                            // Destroy the block that was hit by an egg.
+                            hit.setType(Material.AIR);
 
-					}
+                        }
 
-				}
+                    }
 
-			}
+                }
 
-		}
+            }
 
-	}
+        }
 
-	// TODO: Implement spectator compass here.
-	@EventHandler
-	public void eggHatch(PlayerEggThrowEvent event) {
+    }
 
-		Player player = event.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+    // TODO: Implement spectator compass here.
+    @EventHandler
+    public void eggHatch(PlayerEggThrowEvent event) {
 
-		if (u.getGame() != null && u.isAlive()) {
+        Player player = event.getPlayer();
+        UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 
-			event.setHatching(false);
+        if (u.getGame() != null && u.isAlive()) {
 
-		}
+            event.setHatching(false);
 
-	}
+        }
 
-	@EventHandler
-	public void onFall(EntityDamageEvent event) {
+    }
 
-		if (event.getEntity() instanceof Player) {
+    @EventHandler
+    public void onFall(EntityDamageEvent event) {
 
-			Player player = (Player) event.getEntity();
-			UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        if (event.getEntity() instanceof Player) {
 
-			if (u.getGame() != null && u.isAlive()) {
+            Player player = (Player) event.getEntity();
+            UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 
-				event.setCancelled(true);
+            if (u.getGame() != null && u.isAlive()) {
 
-			}
+                event.setCancelled(true);
 
+            }
 
-		}
+        }
 
-	}
+    }
 
-	@EventHandler
-	public void onKnockout(PlayerMoveEvent event) {
+    @EventHandler
+    public void onKnockout(PlayerMoveEvent event) {
 
-		Player player = event.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		Game game = u.getGame();
-		if (game != null && u.isAlive() && ((double) player.getLocation().getBlockY() < -5.0D || player.getLocation().getBlockY() < game.getLowestPossible()) && game.getStatus() == Status.INGAME) {
+        Player player = event.getPlayer();
+        UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        Game game = u.getGame();
+        if (game != null && u.isAlive()
+                && ((double) player.getLocation().getBlockY() < -5.0D
+                        || player.getLocation().getBlockY() < game.getLowestPossible())
+                && game.getStatus() == Status.INGAME)
+        {
 
-			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.KnockoutPlayer").replaceAll("%player%", player.getName()));
-			SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining").replaceAll("%count%", String.valueOf(game.getPlayers().size() - 1)), game);
+            SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.KnockoutPlayer")
+                    .replaceAll("%player%", player.getName()));
+            SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining")
+                    .replaceAll("%count%", String.valueOf(game.getPlayers().size() - 1)), game);
 
-			player.setFallDistance(0.0F);
-			game.leaveGame(u);
+            player.setFallDistance(0.0F);
+            game.leaveGame(u);
 
-			SpleggOG.getPlugin().games.checkWinner(game);
+            SpleggOG.getPlugin().games.checkWinner(game);
 
-		}
+        }
 
-	}
+    }
 
 }

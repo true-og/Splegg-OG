@@ -31,326 +31,327 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class Utils {
 
-	// Enable the conversion of text from config.yml to objects.
-	public FileConfiguration config = SpleggOG.getPlugin().getConfig();
-	public HashMap<String, UtilPlayer> PLAYERS = new HashMap<String, UtilPlayer>();
-	private File f;
-	public static String prefix = "&7[&eSplegg&f-&4OG&7] ";
+    // Enable the conversion of text from config.yml to objects.
+    public FileConfiguration config = SpleggOG.getPlugin().getConfig();
+    public HashMap<String, UtilPlayer> PLAYERS = new HashMap<String, UtilPlayer>();
+    private File f;
+    public static String prefix = "&7[&eSplegg&f-&4OG&7] ";
 
-	public void bc(String s) {
+    public void bc(String s) {
 
-		TextComponent prefixContainer = legacySerializerAnyCase(prefix + s);
-		Bukkit.broadcast(prefixContainer);
+        TextComponent prefixContainer = legacySerializerAnyCase(prefix + s);
+        Bukkit.broadcast(prefixContainer);
 
-	}
+    }
 
-	public void bc(String string, Game game) {
+    public void bc(String string, Game game) {
 
-		Iterator<?> playerIterator = SpleggOG.getPlugin().pm.PLAYERS.values().iterator();
-		while(playerIterator.hasNext()) {
+        Iterator<?> playerIterator = SpleggOG.getPlugin().pm.PLAYERS.values().iterator();
+        while (playerIterator.hasNext()) {
 
-			UtilPlayer u = (UtilPlayer) playerIterator.next();
-			if (u.getGame() == game && u.isAlive()) {
+            UtilPlayer u = (UtilPlayer) playerIterator.next();
+            if (u.getGame() == game && u.isAlive()) {
 
-				spleggOGMessage(u.getPlayer(), string);
+                spleggOGMessage(u.getPlayer(), string);
 
-			}
+            }
 
-		}
+        }
 
-	}
+    }
 
-	public void setup() {
+    public void setup() {
 
-		this.f = new File(SpleggOG.getPlugin().getDataFolder(), "spawns.yml");
+        this.f = new File(SpleggOG.getPlugin().getDataFolder(), "spawns.yml");
 
-		try {
+        try {
 
-			if (! this.f.exists()) {
+            if (!this.f.exists()) {
 
-				this.f.createNewFile();
+                this.f.createNewFile();
 
-			}
+            }
 
-		}
-		catch (IOException error) {
+        } catch (IOException error) {
 
-			SpleggOG.getPlugin().getLogger().severe("An error occured while creating spawns.yml.");
+            SpleggOG.getPlugin().getLogger().severe("An error occured while creating spawns.yml.");
 
-		}
+        }
 
-		reloadSpawns();
-		saveSpawns();
-		reloadSpawns();
+        reloadSpawns();
+        saveSpawns();
+        reloadSpawns();
 
-	}
+    }
 
-	private void reloadSpawns() {
+    private void reloadSpawns() {
 
-		this.config = YamlConfiguration.loadConfiguration(f);
+        this.config = YamlConfiguration.loadConfiguration(f);
 
-	}
+    }
 
-	private void saveSpawns() {
+    private void saveSpawns() {
 
-		try {
+        try {
 
-			this.config.save(f);
+            this.config.save(f);
 
-		}
-		catch (IOException error) {
+        } catch (IOException error) {
 
-			SpleggOG.getPlugin().getLogger().severe("An error occured while saving spawns.yml.");
+            SpleggOG.getPlugin().getLogger().severe("An error occured while saving spawns.yml.");
 
-		}
+        }
 
-	}
+    }
 
-	public void setLobby(Location l) {
+    public void setLobby(Location l) {
 
-		int x = l.getBlockX();
-		int y = l.getBlockY();
-		int z = l.getBlockZ();
-		float yaw = l.getYaw();
-		float pitch = l.getPitch();
-		String worldName = l.getWorld().getName();
+        int x = l.getBlockX();
+        int y = l.getBlockY();
+        int z = l.getBlockZ();
+        float yaw = l.getYaw();
+        float pitch = l.getPitch();
+        String worldName = l.getWorld().getName();
 
-		this.config.set("Spawns.lobby.world", worldName);
-		this.config.set("Spawns.lobby.x", x);
-		this.config.set("Spawns.lobby.y", y);
-		this.config.set("Spawns.lobby.z", z);
-		this.config.set("Spawns.lobby.pitch", pitch);
-		this.config.set("Spawns.lobby.yaw", yaw);
+        this.config.set("Spawns.lobby.world", worldName);
+        this.config.set("Spawns.lobby.x", x);
+        this.config.set("Spawns.lobby.y", y);
+        this.config.set("Spawns.lobby.z", z);
+        this.config.set("Spawns.lobby.pitch", pitch);
+        this.config.set("Spawns.lobby.yaw", yaw);
 
-		saveSpawns();
+        saveSpawns();
 
-	}
+    }
 
-	public Location getLobby(Player player) {
+    public Location getLobby(Player player) {
 
-		int x = this.config.getInt("Spawns.lobby.x");
-		int y = this.config.getInt("Spawns.lobby.y");
-		int z = this.config.getInt("Spawns.lobby.z");
+        int x = this.config.getInt("Spawns.lobby.x");
+        int y = this.config.getInt("Spawns.lobby.y");
+        int z = this.config.getInt("Spawns.lobby.z");
 
-		float yaw = (float) this.config.getInt("Spawns.lobby.yaw");
-		float pitch = (float) this.config.getInt("Spawns.lobby.pitch");
+        float yaw = (float) this.config.getInt("Spawns.lobby.yaw");
+        float pitch = (float) this.config.getInt("Spawns.lobby.pitch");
 
-		World worldName = player.getWorld();
+        World worldName = player.getWorld();
 
-		return new Location(worldName, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
+        return new Location(worldName, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
 
-	}
+    }
 
-	public UtilPlayer getPlayer(String name) {
+    public UtilPlayer getPlayer(String name) {
 
-		return (UtilPlayer) this.PLAYERS.get(name);
+        return (UtilPlayer) this.PLAYERS.get(name);
 
-	}
+    }
 
-	public UtilPlayer getPlayer(Player player) {
+    public UtilPlayer getPlayer(Player player) {
 
-		return (UtilPlayer) this.PLAYERS.get(player.getName());
+        return (UtilPlayer) this.PLAYERS.get(player.getName());
 
-	}
+    }
 
-	// Sends a formatted message to the player (including name replacement).
-	public static void spleggOGMessage(Player p, String message) {
+    // Sends a formatted message to the player (including name replacement).
+    public static void spleggOGMessage(Player p, String message) {
 
-		p.sendMessage(legacySerializerAnyCase(prefix + message));
+        p.sendMessage(legacySerializerAnyCase(prefix + message));
 
-	}
+    }
 
-	public static TextComponent legacySerializerAnyCase(String subject) {
+    public static TextComponent legacySerializerAnyCase(String subject) {
 
-		int count = 0;
-		// Count the number of '&' characters to determine the size of the array
-		for (char c : subject.toCharArray()) {
+        int count = 0;
+        // Count the number of '&' characters to determine the size of the array
+        for (char c : subject.toCharArray()) {
 
-			if (c == '&') {
+            if (c == '&') {
 
-				count++;
+                count++;
 
-			}
+            }
 
-		}
+        }
 
-		// Create an array to store the positions of '&' characters
-		int[] positions = new int[count];
-		int index = 0;
-		// Find the positions of '&' characters and store in the array
-		for (int i = 0; i < subject.length(); i++) {
+        // Create an array to store the positions of '&' characters
+        int[] positions = new int[count];
+        int index = 0;
+        // Find the positions of '&' characters and store in the array
+        for (int i = 0; i < subject.length(); i++) {
 
-			if (subject.charAt(i) == '&') {
+            if (subject.charAt(i) == '&') {
 
-				if (isUpperBukkitCode(subject.charAt(i + 1))) {
+                if (isUpperBukkitCode(subject.charAt(i + 1))) {
 
-					subject = replaceCharAtIndex(subject, (i + 1), Character.toLowerCase(subject.charAt(i + 1)));
+                    subject = replaceCharAtIndex(subject, (i + 1), Character.toLowerCase(subject.charAt(i + 1)));
 
-				}
+                }
 
-				positions[index++] = i;
+                positions[index++] = i;
 
-			}
+            }
 
-		}
+        }
 
-		return LegacyComponentSerializer.legacyAmpersand().deserialize(subject);
+        return LegacyComponentSerializer.legacyAmpersand().deserialize(subject);
 
-	}
+    }
 
-	private static boolean isUpperBukkitCode(char input) {
+    private static boolean isUpperBukkitCode(char input) {
 
-		char[] bukkitColorCodes = {'A', 'B', 'C', 'D', 'E', 'F', 'K', 'L', 'M', 'N', 'O', 'R'};
-		boolean match = false;
+        char[] bukkitColorCodes = { 'A', 'B', 'C', 'D', 'E', 'F', 'K', 'L', 'M', 'N', 'O', 'R' };
+        boolean match = false;
 
-		// Loop through each character in the array.
-		for (char c : bukkitColorCodes) {
-			// Check if the current character in the array is equal to the input character.
-			if (c == input) {
+        // Loop through each character in the array.
+        for (char c : bukkitColorCodes) {
 
-				match = true;
+            // Check if the current character in the array is equal to the input character.
+            if (c == input) {
 
-			}
+                match = true;
 
-		}
+            }
 
-		return match;
+        }
 
-	}
+        return match;
 
-	private static String replaceCharAtIndex(String original, int index, char newChar) {
+    }
 
-		// Check if the index is valid
-		if (index >= 0 && index < original.length()) {
+    private static String replaceCharAtIndex(String original, int index, char newChar) {
 
-			// Create a new string with the replaced character
-			return original.substring(0, index) + newChar + original.substring(index + 1);
+        // Check if the index is valid
+        if (index >= 0 && index < original.length()) {
 
-		}
+            // Create a new string with the replaced character
+            return original.substring(0, index) + newChar + original.substring(index + 1);
 
-		// If the index is invalid, return the original string
-		return original;
+        }
 
-	}
+        // If the index is invalid, return the original string
+        return original;
 
-	public static ItemStack getItem(Material material, String name, String lore) {
+    }
 
-		ItemStack stack = new ItemStack(material, 1);
-		ItemMeta meta = stack.getItemMeta();
-		TextComponent nameContainer = null;
-		TextComponent loreContainer = null;
-		try {
+    public static ItemStack getItem(Material material, String name, String lore) {
 
-			nameContainer = Component.text(name);
-			loreContainer = Component.text(lore);
+        ItemStack stack = new ItemStack(material, 1);
+        ItemMeta meta = stack.getItemMeta();
+        TextComponent nameContainer = null;
+        TextComponent loreContainer = null;
+        try {
 
-		}
-		catch(NullPointerException error) {
+            nameContainer = Component.text(name);
+            loreContainer = Component.text(lore);
 
-			SpleggOG.getPlugin().getLogger().severe("Failed to get Item information for: " + material + ".");
+        } catch (NullPointerException error) {
 
-		}
+            SpleggOG.getPlugin().getLogger().severe("Failed to get Item information for: " + material + ".");
 
-		meta.displayName(nameContainer);
-		meta.lore(Arrays.asList(loreContainer));
-		stack.setItemMeta(meta);
+        }
 
-		return stack;
+        meta.displayName(nameContainer);
+        meta.lore(Arrays.asList(loreContainer));
+        stack.setItemMeta(meta);
 
-	}
+        return stack;
 
-	public static void fireEgg(PlayerInteractEvent event, UtilPlayer u, Player player, ItemStack itemInHand) {
+    }
 
-		if(u.getGame() != null) {
+    public static void fireEgg(PlayerInteractEvent event, UtilPlayer u, Player player, ItemStack itemInHand) {
 
-			if(u.getGame().getStatus().equals(Status.INGAME) && u.isAlive()) {
+        if (u.getGame() != null) {
 
-				if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
+            if (u.getGame().getStatus().equals(Status.INGAME) && u.isAlive()) {
 
-					switch(itemInHand.getType()) {
+                if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
 
-					case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL:
-						player.launchProjectile(Egg.class);
-					eggSound(player);
-					break;
-					case DIAMOND_SHOVEL:
-						for(int i = 0; i < 2; i = i + 1) {
+                    switch (itemInHand.getType()) {
 
-							player.launchProjectile(Egg.class);
+                        case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL:
+                            player.launchProjectile(Egg.class);
+                            eggSound(player);
+                            break;
+                        case DIAMOND_SHOVEL:
+                            for (int i = 0; i < 2; i = i + 1) {
 
-						}
-						eggSound(player);
-						break;
-					case NETHERITE_SHOVEL:
-						for(int i = 0; i < 3; i = i + 1) {
+                                player.launchProjectile(Egg.class);
 
-							player.launchProjectile(Egg.class);
+                            }
+                            eggSound(player);
+                            break;
+                        case NETHERITE_SHOVEL:
+                            for (int i = 0; i < 3; i = i + 1) {
 
-						}
-						eggSound(player);
-						break;
-					default:
-						break;
+                                player.launchProjectile(Egg.class);
 
-					}
+                            }
+                            eggSound(player);
+                            break;
+                        default:
+                            break;
 
-				}
+                    }
 
-			}
+                }
 
-		}
+            }
 
-	}
+        }
 
-	private static void eggSound(Player player) {
+    }
 
-		player.playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 0.10F, 2.0F);
+    private static void eggSound(Player player) {
 
-	}
+        player.playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 0.10F, 2.0F);
 
-	public static Inventory getShopInventory() {
+    }
 
-		// Create the GUI title.
-		TextComponent shopTitleComponent = legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title"));
-		String shopTitle = LegacyComponentSerializer.legacyAmpersand().serialize(shopTitleComponent);
+    public static Inventory getShopInventory() {
 
-		// Create the inventory.
-		Inventory shop = Bukkit.createInventory((InventoryHolder) null, 9, Component.text(shopTitle));
+        // Create the GUI title.
+        TextComponent shopTitleComponent = legacySerializerAnyCase(
+                SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title"));
+        String shopTitle = LegacyComponentSerializer.legacyAmpersand().serialize(shopTitleComponent);
 
-		// Get the item names and descriptions, then serialize them back to Strings.
-		String goldShovelNameComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
-				legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Name"))
-				);
-		String goldShovelDescriptionComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
-				legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Description")
-						.replaceAll("%price%", "&B" + String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price"))))
-				);
+        // Create the inventory.
+        Inventory shop = Bukkit.createInventory((InventoryHolder) null, 9, Component.text(shopTitle));
 
-		String diamondShovelNameComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
-				legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Name"))
-				);
-		String diamondShovelDescriptionComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
-				legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Description")
-						.replaceAll("%price%", "&B" + String.valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price"))))
-				);
+        // Get the item names and descriptions, then serialize them back to Strings.
+        String goldShovelNameComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
+                legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Name")));
+        String goldShovelDescriptionComponent = LegacyComponentSerializer.legacyAmpersand()
+                .serialize(legacySerializerAnyCase(SpleggOG.getPlugin().getConfig()
+                        .getString("GUI.Shop.GoldShovel.Description").replaceAll("%price%", "&B" + String
+                                .valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")))));
 
-		// Present the serialized Strings to the user on the items.
-		shop.setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, goldShovelNameComponent, goldShovelDescriptionComponent));
-		shop.setItem(1, Utils.getItem(Material.DIAMOND_SHOVEL, diamondShovelNameComponent, diamondShovelDescriptionComponent));
+        String diamondShovelNameComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
+                legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Name")));
+        String diamondShovelDescriptionComponent = LegacyComponentSerializer.legacyAmpersand()
+                .serialize(legacySerializerAnyCase(SpleggOG.getPlugin().getConfig()
+                        .getString("GUI.Shop.DiamondShovel.Description").replaceAll("%price%", "&B" + String
+                                .valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price")))));
 
-		// Pass the shop to the player.
-		return shop;
+        // Present the serialized Strings to the user on the items.
+        shop.setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, goldShovelNameComponent, goldShovelDescriptionComponent));
+        shop.setItem(1,
+                Utils.getItem(Material.DIAMOND_SHOVEL, diamondShovelNameComponent, diamondShovelDescriptionComponent));
 
-	}
+        // Pass the shop to the player.
+        return shop;
 
-	// TODO: Spectator mode in listener.
-	/*private static Inventory getSpecInventory() {
+    }
 
-		TextComponent spectatorTitle = Component.text("Splegg - Spectators");
-		Inventory spec = Bukkit.createInventory((InventoryHolder) null, InventoryType.CHEST, spectatorTitle);
-
-		return spec;
-
-	}*/
+    // TODO: Spectator mode in listener.
+    /*
+     * private static Inventory getSpecInventory() {
+     * 
+     * TextComponent spectatorTitle = Component.text("Splegg - Spectators");
+     * Inventory spec = Bukkit.createInventory((InventoryHolder) null,
+     * InventoryType.CHEST, spectatorTitle);
+     * 
+     * return spec;
+     * 
+     * }
+     */
 
 }

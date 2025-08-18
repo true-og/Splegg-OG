@@ -12,43 +12,43 @@ import utils.UtilPlayer;
 
 public class MapListener implements Listener {
 
-	@EventHandler
-	public void blockBreak(BlockBreakEvent event) {
+    @EventHandler
+    public void blockBreak(BlockBreakEvent event) {
 
-		Player player = event.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		if (u.getGame() != null && u.isAlive()) {
+        Player player = event.getPlayer();
+        UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        if (u.getGame() != null && u.isAlive()) {
 
-			event.setCancelled(true);
+            event.setCancelled(true);
 
-		}
+        }
 
-	}
+    }
 
-	@EventHandler
-	public void blockPlace(BlockPlaceEvent event) {
+    @EventHandler
+    public void blockPlace(BlockPlaceEvent event) {
 
-		Player player = event.getPlayer();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		if (u.getGame() != null && u.isAlive()) {
+        Player player = event.getPlayer();
+        UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        if (u.getGame() != null && u.isAlive()) {
 
-			event.setCancelled(true);
+            event.setCancelled(true);
 
-		}
+        }
 
-	}
+    }
 
-	@EventHandler
-	public void hangingEntityBreak(HangingBreakByEntityEvent event) {
+    @EventHandler
+    public void hangingEntityBreak(HangingBreakByEntityEvent event) {
 
-		Player player = (Player) event.getRemover();
-		UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-		if (u.getGame() != null && u.isAlive()) {
+        Player player = (Player) event.getRemover();
+        UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        if (u.getGame() != null && u.isAlive()) {
 
-			event.setCancelled(true);
+            event.setCancelled(true);
 
-		}
+        }
 
-	}
+    }
 
 }
