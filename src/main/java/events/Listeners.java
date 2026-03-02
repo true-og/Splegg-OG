@@ -19,65 +19,83 @@ import com.destroystokyo.paper.event.player.PlayerAdvancementCriterionGrantEvent
 import io.papermc.paper.event.player.AsyncChatEvent;
 import main.SpleggOG;
 import managers.Game;
-import net.milkbowl.vault.economy.EconomyResponse;
+import net.trueog.diamondbankog.DiamondBankException.EconomyDisabledException;
+import net.trueog.diamondbankog.DiamondBankException.InsufficientFundsException;
+import net.trueog.diamondbankog.DiamondBankException.InvalidPlayerException;
+import net.trueog.diamondbankog.DiamondBankException.PlayerNotOnlineException;
+import net.trueog.diamondbankog.api.DiamondBankAPIJava;
+import net.trueog.utilitiesog.UtilitiesOG;
 import utils.UtilPlayer;
 import utils.Utils;
 
 public class Listeners implements Listener {
 
-    public static ArrayList<String> manager = new ArrayList<String>();
-    public static ArrayList<String> moneymanager = new ArrayList<String>();
-    public static ArrayList<String> shopmanager = new ArrayList<String>();
-    public static ArrayList<String> diamondspade = new ArrayList<String>();
-    public static ArrayList<String> goldspade = new ArrayList<String>();
-    public static ArrayList<String> launchEggs = new ArrayList<String>();
+    public static ArrayList<String> manager = new ArrayList<>();
+    public static ArrayList<String> moneymanager = new ArrayList<>();
+    public static ArrayList<String> shopmanager = new ArrayList<>();
+    public static ArrayList<String> diamondspade = new ArrayList<>();
+    public static ArrayList<String> goldspade = new ArrayList<>();
+    public static ArrayList<String> launchEggs = new ArrayList<>();
+
+    private final DiamondBankAPIJava diamondBankAPI;
+
+    public Listeners(DiamondBankAPIJava diamondBankAPI) {
+
+        this.diamondBankAPI = diamondBankAPI;
+
+    }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
 
-        Player player = (Player) event.getWhoClicked();
-        UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        final Player player = (Player) event.getWhoClicked();
+        final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 
         if (shopmanager.contains(player.getName())) {
-
-            EconomyResponse r;
 
             if (event.getCurrentItem().getType() == Material.GOLDEN_SHOVEL) {
 
                 player.getInventory().close();
 
-                if (SpleggOG.getPlugin().econ.getBalance(
-                        player) >= (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price"))
-                {
+                final int priceInDiamonds = SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price");
+                final long priceInShards = diamondBankAPI.diamondsToShards((float) priceInDiamonds);
 
-                    r = SpleggOG.getPlugin().econ.withdrawPlayer(player,
-                            (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price"));
-                    if (r.transactionSuccess()) {
+                try {
 
-                        goldspade.add(player.getName());
-                        diamondspade.remove(player.getName());
-                        shopmanager.remove(player.getName());
-                        manager.remove(player.getName());
+                    diamondBankAPI.consumeFromPlayer(player.getUniqueId(), priceInShards,
+                            "Player " + player.getName() + " purchased a Gold Shovel in Splegg.", "Plugin: Splegg-OG");
 
-                        Utils.spleggOGMessage(player,
-                                SpleggOG.getPlugin().getConfig().getString("Messages.BuyGoldShovel"));
+                    goldspade.add(player.getName());
+                    diamondspade.remove(player.getName());
+                    shopmanager.remove(player.getName());
+                    manager.remove(player.getName());
 
-                    } else {
+                    Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyGoldShovel"));
 
-                        player.sendMessage(String.format("An error occured: %s", r.errorMessage));
-
-                        shopmanager.add(player.getName());
-                        manager.add(player.getName());
-                        goldspade.remove(player.getName());
-                        diamondspade.remove(player.getName());
-
-                    }
-
-                } else {
+                } catch (InsufficientFundsException insufficientFundsException) {
 
                     player.getInventory().close();
 
                     Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
+
+                } catch (EconomyDisabledException economyDisabledException) {
+
+                    UtilitiesOG.trueogMessage(player, "&cERROR: The Diamond economy is currently unavailable.");
+
+                    shopmanager.add(player.getName());
+                    manager.add(player.getName());
+                    goldspade.remove(player.getName());
+                    diamondspade.remove(player.getName());
+
+                } catch (InvalidPlayerException | PlayerNotOnlineException playerException) {
+
+                    UtilitiesOG.trueogMessage(player,
+                            "&cERROR: Your player account could not be found. Contact an administrator.");
+
+                    shopmanager.add(player.getName());
+                    manager.add(player.getName());
+                    goldspade.remove(player.getName());
+                    diamondspade.remove(player.getName());
 
                 }
 
@@ -87,38 +105,47 @@ public class Listeners implements Listener {
 
                 player.getInventory().close();
 
-                if (SpleggOG.getPlugin().econ.getBalance(
-                        player) >= (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price"))
-                {
+                final int priceInDiamonds = SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price");
+                final long priceInShards = diamondBankAPI.diamondsToShards((float) priceInDiamonds);
 
-                    r = SpleggOG.getPlugin().econ.withdrawPlayer(player,
-                            (double) SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price"));
-                    if (r.transactionSuccess()) {
+                try {
 
-                        goldspade.remove(player.getName());
-                        diamondspade.add(player.getName());
-                        shopmanager.remove(player.getName());
-                        manager.remove(player.getName());
+                    diamondBankAPI.consumeFromPlayer(player.getUniqueId(), priceInShards,
+                            "Player " + player.getName() + " purchased a Diamond Shovel in Splegg.",
+                            "Plugin: Splegg-OG");
 
-                        Utils.spleggOGMessage(player,
-                                SpleggOG.getPlugin().getConfig().getString("Messages.BuyDiamondShovel"));
+                    goldspade.remove(player.getName());
+                    diamondspade.add(player.getName());
+                    shopmanager.remove(player.getName());
+                    manager.remove(player.getName());
 
-                    } else {
+                    Utils.spleggOGMessage(player,
+                            SpleggOG.getPlugin().getConfig().getString("Messages.BuyDiamondShovel"));
 
-                        player.sendMessage(String.format("An error occured: %s", r.errorMessage));
-
-                        shopmanager.add(player.getName());
-                        manager.add(player.getName());
-                        goldspade.remove(player.getName());
-                        diamondspade.remove(player.getName());
-
-                    }
-
-                } else {
+                } catch (InsufficientFundsException insufficientFundsException) {
 
                     player.getInventory().close();
 
                     Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
+
+                } catch (EconomyDisabledException economyDisabledException) {
+
+                    UtilitiesOG.trueogMessage(player, "&cERROR: The Diamond economy is currently unavailable.");
+
+                    shopmanager.add(player.getName());
+                    manager.add(player.getName());
+                    goldspade.remove(player.getName());
+                    diamondspade.remove(player.getName());
+
+                } catch (InvalidPlayerException | PlayerNotOnlineException playerException) {
+
+                    UtilitiesOG.trueogMessage(player,
+                            "&cERROR: Your player account could not be found. Contact an administrator.");
+
+                    shopmanager.add(player.getName());
+                    manager.add(player.getName());
+                    goldspade.remove(player.getName());
+                    diamondspade.remove(player.getName());
 
                 }
 
@@ -141,11 +168,11 @@ public class Listeners implements Listener {
     }
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
+    public void onPlayerQuit(PlayerQuitEvent playerQuitEvent) {
 
-        Player player = event.getPlayer();
-        UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-        Game game = u.getGame();
+        final Player player = playerQuitEvent.getPlayer();
+        final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        final Game game = u.getGame();
 
         if (game != null) {
 
@@ -156,78 +183,80 @@ public class Listeners implements Listener {
     }
 
     @EventHandler
-    public void onPlayerPickupItem(EntityPickupItemEvent event) {
+    public void onPlayerPickupItem(EntityPickupItemEvent entityPickupItemEvent) {
 
-        if (event.getEntityType() == EntityType.PLAYER) {
+        if (entityPickupItemEvent.getEntityType() != EntityType.PLAYER) {
 
-            Player player = (Player) event.getEntity();
-            UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-            if (u.getGame() != null && u.isAlive()) {
-
-                event.setCancelled(true);
-
-            }
+            return;
 
         }
 
-    }
-
-    @EventHandler
-    public void onPlayerAdvancement(PlayerAdvancementCriterionGrantEvent event) {
-
-        Player player = event.getPlayer();
-        UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        final Player player = (Player) entityPickupItemEvent.getEntity();
+        final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         if (u.getGame() != null && u.isAlive()) {
 
-            event.setCancelled(true);
+            entityPickupItemEvent.setCancelled(true);
 
         }
 
     }
 
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
+    public void onPlayerAdvancement(PlayerAdvancementCriterionGrantEvent playerAdvancementCriterionGrantEvent) {
 
-        Player player = (Player) event.getPlayer();
-        UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-        Game game = u.getGame();
-        if (game != null && Listeners.launchEggs.contains(u.getName())) {
+        final Player player = playerAdvancementCriterionGrantEvent.getPlayer();
+        final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        if (u.getGame() != null && u.isAlive()) {
 
-            EquipmentSlot playerHand = null;
-            try {
+            playerAdvancementCriterionGrantEvent.setCancelled(true);
 
-                playerHand = event.getHand();
+        }
 
-            } catch (NullPointerException error) {
+    }
 
-                SpleggOG.getPlugin().getLogger().severe("ERROR: Player's hand returned null.");
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent playerInteractEvent) {
 
-            }
+        final Player player = playerInteractEvent.getPlayer();
+        final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        final Game game = u.getGame();
+        if (!(game != null && Listeners.launchEggs.contains(u.getName()))) {
 
-            if (playerHand.equals(EquipmentSlot.HAND)) {
+            return;
 
-                ItemStack itemInHand = player.getInventory().getItemInMainHand();
-                switch (itemInHand.getType()) {
+        }
 
-                    case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL, DIAMOND_SHOVEL, NETHERITE_SHOVEL:
-                        Utils.fireEgg(event, u, player, itemInHand);
-                        break;
-                    case SLIME_BALL:
+        EquipmentSlot playerHand = null;
+        try {
 
-                        game.leaveGame(u);
+            playerHand = playerInteractEvent.getHand();
 
-                        break;
-                    default:
+        } catch (NullPointerException nullPointerException) {
 
-                        if (itemInHand.getType() == Material
-                                .getMaterial(SpleggOG.getPlugin().getConfig().getString("Shop.Item")))
-                        {
+            SpleggOG.getPlugin().getLogger().severe("ERROR: Player's hand returned null.");
+            nullPointerException.printStackTrace();
 
-                            player.openInventory(Utils.getShopInventory());
+        }
 
-                        }
+        if (playerHand != EquipmentSlot.HAND) {
 
-                        break;
+            return;
+
+        }
+
+        final ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        switch (itemInHand.getType()) {
+
+            case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL, DIAMOND_SHOVEL, NETHERITE_SHOVEL ->
+                Utils.fireEgg(playerInteractEvent, u, player, itemInHand);
+            case SLIME_BALL -> game.leaveGame(u);
+            default -> {
+
+                if (itemInHand.getType() == Material
+                        .getMaterial(SpleggOG.getPlugin().getConfig().getString("Shop.Item")))
+                {
+
+                    player.openInventory(Utils.getShopInventory());
 
                 }
 
@@ -238,7 +267,7 @@ public class Listeners implements Listener {
     }
 
     @EventHandler
-    public void onAsyncPlayerChat(AsyncChatEvent event) {
+    public void onAsyncPlayerChat(AsyncChatEvent asyncChatEvent) {
 
         // TODO: Direct chat to world-specific channel here.
 

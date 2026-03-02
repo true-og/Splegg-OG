@@ -22,17 +22,13 @@ import managers.Game;
 import managers.GameManager;
 import managers.GameUtilities;
 import managers.Status;
-import net.milkbowl.vault.economy.Economy;
-import net.trueog.diamondbankog.DiamondBankAPIJava;
+import net.trueog.diamondbankog.api.DiamondBankAPIJava;
 import utils.UtilPlayer;
 import utils.Utils;
 
 public class SpleggOG extends JavaPlugin {
 
-    DiamondBankAPIJava dbog;
-
     private static SpleggOG plugin;
-    public Economy econ = null;
     public Utils chat;
     public MapUtilities maps;
     public GameUtilities games;
@@ -44,50 +40,75 @@ public class SpleggOG extends JavaPlugin {
     public String newVer = "";
     public boolean disabling = false;
     boolean economy = true;
+    private DiamondBankAPIJava diamondBankAPI;
 
     // TODO: If a shovel in the Splegg shop is too expensive, close the inventory
     // and tell the user about it.
     private boolean setupEconomy() {
 
-        if (this.getServer().getPluginManager().getPlugin("Vault") == null) {
+        final RegisteredServiceProvider<DiamondBankAPIJava> diamondBankAPIProvider = getServer().getServicesManager()
+                .getRegistration(DiamondBankAPIJava.class);
+        if (diamondBankAPIProvider == null) {
 
-            // ondBankAPI dbog;
-
+            getLogger().severe("DiamondBank-OG API is null");
+            Bukkit.getPluginManager().disablePlugin(this);
             return false;
-
-        } else {
-
-            RegisteredServiceProvider<Economy> rsp = this.getServer().getServicesManager()
-                    .getRegistration(Economy.class);
-            if (rsp == null) {
-
-                return false;
-
-            } else {
-
-                this.econ = (Economy) rsp.getProvider();
-
-                return this.econ != null;
-
-            }
 
         }
 
+        this.diamondBankAPI = diamondBankAPIProvider.getProvider();
+
+        return true;
+
     }
 
+    @Override
     public void onEnable() {
 
         plugin = this;
         this.chat = new Utils();
         if (this.getServer().getPluginManager().getPlugin("WorldEdit") == null) {
 
-            String noWorldEditError = "\"ERROR: WorldEdit not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
+            final String noWorldEditError = "\"ERROR: WorldEdit not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
             this.getLogger().severe(noWorldEditError);
             this.getLogger().info(noWorldEditError);
 
             Bukkit.getPluginManager().disablePlugin(this);
 
+        } else if (this.getServer().getPluginManager().getPlugin("DiamondBank-OG") == null) {
+
+            final String noDiamondBankOGError = "\"ERROR: DiamondBank-OG not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
+            this.getLogger().severe(noDiamondBankOGError);
+            this.getLogger().info(noDiamondBankOGError);
+
+            Bukkit.getPluginManager().disablePlugin(this);
+
         } else {
+
+            if (!this.setupEconomy()) {
+
+                // Inform the user that the plugin will not work due to a missing
+                // DiamondBank-OG.
+                // dependency.
+                this.getLogger().severe("[%s] - Disabled due to no DiamomdBank-OG dependency found!"
+                        .formatted(this.getPluginMeta().getName()));
+
+                // Disable Splegg-OG for this instance because DiamondBank-OG (a crucial
+                // dependency) was
+                // not found.
+                this.getServer().getPluginManager().disablePlugin(this);
+
+            } else {
+
+                Bukkit.getOnlinePlayers().forEach((Player p) -> {
+
+                    final UtilPlayer u = new UtilPlayer(p);
+
+                    this.pm.PLAYERS.put(p.getName(), u);
+
+                });
+
+            }
 
             this.maps = new MapUtilities();
             this.games = new GameUtilities();
@@ -106,37 +127,14 @@ public class SpleggOG extends JavaPlugin {
             this.getServer().getPluginManager().registerEvents(new PlayerListener(), this);
             this.getServer().getPluginManager().registerEvents(new SpleggEvents(), this);
             this.getServer().getPluginManager().registerEvents(new SignListener(), this);
-            this.getServer().getPluginManager().registerEvents(new Listeners(), this);
-
+            getServer().getPluginManager().registerEvents(new Listeners(diamondBankAPI), this);
             this.getCommand("splegg").setExecutor(new SpleggCommand());
-
-            if (!this.setupEconomy()) {
-
-                // Inform the user that the plugin will not work due to a missing vault
-                // dependency.
-                this.getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!",
-                        this.getPluginMeta().getName()));
-
-                // Disable Splegg-OG for this instance because Vault (a crucial dependency) was
-                // not found.
-                this.getServer().getPluginManager().disablePlugin(this);
-
-            } else {
-
-                for (Player p : Bukkit.getOnlinePlayers()) {
-
-                    UtilPlayer u = new UtilPlayer(p);
-
-                    this.pm.PLAYERS.put(p.getName(), u);
-
-                }
-
-            }
 
         }
 
     }
 
+    @Override
     public void onDisable() {
 
         this.disabling = true;
@@ -145,15 +143,15 @@ public class SpleggOG extends JavaPlugin {
         HandlerList.unregisterAll(new PlayerListener());
         HandlerList.unregisterAll(new SpleggEvents());
         HandlerList.unregisterAll(new SignListener());
-        HandlerList.unregisterAll(new Listeners());
+        HandlerList.unregisterAll(new Listeners(diamondBankAPI));
 
         int gameCounter = 0;
         try {
 
-            Iterator<?> gameIterator = this.games.GAMES.values().iterator();
+            final Iterator<?> gameIterator = this.games.GAMES.values().iterator();
             while (gameIterator.hasNext()) {
 
-                Game game = (Game) gameIterator.next();
+                final Game game = (Game) gameIterator.next();
                 if (game.getStatus() == Status.INGAME) {
 
                     gameCounter++;
@@ -166,9 +164,10 @@ public class SpleggOG extends JavaPlugin {
 
             this.getLogger().info("Splegg-OG Shut Down with " + gameCounter + " games running.");
 
-        } catch (NullPointerException error) {
+        } catch (NullPointerException nullPointerException) {
 
             this.getLogger().info("Splegg-OG Shut Down with 0 games running.");
+            nullPointerException.printStackTrace();
 
         }
 
@@ -176,7 +175,7 @@ public class SpleggOG extends JavaPlugin {
 
     public WorldEditPlugin getWorldEdit() {
 
-        Plugin worldEdit = this.getServer().getPluginManager().getPlugin("WorldEdit");
+        final Plugin worldEdit = this.getServer().getPluginManager().getPlugin("WorldEdit");
 
         return worldEdit instanceof WorldEditPlugin ? (WorldEditPlugin) worldEdit : null;
 

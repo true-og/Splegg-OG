@@ -27,6 +27,9 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import config.Map;
 import events.Listeners;
 import main.SpleggOG;
+import net.trueog.diamondbankog.DiamondBankException.EconomyDisabledException;
+import net.trueog.diamondbankog.api.DiamondBankAPIJava;
+import net.trueog.utilitiesog.UtilitiesOG;
 import runnables.GameTime;
 import runnables.LobbyCountdown;
 import signs.LobbySign;
@@ -53,6 +56,7 @@ public class Game {
     int timer;
     boolean starting;
     LobbySign sign;
+    DiamondBankAPIJava diamondBankAPI;
 
     // Enable the conversion of text from config.yml to objects.
     public FileConfiguration config = SpleggOG.getPlugin().getConfig();
@@ -380,10 +384,10 @@ public class Game {
 
     private void saveInv(Player player) {
 
-        Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
-        Kits preGameKit = new Kits(ess);
+        final Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+        final Kits preGameKit = new Kits(ess);
 
-        ArrayList<String> itemsAsListOfStrings = new ArrayList<String>(player.getInventory().getSize());
+        final ArrayList<String> itemsAsListOfStrings = new ArrayList<String>(player.getInventory().getSize());
         for (ItemStack item : player.getInventory().getContents()) {
 
             if (item != null) {
@@ -560,11 +564,23 @@ public class Game {
 
             if (Listeners.moneymanager.contains(p.getName())) {
 
-                p.sendMessage(Utils
-                        .legacySerializerAnyCase(
-                                "&BYou received " + splegg.getConfig().getInt("Money.KillPlayer") + " &BDiamonds!")
-                        .content());
-                splegg.econ.depositPlayer(p, splegg.getConfig().getInt("Money.KillPlayer"));
+                final int rewardInDiamonds = splegg.getConfig().getInt("Money.KillPlayer");
+                final long rewardInShards = diamondBankAPI.diamondsToShards((float) rewardInDiamonds);
+
+                try {
+
+                    diamondBankAPI.addToPlayerBankShards(p.getUniqueId(), rewardInShards,
+                            "Player " + p.getName() + " earned Diamonds for a kill in Splegg.", "Plugin: Splegg-OG");
+
+                    p.sendMessage(Utils.legacySerializerAnyCase("&BYou received " + rewardInDiamonds + " &BDiamonds!")
+                            .content());
+
+                } catch (EconomyDisabledException economyDisabledException) {
+
+                    UtilitiesOG.trueogMessage(p,
+                            "&cERROR: The Diamond economy is currently unavailable. Your kill reward could not be paid out.");
+
+                }
 
             }
 

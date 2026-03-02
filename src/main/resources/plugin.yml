@@ -3,7 +3,7 @@ main: main.SpleggOG
 version: '${version}'
 authors: [Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle]
 api-version: '${apiVersion}'
-depend: [Vault, WorldEdit]
+depend: [DiamondBank-OG, WorldEdit]
 
 commands:
   splegg:
