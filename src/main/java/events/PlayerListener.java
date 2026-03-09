@@ -1,5 +1,6 @@
 package events;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,106 +21,106 @@ import utils.Utils;
 
 public class PlayerListener implements Listener {
 
-    String[] cmds = new String[] { "" };
+	String[] cmds = new String[] { "" };
 
-    @EventHandler
-    public void onFood(FoodLevelChangeEvent event) {
+	@EventHandler
+	public void onFood(FoodLevelChangeEvent event) {
 
-        if (event.getEntity() instanceof Player) {
+		if (!(event.getEntity() instanceof Player)) {
+			return;
+		}
+		final Player player = (Player) event.getEntity();
+		final UtilPlayer u = new UtilPlayer(player);
+		if (!(u.getGame() != null && u.isAlive())) {
+			return;
+		}
+		event.setCancelled(true);
+		event.setFoodLevel(20);
 
-            Player player = (Player) event.getEntity();
-            UtilPlayer u = new UtilPlayer(player);
-            if (u.getGame() != null && u.isAlive()) {
+	}
 
-                event.setCancelled(true);
-                event.setFoodLevel(20);
+	@EventHandler
+	public void entityDamage(EntityDamageEvent event) {
 
-            }
+		if (!(event.getEntity() instanceof Player)) {
+			return;
+		}
+		final Player player = (Player) event.getEntity();
+		final UtilPlayer u = new UtilPlayer(player);
+		if (u.getGame() != null && u.isAlive()) {
 
-        }
+			event.setCancelled(true);
 
-    }
+		}
 
-    @EventHandler
-    public void entityDamage(EntityDamageEvent event) {
+	}
 
-        if (event.getEntity() instanceof Player) {
+	@EventHandler
+	public void onJoin(PlayerJoinEvent event) {
 
-            Player player = (Player) event.getEntity();
-            UtilPlayer u = new UtilPlayer(player);
-            if (u.getGame() != null && u.isAlive()) {
+		final Player player = event.getPlayer();
+		final UtilPlayer u = new UtilPlayer(player);
 
-                event.setCancelled(true);
+		SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
 
-            }
+		final Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+		final User user = new User(player, ess);
 
-        }
+		final Kits essentialsKitList = new Kits(ess);
+		final Kit playersKitToRestoreAfterMatch = (Kit) essentialsKitList.getKit(player.getName());
+		if (playersKitToRestoreAfterMatch != null) {
 
-    }
+			try {
 
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
+				playersKitToRestoreAfterMatch.expandItems(user);
 
-        Player player = event.getPlayer();
-        UtilPlayer u = new UtilPlayer(player);
+			}
+			catch (Exception error) {
 
-        SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
+				SpleggOG.getPlugin().getLogger().severe(error.getMessage());
 
-        Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
-        User user = new User(player, ess);
+			}
 
-        Kits essentialsKitList = new Kits(ess);
-        Kit playersKitToRestoreAfterMatch = (Kit) essentialsKitList.getKit(player.getName());
-        if (playersKitToRestoreAfterMatch != null) {
+		}
+		else {
 
-            try {
+			SpleggOG.getPlugin().getLogger().severe(
+					"ERROR: Kit for player: " + player.getName() + " was not found during the restore attempt!");
 
-                playersKitToRestoreAfterMatch.expandItems(user);
+		}
 
-            } catch (Exception error) {
+	}
 
-                SpleggOG.getPlugin().getLogger().severe(error.getMessage());
+	@EventHandler
+	public void dropItem(PlayerDropItemEvent event) {
 
-            }
+		final Player player = event.getPlayer();
+		final UtilPlayer u = new UtilPlayer(player);
 
-        } else {
+		if (u.getGame() != null && u.isAlive()) {
 
-            SpleggOG.getPlugin().getLogger().severe(
-                    "ERROR: Kit for player: " + player.getName() + " was not found during the restore attempt!");
+			event.setCancelled(true);
 
-        }
+		}
 
-    }
+	}
 
-    @EventHandler
-    public void dropItem(PlayerDropItemEvent event) {
+	@EventHandler
+	public void onCommand(PlayerCommandPreprocessEvent event) {
 
-        Player player = event.getPlayer();
-        UtilPlayer u = new UtilPlayer(player);
+		final Player player = event.getPlayer();
+		final UtilPlayer u = new UtilPlayer(player);
+		if (!(u.getGame() != null && u.isAlive() && !StringUtils.startsWith(event.getMessage(), "/splegg")
+				&& !player.hasPermission("splegg.admin"))) {
 
-        if (u.getGame() != null && u.isAlive()) {
+			return;
 
-            event.setCancelled(true);
+		}
 
-        }
+		event.setCancelled(true);
 
-    }
+		Utils.spleggOGMessage(player, "&6You cannot use that command in &3Splegg&6!");
 
-    @EventHandler
-    public void onCommand(PlayerCommandPreprocessEvent event) {
-
-        Player player = event.getPlayer();
-        UtilPlayer u = new UtilPlayer(player);
-        if (u.getGame() != null && u.isAlive() && !event.getMessage().startsWith("/splegg")
-                && !player.hasPermission("splegg.admin"))
-        {
-
-            event.setCancelled(true);
-
-            Utils.spleggOGMessage(player, "&6You cannot use that command in &3Splegg&6!");
-
-        }
-
-    }
+	}
 
 }

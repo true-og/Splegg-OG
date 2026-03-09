@@ -33,23 +33,23 @@ public class Utils {
 
     // Enable the conversion of text from config.yml to objects.
     public FileConfiguration config = SpleggOG.getPlugin().getConfig();
-    public HashMap<String, UtilPlayer> PLAYERS = new HashMap<String, UtilPlayer>();
+    public HashMap<String, UtilPlayer> PLAYERS = new HashMap<>();
     private File f;
     public static String prefix = "&7[&eSplegg&f-&4OG&7] ";
 
     public void bc(String s) {
 
-        TextComponent prefixContainer = legacySerializerAnyCase(prefix + s);
+        final TextComponent prefixContainer = legacySerializerAnyCase(prefix + s);
         Bukkit.broadcast(prefixContainer);
 
     }
 
     public void bc(String string, Game game) {
 
-        Iterator<?> playerIterator = SpleggOG.getPlugin().pm.PLAYERS.values().iterator();
+        final Iterator<?> playerIterator = SpleggOG.getPlugin().pm.PLAYERS.values().iterator();
         while (playerIterator.hasNext()) {
 
-            UtilPlayer u = (UtilPlayer) playerIterator.next();
+            final UtilPlayer u = (UtilPlayer) playerIterator.next();
             if (u.getGame() == game && u.isAlive()) {
 
                 spleggOGMessage(u.getPlayer(), string);
