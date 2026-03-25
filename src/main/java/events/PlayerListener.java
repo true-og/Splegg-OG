@@ -33,6 +33,12 @@ public class PlayerListener implements Listener {
         }
 
         final Player player = (Player) event.getEntity();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         final UtilPlayer u = new UtilPlayer(player);
         if (!(u.getGame() != null && u.isAlive())) {
 
@@ -55,6 +61,12 @@ public class PlayerListener implements Listener {
         }
 
         final Player player = (Player) event.getEntity();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         final UtilPlayer u = new UtilPlayer(player);
         if (u.getGame() != null && u.isAlive()) {
 
@@ -102,6 +114,12 @@ public class PlayerListener implements Listener {
     public void dropItem(PlayerDropItemEvent event) {
 
         final Player player = event.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         final UtilPlayer u = new UtilPlayer(player);
 
         if (u.getGame() != null && u.isAlive()) {
@@ -116,6 +134,12 @@ public class PlayerListener implements Listener {
     public void onCommand(PlayerCommandPreprocessEvent event) {
 
         final Player player = event.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         final UtilPlayer u = new UtilPlayer(player);
         if (!(u.getGame() != null && u.isAlive() && !StringUtils.startsWith(event.getMessage(), "/splegg")
                 && !player.hasPermission("splegg.admin")))

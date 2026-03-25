@@ -1,8 +1,11 @@
 package main;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
@@ -185,6 +188,30 @@ public class SpleggOG extends JavaPlugin {
 
         // Pass instance of main to other classes.
         return plugin;
+
+    }
+
+    public List<String> getEnabledSpleggWorlds() {
+
+        return this.getConfig().getStringList("Worlds.Enabled");
+
+    }
+
+    public boolean isSpleggWorld(String worldName) {
+
+        return worldName != null && this.getEnabledSpleggWorlds().contains(worldName);
+
+    }
+
+    public boolean isSpleggWorld(World world) {
+
+        return world != null && this.isSpleggWorld(world.getName());
+
+    }
+
+    public boolean isSpleggWorld(Location location) {
+
+        return location != null && this.isSpleggWorld(location.getWorld());
 
     }
 

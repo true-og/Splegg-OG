@@ -16,6 +16,12 @@ public class MapListener implements Listener {
     public void blockBreak(BlockBreakEvent event) {
 
         Player player = event.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         if (u.getGame() != null && u.isAlive()) {
 
@@ -29,6 +35,12 @@ public class MapListener implements Listener {
     public void blockPlace(BlockPlaceEvent event) {
 
         Player player = event.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         if (u.getGame() != null && u.isAlive()) {
 
@@ -41,7 +53,19 @@ public class MapListener implements Listener {
     @EventHandler
     public void hangingEntityBreak(HangingBreakByEntityEvent event) {
 
+        if (!(event.getRemover() instanceof Player)) {
+
+            return;
+
+        }
+
         Player player = (Player) event.getRemover();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         if (u.getGame() != null && u.isAlive()) {
 

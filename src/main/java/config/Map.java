@@ -282,6 +282,30 @@ public class Map {
 
     }
 
+    public String getWorldName() {
+
+        if (this.lobbySet()) {
+
+            return this.config.getString("Spawns.lobby.world");
+
+        }
+
+        if (this.config.isString("Spawns.1.world")) {
+
+            return this.config.getString("Spawns.1.world");
+
+        }
+
+        if (this.config.isString("Floors.1.p1.world")) {
+
+            return this.config.getString("Floors.1.p1.world");
+
+        }
+
+        return null;
+
+    }
+
     public void setLobby(Location l) {
 
         int x = l.getBlockX();

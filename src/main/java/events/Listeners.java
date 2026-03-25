@@ -49,6 +49,12 @@ public class Listeners implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
 
         final Player player = (Player) event.getWhoClicked();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 
         if (shopmanager.contains(player.getName())) {
@@ -192,6 +198,12 @@ public class Listeners implements Listener {
         }
 
         final Player player = (Player) entityPickupItemEvent.getEntity();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         if (u.getGame() != null && u.isAlive()) {
 
@@ -205,6 +217,12 @@ public class Listeners implements Listener {
     public void onPlayerAdvancement(PlayerAdvancementCriterionGrantEvent playerAdvancementCriterionGrantEvent) {
 
         final Player player = playerAdvancementCriterionGrantEvent.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         if (u.getGame() != null && u.isAlive()) {
 
@@ -218,6 +236,12 @@ public class Listeners implements Listener {
     public void onPlayerInteract(PlayerInteractEvent playerInteractEvent) {
 
         final Player player = playerInteractEvent.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         final Game game = u.getGame();
         if (!(game != null && Listeners.launchEggs.contains(u.getName()))) {

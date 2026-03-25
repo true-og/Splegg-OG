@@ -20,6 +20,19 @@ import utils.Utils;
 
 public class SpleggCommand implements CommandExecutor {
 
+    private boolean ensureSpleggWorld(Player player) {
+
+        if (SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return true;
+
+        }
+
+        Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotInSpleggWorld"));
+        return false;
+
+    }
+
     public boolean onCommand(CommandSender sender, Command cmd, String tag, String[] args) {
 
         if (sender instanceof Player) {
@@ -150,6 +163,12 @@ public class SpleggCommand implements CommandExecutor {
 
                     if (player.hasPermission("splegg.admin")) {
 
+                        if (!ensureSpleggWorld(player)) {
+
+                            return false;
+
+                        }
+
                         SpleggOG.getPlugin().config.setLobby(player.getLocation());
 
                         Utils.spleggOGMessage(player, "&aThe lobby has been set.");
@@ -177,6 +196,12 @@ public class SpleggCommand implements CommandExecutor {
                     if (args[0].equalsIgnoreCase("setspawn")) {
 
                         if (player.hasPermission("splegg.admin")) {
+
+                            if (!ensureSpleggWorld(player)) {
+
+                                return false;
+
+                            }
 
                             firstUserCommandArgument = args[1];
                             if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
@@ -387,6 +412,12 @@ public class SpleggCommand implements CommandExecutor {
 
                         if (player.hasPermission("splegg.admin")) {
 
+                            if (!ensureSpleggWorld(player)) {
+
+                                return false;
+
+                            }
+
                             firstUserCommandArgument = args[1];
                             if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
 
@@ -410,6 +441,12 @@ public class SpleggCommand implements CommandExecutor {
                     } else if (args[0].equalsIgnoreCase("addfloor")) {
 
                         if (player.hasPermission("splegg.admin")) {
+
+                            if (!ensureSpleggWorld(player)) {
+
+                                return false;
+
+                            }
 
                             firstUserCommandArgument = args[1];
                             if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
@@ -460,6 +497,12 @@ public class SpleggCommand implements CommandExecutor {
                     } else if (args[0].equalsIgnoreCase("join")) {
 
                         if (player.hasPermission("splegg.join")) {
+
+                            if (!ensureSpleggWorld(player)) {
+
+                                return false;
+
+                            }
 
                             if (u.getGame() != null) {
 

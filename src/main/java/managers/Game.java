@@ -264,6 +264,10 @@ public class Game {
 
             Utils.spleggOGMessage(player, config.getString("Messages.AlreadyInGame"));
 
+        } else if (!splegg.isSpleggWorld(player.getWorld()) || !splegg.isSpleggWorld(this.map.getWorldName())) {
+
+            Utils.spleggOGMessage(player, config.getString("Messages.NotInSpleggWorld"));
+
         } else if (this.players.containsKey(player.getName())) {
 
             Utils.spleggOGMessage(player, splegg.getConfig().getString("Messages.AlreadyInLobby"));

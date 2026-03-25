@@ -34,6 +34,12 @@ public class SpleggEvents implements Listener {
         if (shooter instanceof Player && event.getEntity() instanceof Egg) {
 
             Player player = (Player) shooter;
+            if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+                return;
+
+            }
+
             UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
             Block hitBlock = event.getHitBlock();
             if (hitBlock != null) {
@@ -119,6 +125,12 @@ public class SpleggEvents implements Listener {
     public void eggHatch(PlayerEggThrowEvent event) {
 
         Player player = event.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 
         if (u.getGame() != null && u.isAlive()) {
@@ -135,6 +147,12 @@ public class SpleggEvents implements Listener {
         if (event.getEntity() instanceof Player) {
 
             Player player = (Player) event.getEntity();
+            if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+                return;
+
+            }
+
             UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
 
             if (u.getGame() != null && u.isAlive()) {
@@ -151,6 +169,12 @@ public class SpleggEvents implements Listener {
     public void onKnockout(PlayerMoveEvent event) {
 
         Player player = event.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         Game game = u.getGame();
         if (game != null && u.isAlive()

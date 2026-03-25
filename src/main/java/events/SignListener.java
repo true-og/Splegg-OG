@@ -25,6 +25,12 @@ public class SignListener implements Listener {
     public void signPlace(SignChangeEvent event) {
 
         Player player = event.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         if (event.line(0).toString().equalsIgnoreCase("[splegg]") && event.line(1).toString().equalsIgnoreCase("join")
                 && player.hasPermission("splegg.admin"))
         {
@@ -75,6 +81,12 @@ public class SignListener implements Listener {
 
             Sign s = (Sign) e.getClickedBlock().getState();
             Player player = e.getPlayer();
+            if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+                return;
+
+            }
+
             if (s.line(0).toString().equalsIgnoreCase(SpleggOG.getPlugin().getConfig().getString("Sings.Format.1"))) {
 
                 String map = s.line(2).toString();
@@ -104,6 +116,12 @@ public class SignListener implements Listener {
     public void signBreak(BlockBreakEvent e) {
 
         Player player = e.getPlayer();
+        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
+
+            return;
+
+        }
+
         if (signMaterials.contains(e.getBlock().getType())) {
 
             Sign s = (Sign) e.getBlock().getState();

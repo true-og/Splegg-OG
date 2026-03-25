@@ -1,6 +1,7 @@
 Messages:
   Prefix: '&8[&2Splegg&8-&4OG&8] &3'
   NoPermission: '&cYou do not have permission!'
+  NotInSpleggWorld: '&cERROR: Splegg can only be used in configured splegg worlds.'
   JoinGame: '&6%player% has joined the game. &7[&e%count%/%maxcount%&7]'
   LeaveGame: '&6%player% has left the game. &7[&e%count%/%maxcount%&7]'
   IndividualLeaveGame: '&6You have left the lobby for map &a%map%&6.'
@@ -39,6 +40,9 @@ Options:
   Timer: 120
   AutoStartPlayers: 4
   GraceTime: 10
+Worlds:
+  Enabled:
+    - splegg
 Sings:
   Format:
     1: '&8[&2Splegg&r-&4OG&8]'
