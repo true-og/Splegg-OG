@@ -48,6 +48,7 @@ repositories {
     maven { url = uri("https://papermc.io/repo/repository/maven-public/") } // Import the Paper Maven Repository.
     maven { url = uri("https://repo.essentialsx.net/releases/") } // Import the EssentialsX Maven Repository.
     maven { url = uri("https://maven.enginehub.org/repo") } // Import the WorldEdit Maven Repository.
+    maven { url = uri("https://ci.mg-dev.eu/plugin/repository/everything") } // Import the BKCommonLib Maven Repository.
 }
 
 /* ---------------------- Java project deps ---------------------------- */
@@ -56,6 +57,12 @@ dependencies {
     compileOnly("io.github.miniplaceholders:miniplaceholders-api:2.2.3") // Import MiniPlaceholders API.
     compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.0-SNAPSHOT") // Import WorldEdit API.
     compileOnly("net.essentialsx:EssentialsX:2.21.0") // Import EssentialsX API.
+    compileOnly("com.github.regix1:MyWorlds:master-SNAPSHOT") {
+        isTransitive = false
+    } // Import MyWorlds API (from Jitpack).
+    compileOnly("com.bergerkiller.bukkit:BKCommonLib:1.21.10-v2-SNAPSHOT") {
+        isTransitive = false
+    } // Import BKCommonLib API (required by MyWorlds at compile time).
     implementation(project(":libs:GxUI-OG")) // Import TrueOG Network GxUI-OG Java API (from source).
     compileOnlyApi(project(":libs:Utilities-OG")) // Import TrueOG Network Utilities-OG Java API (from source).
     compileOnlyApi(project(":libs:DiamondBank-OG")) {

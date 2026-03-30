@@ -293,7 +293,43 @@ public class Listeners implements Listener {
     @EventHandler
     public void onAsyncPlayerChat(AsyncChatEvent asyncChatEvent) {
 
-        // TODO: Direct chat to world-specific channel here.
+        final Player sender = asyncChatEvent.getPlayer();
+        final SpleggOG splegg = SpleggOG.getPlugin();
+
+        if (!splegg.isSpleggWorld(sender.getWorld())) {
+
+            // Not in a Splegg world, don't filter.
+            return;
+
+        }
+
+        // Restrict chat to players in the same world type (lobby or in-game).
+        final boolean senderInLobby = splegg.isSpleggLobbyWorld(sender.getWorld());
+        final boolean senderInGame = splegg.isSpleggInGameWorld(sender.getWorld());
+
+        asyncChatEvent.viewers().removeIf(viewer -> {
+
+            if (!(viewer instanceof Player recipient)) {
+
+                return false;
+
+            }
+
+            if (senderInLobby) {
+
+                return !splegg.isSpleggLobbyWorld(recipient.getWorld());
+
+            }
+
+            if (senderInGame) {
+
+                return !splegg.isSpleggInGameWorld(recipient.getWorld());
+
+            }
+
+            return false;
+
+        });
 
     }
 

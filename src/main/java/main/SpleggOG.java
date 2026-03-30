@@ -1,5 +1,6 @@
 package main;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,6 +13,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.bergerkiller.bukkit.mw.MyWorlds;
+import com.bergerkiller.bukkit.mw.WorldInventory;
 import com.earth2me.essentials.Essentials;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 
@@ -46,6 +49,7 @@ public class SpleggOG extends JavaPlugin {
     boolean economy = true;
     private DiamondBankAPIJava diamondBankAPI;
     private static Essentials essentials;
+    private static MyWorlds myWorlds;
 
     // TODO: If a shovel in the Splegg shop is too expensive, close the inventory
     // and tell the user about it.
@@ -73,6 +77,14 @@ public class SpleggOG extends JavaPlugin {
 
             Bukkit.getPluginManager().disablePlugin(this);
 
+        } else if (this.getServer().getPluginManager().getPlugin("MyWorlds") == null) {
+
+            final String noMyWorldsError = "ERROR: MyWorlds not found! Without MyWorlds, Splegg-OG will not function.";
+
+            this.getLogger().severe(noMyWorldsError);
+
+            Bukkit.getPluginManager().disablePlugin(this);
+
         } else {
 
             final RegisteredServiceProvider<DiamondBankAPIJava> provider = getServer().getServicesManager()
@@ -94,6 +106,7 @@ public class SpleggOG extends JavaPlugin {
 
             // Initialize TrueOG APIs.
             essentials = (Essentials) this.getServer().getPluginManager().getPlugin("Essentials-OG");
+            myWorlds = (MyWorlds) this.getServer().getPluginManager().getPlugin("MyWorlds");
 
             Bukkit.getOnlinePlayers().forEach((Player p) -> {
 
@@ -115,6 +128,9 @@ public class SpleggOG extends JavaPlugin {
 
             this.getConfig().options().copyDefaults(true);
             this.saveConfig();
+
+            // Configure MyWorlds inventory isolation for Splegg worlds.
+            configureMyWorlds();
 
             this.getServer().getPluginManager().registerEvents(new MapListener(), this);
             this.getServer().getPluginManager().registerEvents(new PlayerListener(), this);
@@ -181,9 +197,78 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
+    private void configureMyWorlds() {
+
+        // Enable world-based inventory isolation.
+        myWorlds.setUseWorldInventories(true);
+
+        // Create inventory group for lobby worlds.
+        List<String> lobbyWorlds = getLobbyWorlds();
+        if (!lobbyWorlds.isEmpty()) {
+
+            WorldInventory lobbyInv = WorldInventory.create(myWorlds, lobbyWorlds.get(0));
+            for (int i = 1; i < lobbyWorlds.size(); i++) {
+
+                lobbyInv.add(lobbyWorlds.get(i));
+
+            }
+
+            this.getLogger().info("Created MyWorlds inventory group for lobby worlds: " + lobbyWorlds);
+
+        }
+
+        // Create inventory group for in-game worlds.
+        List<String> inGameWorlds = getInGameWorlds();
+        if (!inGameWorlds.isEmpty()) {
+
+            WorldInventory inGameInv = WorldInventory.create(myWorlds, inGameWorlds.get(0));
+            for (int i = 1; i < inGameWorlds.size(); i++) {
+
+                inGameInv.add(inGameWorlds.get(i));
+
+            }
+
+            this.getLogger().info("Created MyWorlds inventory group for in-game worlds: " + inGameWorlds);
+
+        }
+
+    }
+
+    public List<String> getMainWorlds() {
+
+        return this.getConfig().getStringList("Worlds.Main");
+
+    }
+
+    public List<String> getLobbyWorlds() {
+
+        return this.getConfig().getStringList("Worlds.Lobby");
+
+    }
+
+    public List<String> getInGameWorlds() {
+
+        return this.getConfig().getStringList("Worlds.InGame");
+
+    }
+
     public List<String> getEnabledSpleggWorlds() {
 
-        return this.getConfig().getStringList("Worlds.Enabled");
+        List<String> all = new ArrayList<>(getLobbyWorlds());
+        all.addAll(getInGameWorlds());
+        return all;
+
+    }
+
+    public boolean isMainWorld(String worldName) {
+
+        return worldName != null && this.getMainWorlds().contains(worldName);
+
+    }
+
+    public boolean isMainWorld(World world) {
+
+        return world != null && this.isMainWorld(world.getName());
 
     }
 
@@ -205,10 +290,41 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
+    public boolean isSpleggLobbyWorld(String worldName) {
+
+        return worldName != null && this.getLobbyWorlds().contains(worldName);
+
+    }
+
+    public boolean isSpleggLobbyWorld(World world) {
+
+        return world != null && this.isSpleggLobbyWorld(world.getName());
+
+    }
+
+    public boolean isSpleggInGameWorld(String worldName) {
+
+        return worldName != null && this.getInGameWorlds().contains(worldName);
+
+    }
+
+    public boolean isSpleggInGameWorld(World world) {
+
+        return world != null && this.isSpleggInGameWorld(world.getName());
+
+    }
+
     // Getter for Essentials-OG API.
     public static Essentials getEssentials() {
 
         return essentials;
+
+    }
+
+    // Getter for MyWorlds API.
+    public static MyWorlds getMyWorlds() {
+
+        return myWorlds;
 
     }
 

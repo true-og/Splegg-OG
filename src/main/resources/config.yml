@@ -41,7 +41,13 @@ Options:
   AutoStartPlayers: 4
   GraceTime: 10
 Worlds:
-  Enabled:
+  Main:
+    - world
+    - world_nether
+    - world_the_end
+  Lobby:
+    - splegg_lobby
+  InGame:
     - splegg
 Sings:
   Format:
