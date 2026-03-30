@@ -84,7 +84,7 @@ public class PlayerListener implements Listener {
 
         SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
 
-        final Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+        final Essentials ess = SpleggOG.getEssentials();
         final User user = new User(player, ess);
 
         final Kits essentialsKitList = new Kits(ess);

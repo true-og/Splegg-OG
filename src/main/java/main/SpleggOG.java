@@ -12,6 +12,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.earth2me.essentials.Essentials;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 
 import commands.SpleggCommand;
@@ -44,26 +45,10 @@ public class SpleggOG extends JavaPlugin {
     public boolean disabling = false;
     boolean economy = true;
     private DiamondBankAPIJava diamondBankAPI;
+    private static Essentials essentials;
 
     // TODO: If a shovel in the Splegg shop is too expensive, close the inventory
     // and tell the user about it.
-    private boolean setupEconomy() {
-
-        final RegisteredServiceProvider<DiamondBankAPIJava> diamondBankAPIProvider = getServer().getServicesManager()
-                .getRegistration(DiamondBankAPIJava.class);
-        if (diamondBankAPIProvider == null) {
-
-            getLogger().severe("DiamondBank-OG API is null");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return false;
-
-        }
-
-        this.diamondBankAPI = diamondBankAPIProvider.getProvider();
-
-        return true;
-
-    }
 
     @Override
     public void onEnable() {
@@ -73,14 +58,16 @@ public class SpleggOG extends JavaPlugin {
         if (this.getServer().getPluginManager().getPlugin("WorldEdit") == null) {
 
             final String noWorldEditError = "\"ERROR: WorldEdit not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
+
             this.getLogger().severe(noWorldEditError);
             this.getLogger().info(noWorldEditError);
 
             Bukkit.getPluginManager().disablePlugin(this);
 
-        } else if (this.getServer().getPluginManager().getPlugin("DiamondBank-OG") == null) {
+        } else if (this.getServer().getPluginManager().getPlugin("Essentials-OG") == null) {
 
             final String noDiamondBankOGError = "\"ERROR: DiamondBank-OG not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
+
             this.getLogger().severe(noDiamondBankOGError);
             this.getLogger().info(noDiamondBankOGError);
 
@@ -88,30 +75,33 @@ public class SpleggOG extends JavaPlugin {
 
         } else {
 
-            if (!this.setupEconomy()) {
+            final RegisteredServiceProvider<DiamondBankAPIJava> provider = getServer().getServicesManager()
+                    .getRegistration(DiamondBankAPIJava.class);
 
-                // Inform the user that the plugin will not work due to a missing
-                // DiamondBank-OG.
-                // dependency.
-                this.getLogger().severe("[%s] - Disabled due to no DiamomdBank-OG dependency found!"
-                        .formatted(this.getPluginMeta().getName()));
+            if (provider == null) {
 
-                // Disable Splegg-OG for this instance because DiamondBank-OG (a crucial
-                // dependency) was
-                // not found.
-                this.getServer().getPluginManager().disablePlugin(this);
+                getLogger().severe("DiamondBank-OG API is null – disabling Splegg.");
+
+                Bukkit.getPluginManager().disablePlugin(this);
+
+                return;
 
             } else {
 
-                Bukkit.getOnlinePlayers().forEach((Player p) -> {
-
-                    final UtilPlayer u = new UtilPlayer(p);
-
-                    this.pm.PLAYERS.put(p.getName(), u);
-
-                });
+                diamondBankAPI = provider.getProvider();
 
             }
+
+            // Initialize TrueOG APIs.
+            essentials = (Essentials) this.getServer().getPluginManager().getPlugin("Essentials-OG");
+
+            Bukkit.getOnlinePlayers().forEach((Player p) -> {
+
+                final UtilPlayer u = new UtilPlayer(p);
+
+                this.pm.PLAYERS.put(p.getName(), u);
+
+            });
 
             this.maps = new MapUtilities();
             this.games = new GameUtilities();
@@ -212,6 +202,13 @@ public class SpleggOG extends JavaPlugin {
     public boolean isSpleggWorld(Location location) {
 
         return location != null && this.isSpleggWorld(location.getWorld());
+
+    }
+
+    // Getter for Essentials-OG API.
+    public static Essentials getEssentials() {
+
+        return essentials;
 
     }
 

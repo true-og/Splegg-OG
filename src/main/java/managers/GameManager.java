@@ -24,7 +24,7 @@ public class GameManager {
 
     public void startGame(Game game) {
 
-        Map map = game.getMap();
+        final Map map = game.getMap();
         SpleggOG.getPlugin().getLogger().info("New game commencing in map: " + map);
         game.startGameTimer();
         Bukkit.getScheduler().cancelTask(game.counter);
@@ -34,7 +34,7 @@ public class GameManager {
         int c = 1;
         game.loadFloors();
 
-        Iterator<?> playersInGame = game.players.values().iterator();
+        final Iterator<?> playersInGame = game.players.values().iterator();
         SpleggPlayer sp;
         while (playersInGame.hasNext()) {
 
@@ -77,11 +77,11 @@ public class GameManager {
         game.floor.clear();
         game.setStarting(false);
 
-        Iterator<?> playersInGame = game.players.values().iterator();
+        final Iterator<?> playersInGame = game.players.values().iterator();
         while (playersInGame.hasNext()) {
 
-            SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
-            UtilPlayer u = sp.getUtilPlayer();
+            final SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
+            final UtilPlayer u = sp.getUtilPlayer();
             game.leaveGame(u);
 
         }
@@ -100,23 +100,21 @@ public class GameManager {
 
     public String getDigitTime(int count) {
 
-        int minutes = count / 60;
-        int seconds = count % 60;
+        final int minutes = count / 60;
+        final int seconds = count % 60;
 
-        String disMinu = (minutes < 10 ? "0" : "") + minutes;
-        String disSec = (seconds < 10 ? "0" : "") + seconds;
-        String formattedTime = disMinu + ":" + disSec;
-
-        return formattedTime;
+        final String disMinu = (minutes < 10 ? "0" : "") + minutes;
+        final String disSec = (seconds < 10 ? "0" : "") + seconds;
+        return disMinu + ":" + disSec;
 
     }
 
     public void ingameTimer(int count, HashMap<String, SpleggPlayer> players) {
 
-        Iterator<?> playersInGame = players.values().iterator();
+        final Iterator<?> playersInGame = players.values().iterator();
         while (playersInGame.hasNext()) {
 
-            SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
+            final SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
             Utils.spleggOGMessage(sp.getPlayer(), ("&6Splegg is ending in... " + splegg.game.getDigitTime(count)));
 
         }

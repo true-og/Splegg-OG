@@ -67,9 +67,9 @@ public class Game {
         this.map = map;
         this.name = map.getName();
         this.status = Status.LOBBY;
-        this.players = new HashMap<String, SpleggPlayer>();
-        this.floor = new HashSet<Location>();
-        this.data = new ArrayList<Rollback>();
+        this.players = new HashMap<>();
+        this.floor = new HashSet<>();
+        this.data = new ArrayList<>();
         this.time = 601;
         this.lobbycount = 31;
         this.y1 = -64;
@@ -80,6 +80,7 @@ public class Game {
 
         (new BukkitRunnable() {
 
+            @Override
             public void run() {
 
                 Game.this.getSign().update(map, true);
@@ -94,20 +95,21 @@ public class Game {
 
     public void startGameTimer() {
 
-        int grace = config.getInt("Options.GraceTime");
+        final int grace = config.getInt("Options.GraceTime");
         this.splegg.chat.bc(config.getString("Messages.GraceTimeStart").replaceAll("%grace%", String.valueOf(grace)),
                 this);
 
         (new BukkitRunnable() {
 
+            @Override
             public void run() {
 
                 Game.this.splegg.chat.bc(config.getString("Messages.GraceTimeFinish"), Game.this);
 
-                Iterator<?> PlayersInGame = players.values().iterator();
+                final Iterator<?> PlayersInGame = players.values().iterator();
                 while (PlayersInGame.hasNext()) {
 
-                    SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
+                    final SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
                     sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.2F);
 
                     // TODO: Add all available shovels here.
@@ -208,11 +210,11 @@ public class Game {
 
     public ArrayList<SpleggPlayer> getSp() {
 
-        ArrayList<SpleggPlayer> sp = new ArrayList<SpleggPlayer>();
-        Iterator<?> var3 = this.players.values().iterator();
+        final ArrayList<SpleggPlayer> sp = new ArrayList<>();
+        final Iterator<?> var3 = this.players.values().iterator();
         while (var3.hasNext()) {
 
-            SpleggPlayer sps = (SpleggPlayer) var3.next();
+            final SpleggPlayer sps = (SpleggPlayer) var3.next();
             sp.add(sps);
 
         }
@@ -223,7 +225,7 @@ public class Game {
 
     public SpleggPlayer getPlayer(Player player) {
 
-        return (SpleggPlayer) this.players.get(player.getName());
+        return this.players.get(player.getName());
 
     }
 
@@ -259,7 +261,7 @@ public class Game {
 
     public void joinGame(UtilPlayer playerWhoIsJoining) {
 
-        Player player = playerWhoIsJoining.getPlayer();
+        final Player player = playerWhoIsJoining.getPlayer();
         if (playerWhoIsJoining.getGame() != null) {
 
             Utils.spleggOGMessage(player, config.getString("Messages.AlreadyInGame"));
@@ -274,11 +276,11 @@ public class Game {
 
         } else if (this.status == Status.LOBBY) {
 
-            int size = this.players.size();
+            final int size = this.players.size();
             // Makes maximum players in a game the same as the amount of spawn points that
             // are set for a given map.
-            int max = this.map.getSpawnCount();
-            SpleggPlayer sp;
+            final int max = this.map.getSpawnCount();
+            final SpleggPlayer sp;
             if (max == 1) {
 
                 sp = new SpleggPlayer(playerWhoIsJoining);
@@ -388,10 +390,10 @@ public class Game {
 
     private void saveInv(Player player) {
 
-        final Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+        final Essentials ess = SpleggOG.getEssentials();
         final Kits preGameKit = new Kits(ess);
 
-        final ArrayList<String> itemsAsListOfStrings = new ArrayList<String>(player.getInventory().getSize());
+        final ArrayList<String> itemsAsListOfStrings = new ArrayList<>(player.getInventory().getSize());
         for (ItemStack item : player.getInventory().getContents()) {
 
             if (item != null) {
@@ -416,10 +418,10 @@ public class Game {
         player.updateInventory();
         player.setFireTicks(0);
 
-        Iterator<?> activePotionEffects = player.getActivePotionEffects().iterator();
+        final Iterator<?> activePotionEffects = player.getActivePotionEffects().iterator();
         while (activePotionEffects.hasNext()) {
 
-            PotionEffect effect = (PotionEffect) activePotionEffects.next();
+            final PotionEffect effect = (PotionEffect) activePotionEffects.next();
             player.removePotionEffect(effect.getType());
 
         }
@@ -428,7 +430,7 @@ public class Game {
 
     private void setLobbyInv(Player player) {
 
-        int[] slotsDeclaredInConfigFile = new int[42];
+        final int[] slotsDeclaredInConfigFile = new int[42];
         for (int i = 0; i < slotsDeclaredInConfigFile.length; i++) {
 
             setInventorySlotItem(player, i);
@@ -478,29 +480,30 @@ public class Game {
     public void startCountdown() {
 
         Bukkit.getScheduler().cancelTask(counter);
-        if (this.status == Status.LOBBY) {
+        if (this.status != Status.LOBBY) {
 
-            this.lobbycount = config.getInt("Options.Timer");
-
-            Iterator<?> playersInGame = this.players.values().iterator();
-            while (playersInGame.hasNext()) {
-
-                SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
-                sp.getPlayer().setLevel(this.getLobbyCount());
-
-            }
-
-            counter = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.splegg,
-                    new LobbyCountdown(splegg, this, this.getLobbyCount()), 0L, 20L);
+            return;
 
         }
+
+        this.lobbycount = config.getInt("Options.Timer");
+        final Iterator<?> playersInGame = this.players.values().iterator();
+        while (playersInGame.hasNext()) {
+
+            final SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
+            sp.getPlayer().setLevel(this.getLobbyCount());
+
+        }
+
+        counter = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.splegg,
+                new LobbyCountdown(splegg, this, this.getLobbyCount()), 0L, 20L);
 
     }
 
     public void leaveGame(UtilPlayer u) {
 
-        Player player = u.getPlayer();
-        Game game = u.getGame();
+        final Player player = u.getPlayer();
+        final Game game = u.getGame();
         if (game != null) {
 
             // Tell player that left about their current state.
@@ -523,14 +526,14 @@ public class Game {
 
         }
 
-        String playerWhoOnlyNeedsIndividualLeaveGameMessage = new String();
+        String playerWhoOnlyNeedsIndividualLeaveGameMessage = "";
 
-        Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
-        User user = new User(player, ess);
+        final Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+        final User user = new User(player, ess);
 
         playerWhoOnlyNeedsIndividualLeaveGameMessage = player.getName();
 
-        Kits essentialsKitList = new Kits(ess);
+        final Kits essentialsKitList = new Kits(ess);
         if (essentialsKitList != null) {
 
             try {
@@ -545,15 +548,15 @@ public class Game {
 
         }
 
-        InvStore store = u.getStore();
+        final InvStore store = u.getStore();
         store.load();
         store.reset();
 
         for (Player p : Bukkit.getOnlinePlayers()) {
 
-            if (p.getName() != playerWhoOnlyNeedsIndividualLeaveGameMessage) {
+            if (!p.getName().equals(playerWhoOnlyNeedsIndividualLeaveGameMessage)) {
 
-                UtilPlayer playerRemainingInGame = SpleggOG.getPlugin().pm.getPlayer(p);
+                final UtilPlayer playerRemainingInGame = SpleggOG.getPlugin().pm.getPlayer(p);
                 if (playerRemainingInGame.getGame() != null) {
 
                     // Tell the rest of the people in the lobby that the player has left.
@@ -622,23 +625,24 @@ public class Game {
 
             for (int i = 1; i <= this.map.getFloors(); ++i) {
 
-                Location l1 = this.map.getFloor(i, "1");
-                Location l2 = this.map.getFloor(i, "2");
+                final Location l1 = this.map.getFloor(i, "1");
+                final Location l2 = this.map.getFloor(i, "2");
 
-                CuboidRegion sel = new CuboidRegion(BlockVector3.at(l1.getBlockX(), l1.getBlockY(), l1.getBlockZ()),
+                final CuboidRegion sel = new CuboidRegion(
+                        BlockVector3.at(l1.getBlockX(), l1.getBlockY(), l1.getBlockZ()),
                         BlockVector3.at(l2.getBlockX(), l2.getBlockY(), l2.getBlockZ()));
 
-                BlockVector3 min = sel.getMinimumPoint();
-                BlockVector3 max = sel.getMaximumPoint();
+                final BlockVector3 min = sel.getMinimumPoint();
+                final BlockVector3 max = sel.getMaximumPoint();
 
-                int minX = min.x();
-                int minY = min.y();
+                final int minX = min.x();
+                final int minY = min.y();
                 this.y1 = minY;
-                int minZ = min.z();
-                int maxX = max.x();
-                int maxY = max.y();
+                final int minZ = min.z();
+                final int maxX = max.x();
+                final int maxY = max.y();
                 this.y2 = maxY;
-                int maxZ = max.z();
+                final int maxZ = max.z();
                 this.small = Math.min(this.y2, this.y2);
 
                 for (int x = minX; x <= maxX; ++x) {
@@ -647,10 +651,10 @@ public class Game {
 
                         for (int z = minZ; z <= maxZ; ++z) {
 
-                            Location l = new Location(l1.getWorld(), (double) x, (double) y, (double) z);
+                            final Location l = new Location(l1.getWorld(), (double) x, (double) y, (double) z);
                             this.floor.add(l);
 
-                            Block block = l.getWorld().getBlockAt(x, y, z);
+                            final Block block = l.getWorld().getBlockAt(x, y, z);
                             this.data.add(new Rollback(l.getWorld().getName(), block.getType(), block.getBlockData(), x,
                                     y, z));
 
@@ -670,11 +674,11 @@ public class Game {
 
     public void resetArena() {
 
-        Iterator<?> var2 = this.data.iterator();
+        final Iterator<?> var2 = this.data.iterator();
         while (var2.hasNext()) {
 
-            Rollback d = (Rollback) var2.next();
-            Location l = new Location(Bukkit.getWorld(d.getWorld()), (double) d.getX(), (double) d.getY(),
+            final Rollback d = (Rollback) var2.next();
+            final Location l = new Location(Bukkit.getWorld(d.getWorld()), (double) d.getX(), (double) d.getY(),
                     (double) d.getZ());
 
             l.getBlock().setType(d.getPrevid());
