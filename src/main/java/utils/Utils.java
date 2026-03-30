@@ -133,7 +133,7 @@ public class Utils {
         float yaw = (float) this.config.getInt("Spawns.lobby.yaw");
         float pitch = (float) this.config.getInt("Spawns.lobby.pitch");
 
-        World worldName = player.getWorld();
+        World worldName = Bukkit.getWorld(this.config.getString("Spawns.lobby.world"));
 
         return new Location(worldName, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
 
