@@ -3,6 +3,8 @@ package main;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -77,7 +79,7 @@ public class SpleggOG extends JavaPlugin {
 
             Bukkit.getPluginManager().disablePlugin(this);
 
-        } else if (this.getServer().getPluginManager().getPlugin("MyWorlds") == null) {
+        } else if (findMyWorldsPlugin() == null) {
 
             final String noMyWorldsError = "ERROR: MyWorlds not found! Without MyWorlds, Splegg-OG will not function.";
 
@@ -106,7 +108,7 @@ public class SpleggOG extends JavaPlugin {
 
             // Initialize TrueOG APIs.
             essentials = (Essentials) this.getServer().getPluginManager().getPlugin("Essentials-OG");
-            myWorlds = (MyWorlds) this.getServer().getPluginManager().getPlugin("MyWorlds");
+            myWorlds = findMyWorldsPlugin();
 
             Bukkit.getOnlinePlayers().forEach((Player p) -> {
 
@@ -206,14 +208,7 @@ public class SpleggOG extends JavaPlugin {
         List<String> lobbyWorlds = getLobbyWorlds();
         if (!lobbyWorlds.isEmpty()) {
 
-            WorldInventory lobbyInv = WorldInventory.create(myWorlds, lobbyWorlds.get(0));
-            for (int i = 1; i < lobbyWorlds.size(); i++) {
-
-                lobbyInv.add(lobbyWorlds.get(i));
-
-            }
-
-            this.getLogger().info("Created MyWorlds inventory group for lobby worlds: " + lobbyWorlds);
+            createInventoryGroup(lobbyWorlds, "lobby");
 
         }
 
@@ -221,14 +216,51 @@ public class SpleggOG extends JavaPlugin {
         List<String> inGameWorlds = getInGameWorlds();
         if (!inGameWorlds.isEmpty()) {
 
-            WorldInventory inGameInv = WorldInventory.create(myWorlds, inGameWorlds.get(0));
-            for (int i = 1; i < inGameWorlds.size(); i++) {
+            createInventoryGroup(inGameWorlds, "in-game");
 
-                inGameInv.add(inGameWorlds.get(i));
+        }
+
+    }
+
+    private void createInventoryGroup(List<String> worlds, String groupType) {
+
+        try {
+
+            final Object inventory = createWorldInventory(worlds.get(0));
+            final Method addMethod = inventory.getClass().getMethod("add", String.class);
+
+            for (int i = 1; i < worlds.size(); i++) {
+
+                addMethod.invoke(inventory, worlds.get(i));
 
             }
 
-            this.getLogger().info("Created MyWorlds inventory group for in-game worlds: " + inGameWorlds);
+            this.getLogger().info("Created MyWorlds inventory group for " + groupType + " worlds: " + worlds);
+
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exception) {
+
+            throw new IllegalStateException(
+                    "Failed to configure MyWorlds inventory group for " + groupType + " worlds: " + worlds, exception);
+
+        }
+
+    }
+
+    private Object createWorldInventory(String worldName)
+            throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
+    {
+
+        try {
+
+            final Method createMethod = WorldInventory.class.getMethod("create", MyWorlds.class, String.class);
+
+            return createMethod.invoke(null, myWorlds, worldName);
+
+        } catch (NoSuchMethodException ignored) {
+
+            final Method createMethod = WorldInventory.class.getMethod("create", String.class);
+
+            return createMethod.invoke(null, worldName);
 
         }
 
@@ -325,6 +357,26 @@ public class SpleggOG extends JavaPlugin {
     public static MyWorlds getMyWorlds() {
 
         return myWorlds;
+
+    }
+
+    private MyWorlds findMyWorldsPlugin() {
+
+        Plugin plugin = this.getServer().getPluginManager().getPlugin("MyWorlds");
+        if (plugin instanceof MyWorlds) {
+
+            return (MyWorlds) plugin;
+
+        }
+
+        plugin = this.getServer().getPluginManager().getPlugin("My_Worlds");
+        if (plugin instanceof MyWorlds) {
+
+            return (MyWorlds) plugin;
+
+        }
+
+        return null;
 
     }
 
