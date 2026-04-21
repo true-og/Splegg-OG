@@ -316,28 +316,27 @@ public class Utils {
         // Create the inventory.
         Inventory shop = Bukkit.createInventory((InventoryHolder) null, 9, Component.text(shopTitle));
 
-        // Get the item names and descriptions, then serialize them back to Strings.
-        String goldShovelNameComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
-                legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.GoldShovel.Name")));
-        String goldShovelDescriptionComponent = LegacyComponentSerializer.legacyAmpersand()
-                .serialize(legacySerializerAnyCase(SpleggOG.getPlugin().getConfig()
-                        .getString("GUI.Shop.GoldShovel.Description").replaceAll("%price%", "&B" + String
-                                .valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.GoldShovel.Price")))));
-
-        String diamondShovelNameComponent = LegacyComponentSerializer.legacyAmpersand().serialize(
-                legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("GUI.Shop.DiamondShovel.Name")));
-        String diamondShovelDescriptionComponent = LegacyComponentSerializer.legacyAmpersand()
-                .serialize(legacySerializerAnyCase(SpleggOG.getPlugin().getConfig()
-                        .getString("GUI.Shop.DiamondShovel.Description").replaceAll("%price%", "&B" + String
-                                .valueOf(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.DiamondShovel.Price")))));
-
-        // Present the serialized Strings to the user on the items.
-        shop.setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL, goldShovelNameComponent, goldShovelDescriptionComponent));
-        shop.setItem(1,
-                Utils.getItem(Material.DIAMOND_SHOVEL, diamondShovelNameComponent, diamondShovelDescriptionComponent));
+        shop.setItem(0, getShopItem(Material.WOODEN_SHOVEL, "GUI.Shop.WoodShovel"));
+        shop.setItem(1, getShopItem(Material.STONE_SHOVEL, "GUI.Shop.StoneShovel"));
+        shop.setItem(2, getShopItem(Material.IRON_SHOVEL, "GUI.Shop.IronShovel"));
+        shop.setItem(3, getShopItem(Material.GOLDEN_SHOVEL, "GUI.Shop.GoldShovel"));
+        shop.setItem(4, getShopItem(Material.DIAMOND_SHOVEL, "GUI.Shop.DiamondShovel"));
+        shop.setItem(5, getShopItem(Material.NETHERITE_SHOVEL, "GUI.Shop.NetheriteShovel"));
 
         // Pass the shop to the player.
         return shop;
+
+    }
+
+    private static ItemStack getShopItem(Material material, String configPath) {
+
+        final String name = LegacyComponentSerializer.legacyAmpersand()
+                .serialize(legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString(configPath + ".Name")));
+        final String description = LegacyComponentSerializer.legacyAmpersand().serialize(
+                legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString(configPath + ".Description")
+                        .replaceAll("%price%", "&B" + SpleggOG.getPlugin().getConfig().getInt(configPath + ".Price"))));
+
+        return Utils.getItem(material, name, description);
 
     }
 

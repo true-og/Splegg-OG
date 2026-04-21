@@ -24,8 +24,12 @@ Messages:
   Mapnotexist: '&cERROR: Map does not exist!'
   Mapdisabled: '&cERROR: Map is disabled.'
   Haveyoueverbought: '&cERROR: You already own this shovel.'
+  BuyWoodShovel: '&BYou bought a Wooden Shovel!'
+  BuyStoneShovel: '&BYou bought a Stone Shovel!'
+  BuyIronShovel: '&BYou selected the Iron Shovel!'
   BuyGoldShovel: '&BYou bought a Gold Shovel!'
   BuyDiamondShovel: '&BYou bought a Diamond Shovel!'
+  BuyNetheriteShovel: '&BYou bought a Netherite Shovel!'
   VIPPrivilege: '&6Only &fOG &6players and above can enter the full game!'
   VIPJoinGame: '&6You have joined a full game thanks to your donor rank. Thank you for supporting &2True&4OG!'
 Scoreboard:
@@ -65,6 +69,12 @@ Sings:
     Started: '&6[Started]'
     Disabled: '&4[Disabled]'
 Shovels:
+  Wood:
+    Name: '&6&lWooden Shovel'
+    Lore: '&e&lRight-Click to launch eggs!'
+  Stone:
+    Name: '&7&lStone Shovel'
+    Lore: '&e&lRight-Click to launch eggs!'
   Iron:
     Name: '&f&lIron Shovel'
     Lore: '&e&lRight-Click to launch eggs!'
@@ -74,10 +84,25 @@ Shovels:
   Diamond:
     Name: '&b&lDiamond Shovel'
     Lore: '&e&lRight-Click to launch eggs!'
+  Netherite:
+    Name: '&8&lNetherite Shovel'
+    Lore: '&e&lRight-Click to launch eggs!'
 GUI:
   Shop:
     Title: '&3&lSplegg Shop'
-    Size: 10
+    Size: 9
+    WoodShovel:
+      Name: '&6&lWooden Shovel'
+      Description: '&6A classic &6Wooden Shovel&6 for style points. Price: &B%price% Diamonds&6.'
+      Price: 100
+    StoneShovel:
+      Name: '&7&lStone Shovel'
+      Description: '&6Upgrade your look with a &7Stone Shovel&6. Price: &B%price% Diamonds&6.'
+      Price: 250
+    IronShovel:
+      Name: '&f&lIron Shovel'
+      Description: '&6The standard &fIron Shovel &6comes with every match. Price: &B%price% Diamonds&6.'
+      Price: 0
     GoldShovel:
       Name: '&e&lGolden Shovel'
       Description: '&6Impress your SO with this fancy &eGolden Shovel&6! Price: &B%price% Diamonds&6.'
@@ -86,6 +111,10 @@ GUI:
       Name: '&b&lDiamond Shovel'
       Description: '&6The illustrious &BDiamond Shovel &6shoots TWO eggs at a time! Price: &B%price% Diamonds&6.'
       Price: 1000
+    NetheriteShovel:
+      Name: '&8&lNetherite Shovel'
+      Description: '&6The fearsome &8Netherite Shovel &6shoots THREE eggs at a time! Price: &B%price% Diamonds&6.'
+      Price: 1500
 Guide:
   Item: ENCHANTED_BOOK
   Slot: 0

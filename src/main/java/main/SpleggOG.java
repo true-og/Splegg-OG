@@ -72,10 +72,10 @@ public class SpleggOG extends JavaPlugin {
 
         } else if (this.getServer().getPluginManager().getPlugin("Essentials-OG") == null) {
 
-            final String noDiamondBankOGError = "\"ERROR: DiamondBank-OG not found! Without WorldEdit, Splegg-OG will not function. Please download it from http://dev.bukkit.org/bukkit-plugins/worldedit\"";
+            final String noEssentialsOGError = "\"ERROR: Essentials-OG not found! Splegg-OG requires Essentials-OG for inventory handling and will now disable.\"";
 
-            this.getLogger().severe(noDiamondBankOGError);
-            this.getLogger().info(noDiamondBankOGError);
+            this.getLogger().severe(noEssentialsOGError);
+            this.getLogger().info(noEssentialsOGError);
 
             Bukkit.getPluginManager().disablePlugin(this);
 

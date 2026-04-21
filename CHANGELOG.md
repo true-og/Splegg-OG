@@ -1,3 +1,15 @@
+**0.8:**
+
+- Added permission metadata for `splegg.join`, `splegg.joinfull`, and `splegg.admin`.
+
+- Expanded the shop to include every shovel available in Minecraft 1.19.4.
+
+- Added support for selecting wood, stone, iron, gold, diamond, and netherite shovels before a match.
+
+- Updated the README and plugin dependency metadata to reflect the current DiamondBank-OG, Essentials-OG, and MyWorlds requirements.
+
+- Fixed the incorrect startup error message shown when Essentials-OG is missing.
+
 **0.7:**
 
 - 1.19.4 Support.

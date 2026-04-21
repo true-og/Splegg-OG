@@ -3,8 +3,8 @@ main: main.SpleggOG
 version: '${version}'
 authors: [Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle]
 api-version: '${apiVersion}'
-depend: [DiamondBank-OG, Essentials-OG, WorldEdit]
-softdepend: [MyWorlds, My_Worlds]
+depend: [DiamondBank-OG, Essentials-OG, WorldEdit, MyWorlds]
+softdepend: [My_Worlds]
 
 commands:
   splegg:
@@ -15,3 +15,18 @@ permissions:
   splegg.use:
     description: Permission to run Splegg-OG commands.
     default: op
+    children:
+      splegg.join: true
+  splegg.join:
+    description: Permission to join Splegg games.
+    default: op
+  splegg.joinfull:
+    description: Permission to join full Splegg games.
+    default: op
+  splegg.admin:
+    description: Permission to manage Splegg maps, signs, and matches.
+    default: op
+    children:
+      splegg.use: true
+      splegg.join: true
+      splegg.joinfull: true

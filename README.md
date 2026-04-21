@@ -4,7 +4,9 @@
 
 **Splegg-OG** is a Splegg plugin originally made by MrLuangamer, updated for Worldedit 7.2 and Spigot 1.16.4 by Hraponssi, then updated for Purpur 1.19.4 for use at [TrueOG Network](https://true-og.net/) by [NotAlexNoyle](https://github.com/NotAlexNoyle/).
 
-Dependencies: WorldEdit, Vault.
+Dependencies: WorldEdit, DiamondBank-OG, Essentials-OG, and MyWorlds.
+
+Legacy note: `My_Worlds` is still recognized as a fallback plugin name at runtime, but a MyWorlds-compatible world manager is required for Splegg-OG to start.
 
 **To Set Up:**:
 

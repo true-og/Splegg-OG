@@ -110,62 +110,20 @@ public class Game {
                 while (PlayersInGame.hasNext()) {
 
                     final SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
+                    final String playerName = sp.getPlayer().getName();
                     sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.2F);
 
-                    // TODO: Add all available shovels here.
-                    if (!Listeners.manager.contains(sp.getPlayer().getName())) {
+                    final Material selectedShovel = Listeners.getSelectedShovelMaterial(playerName);
+                    final String selectedShovelConfigPath = Listeners.getSelectedShovelConfigPath(playerName);
 
-                        if (Listeners.goldspade.contains(sp.getPlayer().getName())) {
+                    sp.getPlayer().getInventory().setItem(0, Utils.getItem(selectedShovel,
+                            Utils.legacySerializerAnyCase(
+                                    splegg.getConfig().getString(selectedShovelConfigPath + ".Name")).content(),
+                            Utils.legacySerializerAnyCase(
+                                    splegg.getConfig().getString(selectedShovelConfigPath + ".Lore")).content()));
+                    sp.getPlayer().updateInventory();
 
-                            sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.GOLDEN_SHOVEL,
-                                    Utils.legacySerializerAnyCase(splegg.getConfig().getString("Shovels.Gold.Name"))
-                                            .content(),
-                                    Utils.legacySerializerAnyCase(splegg.getConfig().getString("Shovels.Gold.Lore"))
-                                            .content()));
-                            sp.getPlayer().updateInventory();
-
-                            Listeners.manager.remove(sp.getPlayer().getName());
-                            Listeners.goldspade.remove(sp.getPlayer().getName());
-                            Listeners.diamondspade.remove(sp.getPlayer().getName());
-                            Listeners.shopmanager.remove(sp.getPlayer().getName());
-                            Listeners.moneymanager.add(sp.getPlayer().getName());
-
-                        }
-
-                        if (Listeners.diamondspade.contains(sp.getPlayer().getName())) {
-
-                            sp.getPlayer().getInventory().setItem(0, Utils.getItem(Material.DIAMOND_SHOVEL,
-                                    Utils.legacySerializerAnyCase(splegg.getConfig().getString("Shovels.Diamond.Name"))
-                                            .content(),
-                                    Utils.legacySerializerAnyCase(splegg.getConfig().getString("Shovels.Diamond.Lore"))
-                                            .content()));
-                            sp.getPlayer().updateInventory();
-
-                            Listeners.manager.remove(sp.getPlayer().getName());
-                            Listeners.goldspade.remove(sp.getPlayer().getName());
-                            Listeners.diamondspade.remove(sp.getPlayer().getName());
-                            Listeners.shopmanager.remove(sp.getPlayer().getName());
-                            Listeners.moneymanager.add(sp.getPlayer().getName());
-
-                        }
-
-                    } else {
-
-                        sp.getPlayer().getInventory().setItem(0,
-                                Utils.getItem(Material.IRON_SHOVEL,
-                                        Utils.legacySerializerAnyCase(splegg.getConfig().getString("Shovels.Iron.Name"))
-                                                .content(),
-                                        Utils.legacySerializerAnyCase(splegg.getConfig().getString("Shovels.Iron.Lore"))
-                                                .content()));
-                        sp.getPlayer().updateInventory();
-
-                        Listeners.manager.remove(sp.getPlayer().getName());
-                        Listeners.goldspade.remove(sp.getPlayer().getName());
-                        Listeners.diamondspade.remove(sp.getPlayer().getName());
-                        Listeners.shopmanager.remove(sp.getPlayer().getName());
-                        Listeners.moneymanager.add(sp.getPlayer().getName());
-
-                    }
+                    Listeners.finalizePreGameShovelState(playerName);
 
                 }
 
