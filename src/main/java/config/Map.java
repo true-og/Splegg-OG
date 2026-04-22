@@ -66,15 +66,26 @@ public class Map {
 
     public void usableDecider(Map map) {
 
-        if (this.spawncount > 0 && this.floorcount > 0) {
+        final boolean valid = this.spawncount >= 2 && this.floorcount > 0 && hasValidConfiguredWorlds();
+        final Game game = SpleggOG.getPlugin().games.getGame(this.getName());
+        if (valid) {
 
             SpleggOG.getPlugin().getLogger().info("Floor and spawn point(s) detected. The map is ready to go!");
             this.usable = true;
-            SpleggOG.getPlugin().games.getGame(this.getName()).setStatus(Status.LOBBY);
+            if (game != null) {
+
+                game.setStatus(Status.LOBBY);
+
+            }
 
         } else {
 
             this.usable = false;
+            if (game != null) {
+
+                game.setStatus(Status.DISABLED);
+
+            }
 
         }
 
@@ -84,6 +95,48 @@ public class Map {
 
         usableDecider(map);
         return this.usable;
+
+    }
+
+    private boolean hasValidConfiguredWorlds() {
+
+        for (int i = 1; i <= this.spawncount; i++) {
+
+            final String spawnWorld = this.config.getString("Spawns." + i + ".world");
+            if (spawnWorld == null || Bukkit.getWorld(spawnWorld) == null) {
+
+                return false;
+
+            }
+
+        }
+
+        for (int i = 1; i <= this.floorcount; i++) {
+
+            final String floorOneWorld = this.config.getString("Floors." + i + ".p1.world");
+            final String floorTwoWorld = this.config.getString("Floors." + i + ".p2.world");
+            if (floorOneWorld == null || floorTwoWorld == null || Bukkit.getWorld(floorOneWorld) == null
+                    || Bukkit.getWorld(floorTwoWorld) == null || !floorOneWorld.equals(floorTwoWorld))
+            {
+
+                return false;
+
+            }
+
+        }
+
+        if (this.lobbySet()) {
+
+            final String lobbyWorld = this.config.getString("Spawns.lobby.world");
+            if (lobbyWorld == null || Bukkit.getWorld(lobbyWorld) == null) {
+
+                return false;
+
+            }
+
+        }
+
+        return true;
 
     }
 

@@ -535,12 +535,6 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
                         if (player.hasPermission("splegg.join")) {
 
-                            if (!ensureSpleggWorld(player)) {
-
-                                return false;
-
-                            }
-
                             if (u.getGame() != null) {
 
                                 Utils.spleggOGMessage(player, "&cERROR: You are already playing.");
@@ -774,13 +768,6 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
         if (u.getGame() != null) {
 
             Utils.spleggOGMessage(player, "&cERROR: You are already playing.");
-            return;
-
-        }
-
-        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
-
-            Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotInSpleggWorld"));
             return;
 
         }

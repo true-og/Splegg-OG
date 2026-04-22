@@ -26,12 +26,6 @@ public class SignListener implements Listener {
     public void signPlace(SignChangeEvent event) {
 
         Player player = event.getPlayer();
-        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
-
-            return;
-
-        }
-
         final String header = PlainTextComponentSerializer.plainText().serialize(event.line(0)).trim();
         final String action = PlainTextComponentSerializer.plainText().serialize(event.line(1)).trim();
 
@@ -85,12 +79,6 @@ public class SignListener implements Listener {
 
             Sign s = (Sign) e.getClickedBlock().getState();
             Player player = e.getPlayer();
-            if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
-
-                return;
-
-            }
-
             final String line0Plain = PlainTextComponentSerializer.plainText().serialize(s.line(0)).trim();
             final String formatHeader = PlainTextComponentSerializer.plainText()
                     .serialize(Utils
@@ -126,12 +114,6 @@ public class SignListener implements Listener {
     public void signBreak(BlockBreakEvent e) {
 
         Player player = e.getPlayer();
-        if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
-
-            return;
-
-        }
-
         if (signMaterials.contains(e.getBlock().getType())) {
 
             String owningMap = null;

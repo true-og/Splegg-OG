@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.destroystokyo.paper.event.player.PlayerAdvancementCriterionGrantEvent;
 
+import gui.SpleggShopGUI;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import main.SpleggOG;
 import managers.Game;
@@ -40,11 +41,9 @@ public class Listeners implements Listener {
     public static ArrayList<String> netheritespade = new ArrayList<>();
     public static ArrayList<String> launchEggs = new ArrayList<>();
 
-    private final DiamondBankAPIJava diamondBankAPI;
-
     public Listeners(DiamondBankAPIJava diamondBankAPI) {
 
-        this.diamondBankAPI = diamondBankAPI;
+        // Constructor retained for compatibility with existing registration call sites.
 
     }
 
@@ -65,74 +64,45 @@ public class Listeners implements Listener {
 
         }
 
-        final ItemStack currentItem = event.getCurrentItem();
-        if (currentItem == null) {
-
-            return;
-
-        }
-
-        final Material clickedMaterial = currentItem.getType();
-        if (!isShopShovel(clickedMaterial)) {
-
-            return;
-
-        }
-
-        if (!shopmanager.contains(player.getName())) {
-
-            player.closeInventory();
-
-            Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought"));
-
-            return;
-
-        }
-
-        switch (clickedMaterial) {
-
-            case WOODEN_SHOVEL -> purchaseShovel(player, "GUI.Shop.WoodShovel", "Messages.BuyWoodShovel", woodspade);
-            case STONE_SHOVEL -> purchaseShovel(player, "GUI.Shop.StoneShovel", "Messages.BuyStoneShovel", stonespade);
-            case IRON_SHOVEL -> selectIronShovel(player);
-            case GOLDEN_SHOVEL -> purchaseShovel(player, "GUI.Shop.GoldShovel", "Messages.BuyGoldShovel", goldspade);
-            case DIAMOND_SHOVEL ->
-                purchaseShovel(player, "GUI.Shop.DiamondShovel", "Messages.BuyDiamondShovel", diamondspade);
-            case NETHERITE_SHOVEL ->
-                purchaseShovel(player, "GUI.Shop.NetheriteShovel", "Messages.BuyNetheriteShovel", netheritespade);
-            default -> {
-
-                return;
-
-            }
-
-        }
-
     }
 
-    private boolean isShopShovel(Material material) {
-
-        return switch (material) {
-
-            case WOODEN_SHOVEL, STONE_SHOVEL, IRON_SHOVEL, GOLDEN_SHOVEL, DIAMOND_SHOVEL, NETHERITE_SHOVEL -> true;
-            default -> false;
-
-        };
-
-    }
-
-    private void purchaseShovel(Player player, String configPath, String successMessagePath,
+    public static boolean handleShovelSelection(Player player, String configPath, String successMessagePath,
             ArrayList<String> selectedShovelList)
     {
 
-        player.closeInventory();
+        if (!shopmanager.contains(player.getName())) {
+
+            Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought"));
+
+            return false;
+
+        }
 
         final int priceInDiamonds = SpleggOG.getPlugin().getConfig().getInt(configPath + ".Price");
         if (priceInDiamonds <= 0) {
 
             selectPurchasedShovel(player.getName(), selectedShovelList);
             Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString(successMessagePath));
+            player.closeInventory();
 
-            return;
+            return true;
+
+        }
+
+        if (!isShovelAffordable(player, configPath)) {
+
+            Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
+
+            return false;
+
+        }
+
+        final DiamondBankAPIJava diamondBankAPI = SpleggOG.getPlugin().getDiamondBankAPI();
+        if (diamondBankAPI == null) {
+
+            UtilitiesOG.trueogMessage(player, "&cERROR: The Diamond economy is currently unavailable.");
+
+            return false;
 
         }
 
@@ -146,35 +116,86 @@ public class Listeners implements Listener {
 
             selectPurchasedShovel(player.getName(), selectedShovelList);
             Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString(successMessagePath));
+            player.closeInventory();
+            return true;
 
         } catch (InsufficientFundsException insufficientFundsException) {
 
             Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
+            return false;
 
         } catch (EconomyDisabledException economyDisabledException) {
 
             restoreDefaultLobbyState(player.getName());
             UtilitiesOG.trueogMessage(player, "&cERROR: The Diamond economy is currently unavailable.");
+            return false;
 
         } catch (InvalidPlayerException | PlayerNotOnlineException playerException) {
 
             restoreDefaultLobbyState(player.getName());
             UtilitiesOG.trueogMessage(player,
                     "&cERROR: Your player account could not be found. Contact an administrator.");
+            return false;
 
         }
 
     }
 
-    private void selectIronShovel(Player player) {
+    public static boolean handleIronSelection(Player player) {
 
-        player.closeInventory();
         restoreDefaultLobbyState(player.getName());
         Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyIronShovel"));
+        player.closeInventory();
+
+        return true;
 
     }
 
-    private void selectPurchasedShovel(String playerName, ArrayList<String> selectedShovelList) {
+    public static boolean isShovelAffordable(Player player, String configPath) {
+
+        final int priceInDiamonds = SpleggOG.getPlugin().getConfig().getInt(configPath + ".Price");
+        if (priceInDiamonds <= 0) {
+
+            return true;
+
+        }
+
+        final DiamondBankAPIJava diamondBankAPI = SpleggOG.getPlugin().getDiamondBankAPI();
+        if (diamondBankAPI == null) {
+
+            return false;
+
+        }
+
+        try {
+
+            final long priceInShards = diamondBankAPI.diamondsToShards((float) priceInDiamonds);
+            final long availableShards = diamondBankAPI.getBankShards(player.getUniqueId())
+                    + diamondBankAPI.getInventoryShards(player.getUniqueId());
+
+            return availableShards >= priceInShards;
+
+        } catch (EconomyDisabledException economyDisabledException) {
+
+            return false;
+
+        }
+
+    }
+
+    public static boolean canPurchasePremiumShovel(String playerName) {
+
+        return shopmanager.contains(playerName);
+
+    }
+
+    public static void openShop(Player player) {
+
+        new SpleggShopGUI(player).open(true);
+
+    }
+
+    private static void selectPurchasedShovel(String playerName, ArrayList<String> selectedShovelList) {
 
         clearSelectedShovels(playerName);
         manager.remove(playerName);
@@ -187,7 +208,7 @@ public class Listeners implements Listener {
 
     }
 
-    private void clearSelectedShovels(String playerName) {
+    private static void clearSelectedShovels(String playerName) {
 
         woodspade.remove(playerName);
         stonespade.remove(playerName);
@@ -197,7 +218,7 @@ public class Listeners implements Listener {
 
     }
 
-    private void restoreDefaultLobbyState(String playerName) {
+    private static void restoreDefaultLobbyState(String playerName) {
 
         clearSelectedShovels(playerName);
         if (!manager.contains(playerName)) {
@@ -214,7 +235,7 @@ public class Listeners implements Listener {
 
     }
 
-    private String currentShovelName(String configPath) {
+    private static String currentShovelName(String configPath) {
 
         return SpleggOG.getPlugin().getConfig().getString(configPath + ".Name").replaceAll("&[0-9A-FK-ORa-fk-or]", "");
 
@@ -422,7 +443,7 @@ public class Listeners implements Listener {
                         .getMaterial(SpleggOG.getPlugin().getConfig().getString("Shop.Item")))
                 {
 
-                    player.openInventory(Utils.getShopInventory());
+                    openShop(player);
 
                 }
 

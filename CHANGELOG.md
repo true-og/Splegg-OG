@@ -1,3 +1,15 @@
+**0.8.8:**
+
+- Tightened playable-map validation so a map now requires at least 2 spawn points, at least 1 floor, and valid loaded world references before it can enter a playable lobby state.
+
+- Fixed join flow so players can now join Splegg lobbies from outside Splegg worlds, including via `/splegg join`, `/splegg random`, and registered join signs.
+
+- Fixed lobby countdown recovery so a failed countdown now returns to a waiting state instead of immediately restarting itself.
+
+- Fixed kill reward payouts so eliminations only reward surviving players in the same match instead of players from other matches.
+
+- Reworked the Splegg shop onto the local GxUI-OG GUI layer and added live affordability feedback: affordable shovels glow, unaffordable ones do not, and shop lore now reflects the current affordability state.
+
 **0.8.7:**
 
 - Fixed the in-game round timer so matches now count down correctly and end on time limit instead of stopping immediately.

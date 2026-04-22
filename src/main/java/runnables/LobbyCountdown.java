@@ -88,8 +88,9 @@ public class LobbyCountdown implements Runnable {
             Bukkit.getScheduler().cancelTask(this.game.getCounterID());
 
             this.game.setStarting(false);
+            this.game.setLobbyCount(SpleggOG.getPlugin().getConfig().getInt("Options.Timer"));
             this.game.getSign().update(this.game.getMap(), false);
-            this.game.startCountdown();
+            LobbyScoreboard.refreshGame(this.game);
 
         }
 

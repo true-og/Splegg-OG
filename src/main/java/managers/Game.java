@@ -218,11 +218,7 @@ public class Game {
 
             Utils.spleggOGMessage(player, config.getString("Messages.AlreadyInGame"));
 
-        } else if (splegg.isMainWorld(player.getWorld()) || splegg.isMainWorld(this.map.getWorldName())) {
-
-            Utils.spleggOGMessage(player, config.getString("Messages.NotInSpleggWorld"));
-
-        } else if (!splegg.isSpleggWorld(player.getWorld()) || !splegg.isSpleggWorld(this.map.getWorldName())) {
+        } else if (splegg.isMainWorld(this.map.getWorldName()) || !splegg.isSpleggWorld(this.map.getWorldName())) {
 
             Utils.spleggOGMessage(player, config.getString("Messages.NotInSpleggWorld"));
 
@@ -480,48 +476,50 @@ public class Game {
         u.getStore().load();
         u.getStore().reset();
 
-        for (Player p : Bukkit.getOnlinePlayers()) {
+        if (game != null) {
 
-            if (!p.getName().equals(playerWhoOnlyNeedsIndividualLeaveGameMessage)) {
+            for (SpleggPlayer remainingPlayer : this.players.values()) {
 
-                final UtilPlayer playerRemainingInGame = SpleggOG.getPlugin().pm.getPlayer(p);
-                if (playerRemainingInGame.getGame() != null) {
+                final Player remaining = remainingPlayer.getPlayer();
+                if (!remaining.getName().equals(playerWhoOnlyNeedsIndividualLeaveGameMessage)) {
 
                     // Tell the rest of the people in the lobby that the player has left.
-                    Utils.spleggOGMessage(p,
+                    Utils.spleggOGMessage(remaining,
                             config.getString("Messages.LeaveGame").replaceAll("%player%", player.getName())
                                     .replaceAll("%count%", String.valueOf(this.players.size()))
                                     .replaceAll("%maxcount%", String.valueOf(this.map.getSpawnCount())));
 
                 }
 
-            }
+                if (game.getStatus() == Status.INGAME && Listeners.moneymanager.contains(remaining.getName())
+                        && diamondBankAPI != null)
+                {
 
-            if (game != null && game.getStatus() == Status.INGAME && Listeners.moneymanager.contains(p.getName())
-                    && diamondBankAPI != null)
-            {
+                    final int rewardInDiamonds = splegg.getConfig().getInt("Money.KillPlayer");
+                    if (rewardInDiamonds <= 0) {
 
-                final int rewardInDiamonds = splegg.getConfig().getInt("Money.KillPlayer");
-                if (rewardInDiamonds <= 0) {
+                        continue;
 
-                    continue;
+                    }
 
-                }
+                    final long rewardInShards = diamondBankAPI.diamondsToShards((float) rewardInDiamonds);
 
-                final long rewardInShards = diamondBankAPI.diamondsToShards((float) rewardInDiamonds);
+                    try {
 
-                try {
+                        diamondBankAPI.addToPlayerBankShards(remaining.getUniqueId(), rewardInShards,
+                                "Player " + remaining.getName() + " earned Diamonds for a kill in Splegg.",
+                                "Plugin: Splegg-OG");
 
-                    diamondBankAPI.addToPlayerBankShards(p.getUniqueId(), rewardInShards,
-                            "Player " + p.getName() + " earned Diamonds for a kill in Splegg.", "Plugin: Splegg-OG");
+                        remaining.sendMessage(
+                                Utils.legacySerializerAnyCase("&BYou received " + rewardInDiamonds + " &BDiamonds!")
+                                        .content());
 
-                    p.sendMessage(Utils.legacySerializerAnyCase("&BYou received " + rewardInDiamonds + " &BDiamonds!")
-                            .content());
+                    } catch (EconomyDisabledException economyDisabledException) {
 
-                } catch (EconomyDisabledException economyDisabledException) {
+                        UtilitiesOG.trueogMessage(remaining,
+                                "&cERROR: The Diamond economy is currently unavailable. Your kill reward could not be paid out.");
 
-                    UtilitiesOG.trueogMessage(p,
-                            "&cERROR: The Diamond economy is currently unavailable. Your kill reward could not be paid out.");
+                    }
 
                 }
 
@@ -564,6 +562,7 @@ public class Game {
     public boolean loadFloors() {
 
         this.floor.clear();
+        this.data.clear();
 
         if (this.map.getFloors() <= 0) {
 
