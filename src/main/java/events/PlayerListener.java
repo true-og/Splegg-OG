@@ -10,11 +10,6 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-import com.earth2me.essentials.Essentials;
-import com.earth2me.essentials.Kit;
-import com.earth2me.essentials.Kits;
-import com.earth2me.essentials.User;
-
 import main.SpleggOG;
 import utils.UtilPlayer;
 import utils.Utils;
@@ -22,6 +17,20 @@ import utils.Utils;
 public class PlayerListener implements Listener {
 
     String[] cmds = new String[] { "" };
+
+    private UtilPlayer getTrackedPlayer(Player player) {
+
+        UtilPlayer trackedPlayer = SpleggOG.getPlugin().pm.getPlayer(player);
+        if (trackedPlayer == null) {
+
+            trackedPlayer = new UtilPlayer(player);
+            SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), trackedPlayer);
+
+        }
+
+        return trackedPlayer;
+
+    }
 
     @EventHandler
     public void onFood(FoodLevelChangeEvent event) {
@@ -39,7 +48,7 @@ public class PlayerListener implements Listener {
 
         }
 
-        final UtilPlayer u = new UtilPlayer(player);
+        final UtilPlayer u = getTrackedPlayer(player);
         if (!(u.getGame() != null && u.isAlive())) {
 
             return;
@@ -67,7 +76,7 @@ public class PlayerListener implements Listener {
 
         }
 
-        final UtilPlayer u = new UtilPlayer(player);
+        final UtilPlayer u = getTrackedPlayer(player);
         if (u.getGame() != null && u.isAlive()) {
 
             event.setCancelled(true);
@@ -84,30 +93,6 @@ public class PlayerListener implements Listener {
 
         SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
 
-        final Essentials ess = SpleggOG.getEssentials();
-        final User user = new User(player, ess);
-
-        final Kits essentialsKitList = new Kits(ess);
-        final Kit playersKitToRestoreAfterMatch = (Kit) essentialsKitList.getKit(player.getName());
-        if (playersKitToRestoreAfterMatch != null) {
-
-            try {
-
-                playersKitToRestoreAfterMatch.expandItems(user);
-
-            } catch (Exception error) {
-
-                SpleggOG.getPlugin().getLogger().severe(error.getMessage());
-
-            }
-
-        } else {
-
-            SpleggOG.getPlugin().getLogger().severe(
-                    "ERROR: Kit for player: " + player.getName() + " was not found during the restore attempt!");
-
-        }
-
     }
 
     @EventHandler
@@ -120,7 +105,7 @@ public class PlayerListener implements Listener {
 
         }
 
-        final UtilPlayer u = new UtilPlayer(player);
+        final UtilPlayer u = getTrackedPlayer(player);
 
         if (u.getGame() != null && u.isAlive()) {
 
@@ -140,7 +125,7 @@ public class PlayerListener implements Listener {
 
         }
 
-        final UtilPlayer u = new UtilPlayer(player);
+        final UtilPlayer u = getTrackedPlayer(player);
         if (!(u.getGame() != null && u.isAlive() && !StringUtils.startsWith(event.getMessage(), "/splegg")
                 && !player.hasPermission("splegg.admin")))
         {

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -14,13 +13,8 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
-
-import com.earth2me.essentials.Essentials;
-import com.earth2me.essentials.Kits;
-import com.earth2me.essentials.User;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 
@@ -33,7 +27,6 @@ import net.trueog.utilitiesog.UtilitiesOG;
 import runnables.GameTime;
 import runnables.LobbyCountdown;
 import signs.LobbySign;
-import utils.InvStore;
 import utils.SpleggPlayer;
 import utils.UtilPlayer;
 import utils.Utils;
@@ -249,13 +242,6 @@ public class Game {
                 playerWhoIsJoining.setAlive(true);
                 playerWhoIsJoining.getStore().save();
                 Listeners.launchEggs.add(sp.getPlayer().getName());
-                saveInv(player);
-                player.setHealth(20.0D);
-                player.setFallDistance(1);
-                player.setFoodLevel(20);
-                player.setLevel(0);
-                player.setExp(0.0F);
-                player.setGameMode(GameMode.ADVENTURE);
                 this.players.put(player.getName(), sp);
                 playerWhoIsJoining.setGame(this.splegg.games.getGame(this.name));
 
@@ -269,10 +255,9 @@ public class Game {
 
                 }
 
+                preparePlayerForLobby(player);
                 Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
                 Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
-
-                setLobbyInv(player);
 
                 this.splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("%player%", player.getName())
                         .replaceAll("%count%", String.valueOf(this.players.size()))
@@ -301,12 +286,6 @@ public class Game {
                 playerWhoIsJoining.setAlive(true);
                 playerWhoIsJoining.getStore().save();
                 Listeners.launchEggs.add(sp.getPlayer().getName());
-                saveInv(player);
-                player.setHealth(20.0D);
-                player.setFoodLevel(20);
-                player.setLevel(0);
-                player.setExp(0.0F);
-                player.setGameMode(GameMode.ADVENTURE);
 
                 players.put(player.getName(), sp);
                 playerWhoIsJoining.setGame(splegg.games.getGame(name));
@@ -321,8 +300,7 @@ public class Game {
 
                 }
 
-                player.getInventory().clear();
-                setLobbyInv(player);
+                preparePlayerForLobby(player);
 
                 Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
                 Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
@@ -350,35 +328,19 @@ public class Game {
 
     }
 
-    private void saveInv(Player player) {
-
-        final Essentials ess = SpleggOG.getEssentials();
-        final Kits preGameKit = new Kits(ess);
-
-        final ArrayList<String> itemsAsListOfStrings = new ArrayList<>(player.getInventory().getSize());
-        for (ItemStack item : player.getInventory().getContents()) {
-
-            if (item != null) {
-
-                itemsAsListOfStrings.add(item.serialize().toString());
-
-            } else {
-
-                itemsAsListOfStrings.add("");
-
-            }
-
-        }
-
-        preGameKit.addKit(player.getName(), (List<String>) itemsAsListOfStrings, 0);
-        SpleggOG.getPlugin().getLogger()
-                .info("The pre-game inventory: " + preGameKit.matchKit(player.getName()) + " has been saved.");
+    private void preparePlayerForLobby(Player player) {
 
         player.closeInventory();
         player.clearActiveItem();
         player.getInventory().clear();
         player.updateInventory();
         player.setFireTicks(0);
+        player.setHealth(20.0D);
+        player.setFallDistance(1);
+        player.setFoodLevel(20);
+        player.setLevel(0);
+        player.setExp(0.0F);
+        player.setGameMode(GameMode.ADVENTURE);
 
         final Iterator<?> activePotionEffects = player.getActivePotionEffects().iterator();
         while (activePotionEffects.hasNext()) {
@@ -387,6 +349,8 @@ public class Game {
             player.removePotionEffect(effect.getType());
 
         }
+
+        setLobbyInv(player);
 
     }
 
@@ -490,29 +454,9 @@ public class Game {
 
         String playerWhoOnlyNeedsIndividualLeaveGameMessage = "";
 
-        final Essentials ess = (Essentials) SpleggOG.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
-        final User user = new User(player, ess);
-
         playerWhoOnlyNeedsIndividualLeaveGameMessage = player.getName();
-
-        final Kits essentialsKitList = new Kits(ess);
-        if (essentialsKitList != null) {
-
-            try {
-
-                essentialsKitList.getKit(user.getName());
-
-            } catch (Exception error) {
-
-                SpleggOG.getPlugin().getLogger().severe(error.getMessage());
-
-            }
-
-        }
-
-        final InvStore store = u.getStore();
-        store.load();
-        store.reset();
+        u.getStore().load();
+        u.getStore().reset();
 
         for (Player p : Bukkit.getOnlinePlayers()) {
 
@@ -605,7 +549,7 @@ public class Game {
                 final int maxY = max.y();
                 this.y2 = maxY;
                 final int maxZ = max.z();
-                this.small = Math.min(this.y2, this.y2);
+                this.small = Math.min(this.y1, this.y2);
 
                 for (int x = minX; x <= maxX; ++x) {
 

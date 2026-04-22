@@ -110,6 +110,13 @@ public class SpleggOG extends JavaPlugin {
             essentials = (Essentials) this.getServer().getPluginManager().getPlugin("Essentials-OG");
             myWorlds = findMyWorldsPlugin();
 
+            this.maps = new MapUtilities();
+            this.games = new GameUtilities();
+            this.game = new GameManager();
+            this.pm = new Utils();
+            this.utils = new Utils();
+            this.config = new Utils();
+
             Bukkit.getOnlinePlayers().forEach((Player p) -> {
 
                 final UtilPlayer u = new UtilPlayer(p);
@@ -117,13 +124,6 @@ public class SpleggOG extends JavaPlugin {
                 this.pm.PLAYERS.put(p.getName(), u);
 
             });
-
-            this.maps = new MapUtilities();
-            this.games = new GameUtilities();
-            this.game = new GameManager();
-            this.pm = new Utils();
-            this.utils = new Utils();
-            this.config = new Utils();
 
             this.maps.c.setup();
             this.config.setup();

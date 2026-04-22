@@ -445,9 +445,9 @@ public class Listeners implements Listener {
 
         }
 
-        // Restrict chat to players in the same world type (lobby or in-game).
-        final boolean senderInLobby = splegg.isSpleggLobbyWorld(sender.getWorld());
-        final boolean senderInGame = splegg.isSpleggInGameWorld(sender.getWorld());
+        final UtilPlayer senderState = splegg.pm.getPlayer(sender);
+        final Game senderGame = senderState != null ? senderState.getGame() : null;
+        final String senderWorldName = sender.getWorld().getName();
 
         asyncChatEvent.viewers().removeIf(viewer -> {
 
@@ -457,19 +457,14 @@ public class Listeners implements Listener {
 
             }
 
-            if (senderInLobby) {
+            if (senderGame != null) {
 
-                return !splegg.isSpleggLobbyWorld(recipient.getWorld());
-
-            }
-
-            if (senderInGame) {
-
-                return !splegg.isSpleggInGameWorld(recipient.getWorld());
+                final UtilPlayer recipientState = splegg.pm.getPlayer(recipient);
+                return recipientState == null || recipientState.getGame() != senderGame;
 
             }
 
-            return false;
+            return !recipient.getWorld().getName().equals(senderWorldName);
 
         });
 

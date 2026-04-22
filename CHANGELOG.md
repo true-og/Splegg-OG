@@ -1,3 +1,17 @@
+**0.8.5:**
+
+- Fixed plugin startup with players already online by initializing tracked player storage before repopulating it.
+
+- Stopped using Essentials kits to save and restore Splegg inventories, so MyWorlds now remains the only inventory boundary between main and Splegg worlds.
+
+- Fixed in-match protection listeners to use the tracked `UtilPlayer` state instead of creating fresh session objects.
+
+- Fixed the knockout floor height calculation so eliminations happen below the actual arena floor.
+
+- Fixed admin `/splegg start <map>` and `/splegg stop <map>` targeting so they operate on the specified game instead of the command sender's current game.
+
+- Tightened Splegg chat isolation so joined players only talk to players in the same match, while non-participants in Splegg worlds stay scoped to their current world.
+
 **0.8:**
 
 - Added permission metadata for `splegg.join`, `splegg.joinfull`, and `splegg.admin`.

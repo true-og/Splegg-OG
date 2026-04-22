@@ -341,12 +341,17 @@ public class SpleggCommand implements CommandExecutor {
 
                                 } else if (game.getStatus() == Status.LOBBY) {
 
-                                    if (u.getGame().getPlayers().size() >= 2) {
+                                    if (game.getPlayers().size() >= 2) {
 
                                         Utils.spleggOGMessage(player,
                                                 "&eStarting Game " + firstUserCommandArgument + "...");
 
                                         SpleggOG.getPlugin().game.startGame(game);
+
+                                    } else {
+
+                                        Utils.spleggOGMessage(player,
+                                                "&cERROR: There are not enough players in the lobby to start the game.");
 
                                     }
 
@@ -390,7 +395,7 @@ public class SpleggCommand implements CommandExecutor {
                                     SpleggOG.getPlugin().chat.bc("&5" + player.getName() + "&6 has stopped the game.",
                                             game);
 
-                                    SpleggOG.getPlugin().game.stopGame(game, u.getGame().players.size());
+                                    SpleggOG.getPlugin().game.stopGame(game, game.getPlayers().size());
 
                                     Utils.spleggOGMessage(player, "&6You have stopped the game.");
 
