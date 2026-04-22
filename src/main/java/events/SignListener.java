@@ -15,6 +15,7 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import main.SpleggOG;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import signs.LobbySign;
 import signs.LobbySignUtils;
 import utils.Utils;
@@ -31,11 +32,14 @@ public class SignListener implements Listener {
 
         }
 
-        if (event.line(0).toString().equalsIgnoreCase("[splegg]") && event.line(1).toString().equalsIgnoreCase("join")
+        final String header = PlainTextComponentSerializer.plainText().serialize(event.line(0)).trim();
+        final String action = PlainTextComponentSerializer.plainText().serialize(event.line(1)).trim();
+
+        if (header.equalsIgnoreCase("[splegg]") && action.equalsIgnoreCase("join")
                 && player.hasPermission("splegg.admin"))
         {
 
-            String map = event.line(2).toString();
+            final String map = PlainTextComponentSerializer.plainText().serialize(event.line(2)).trim();
             if (SpleggOG.getPlugin().maps.mapExists(map)) {
 
                 LobbySign ls = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
@@ -87,9 +91,15 @@ public class SignListener implements Listener {
 
             }
 
-            if (s.line(0).toString().equalsIgnoreCase(SpleggOG.getPlugin().getConfig().getString("Sings.Format.1"))) {
+            final String line0Plain = PlainTextComponentSerializer.plainText().serialize(s.line(0)).trim();
+            final String formatHeader = PlainTextComponentSerializer.plainText()
+                    .serialize(Utils
+                            .legacySerializerAnyCase(SpleggOG.getPlugin().getConfig().getString("Sings.Format.1", "")))
+                    .trim();
 
-                String map = s.line(2).toString();
+            if (line0Plain.equalsIgnoreCase(formatHeader)) {
+
+                final String map = PlainTextComponentSerializer.plainText().serialize(s.line(2)).trim();
 
                 if (SpleggOG.getPlugin().maps.mapExists(map)) {
 
@@ -124,26 +134,36 @@ public class SignListener implements Listener {
 
         if (signMaterials.contains(e.getBlock().getType())) {
 
-            Sign s = (Sign) e.getBlock().getState();
-            String[] lines = (String[]) s.lines().toArray();
-            String map = lines[1];
-            if (LobbySignUtils.get().isLobbySign(e.getBlock().getLocation(), map)) {
+            String owningMap = null;
+            for (config.Map candidate : SpleggOG.getPlugin().maps.getMaps()) {
 
-                if (player.hasPermission("splegg.admin")) {
+                if (LobbySignUtils.get().isLobbySign(e.getBlock().getLocation(), candidate.getName())) {
 
-                    LobbySign sign = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
-                    sign.delete(e.getBlock().getLocation());
-
-                    Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign")
-                            .replaceAll("%map%", map));
-
-                } else {
-
-                    e.setCancelled(true);
-
-                    Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign"));
+                    owningMap = candidate.getName();
+                    break;
 
                 }
+
+            }
+
+            if (owningMap == null) {
+
+                return;
+
+            }
+
+            if (player.hasPermission("splegg.admin")) {
+
+                final LobbySign sign = new LobbySign(SpleggOG.getPlugin().maps.getMap(owningMap), SpleggOG.getPlugin());
+                sign.delete(e.getBlock().getLocation());
+
+                Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign")
+                        .replaceAll("%map%", owningMap));
+
+            } else {
+
+                e.setCancelled(true);
+                Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotBreakSign"));
 
             }
 

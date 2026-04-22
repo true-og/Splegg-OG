@@ -7,6 +7,7 @@ import org.bukkit.Sound;
 
 import main.SpleggOG;
 import managers.Game;
+import managers.LobbyScoreboard;
 import utils.SpleggPlayer;
 
 public class LobbyCountdown implements Runnable {
@@ -39,6 +40,7 @@ public class LobbyCountdown implements Runnable {
             }
 
             this.game.getSign().update(this.game.getMap(), false);
+            LobbyScoreboard.refreshGame(this.game);
 
             if (this.lobbycount % 25 == 0) {
 

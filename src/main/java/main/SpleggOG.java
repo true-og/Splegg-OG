@@ -139,7 +139,9 @@ public class SpleggOG extends JavaPlugin {
             this.getServer().getPluginManager().registerEvents(new SpleggEvents(), this);
             this.getServer().getPluginManager().registerEvents(new SignListener(), this);
             getServer().getPluginManager().registerEvents(new Listeners(diamondBankAPI), this);
-            this.getCommand("splegg").setExecutor(new SpleggCommand());
+            final SpleggCommand spleggCommand = new SpleggCommand();
+            this.getCommand("splegg").setExecutor(spleggCommand);
+            this.getCommand("splegg").setTabCompleter(spleggCommand);
 
         }
 

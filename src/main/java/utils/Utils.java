@@ -158,6 +158,14 @@ public class Utils {
 
     }
 
+    // Convert "&"-prefixed legacy colors into the "§" section form Bukkit APIs
+    // that still take raw Strings (sign lines, scoreboard entries) understand.
+    public static String legacySectionize(String subject) {
+
+        return LegacyComponentSerializer.legacySection().serialize(legacySerializerAnyCase(subject));
+
+    }
+
     public static TextComponent legacySerializerAnyCase(String subject) {
 
         int count = 0;

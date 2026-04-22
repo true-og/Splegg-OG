@@ -13,8 +13,8 @@ import config.Map;
 import main.SpleggOG;
 import managers.Game;
 import managers.Status;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import utils.Utils;
 
 public class LobbySign {
 
@@ -166,11 +166,11 @@ public class LobbySign {
 
         } else if (game.getMap().getSpawnCount() <= 1) {
 
-            players = "Players: " + game.getPlayers().size();
+            players = "&5Players: &d" + game.getPlayers().size();
 
         } else {
 
-            players = game.getPlayers().size() + "/" + game.getMap().getSpawnCount();
+            players = "&5" + game.getPlayers().size() + "&8/&d" + game.getMap().getSpawnCount();
 
         }
 
@@ -182,7 +182,7 @@ public class LobbySign {
 
         for (int i = 0; i < lines.length; ++i) {
 
-            TextComponent signLineContainer = Component.text(lines[i]);
+            final TextComponent signLineContainer = Utils.legacySerializerAnyCase(lines[i] != null ? lines[i] : "");
             s.line(i, signLineContainer);
 
         }
@@ -193,13 +193,13 @@ public class LobbySign {
 
     private String getFancyStatus(Game game) {
 
-        String status = new String();
-        Status st = game.getStatus();
+        String status = "";
+        final Status st = game.getStatus();
         if (st == Status.LOBBY) {
 
             if (game.isStarting()) {
 
-                status = splegg.getConfig().getString("Sings.Status.Join");
+                status = splegg.getConfig().getString("Sings.Status.Starting", "&e[Starting]");
 
             } else {
 

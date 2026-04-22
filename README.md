@@ -28,6 +28,14 @@ Legacy note: `My_Worlds` is still recognized as a fallback plugin name at runtim
 
 `/splegg start` Anyone with splegg.admin permissions can start the game even if less players join than there are spawn points.
 
+`/splegg list` List every configured map with its status and player count.
+
+`/splegg info my-map` Inspect a map's setup: spawns, floors, lobby, playable state, and remaining next-steps.
+
+`/splegg random` Join a random playable map, chosen from every map currently in a LOBBY state.
+
+`/splegg help` Show the full command reference. Tab completion is available on every subcommand and map-name argument.
+
 [Original Bukkit Page](https://dev.bukkit.org/projects/splegg-minigame).
 
 *The current Gradle build target is Purpur 1.19.4
@@ -40,36 +48,24 @@ The resulting .jar file will be in build/libs/
 
 **Planned Features:**
 
-- Database to remember shop purchases.
+- Database to remember shop purchases across sessions (currently in-memory only).
 
-- Better victory/loss messages at the end of a game.
+- Winner/loser broadcast messages at the end of a game (currently only logged to console).
 
-- 3, 2, 1 countdowns in chat.
-
-- More complete lobby menus.
-
-- All available shovels in the Splegg shop.
-
-- Diamond shard integration with DiamondBank-OG.
-
-- Multiverse integration.
-
-- Improved map setup UX.
+- Functional lobby menu items: wire up the Guide book and Cosmetics menu (items appear in lobby inventory but have no click handlers).
 
 - Power ups.
 
-- Spectator Mode.
+- Spectator Mode (partial TODOs exist for spectator compass, spectator inventory, and join-in-progress).
 
-- In-lobby map voting.
-
-- Better join sign UI/UX.
+- In-lobby map voting (the `getRandomMap` helper now exists and powers `/splegg random`; voting UI is the remaining piece).
 
 - Leaderboards.
 
 - PlaceholderAPI support.
 
-- Lobby scoreboard.
-
 - In-Game scoreboard.
+
+- Shop affordability pre-check: close the shop and notify the user when they cannot afford any shovel.
 
 **Licensed under the GPLv3.**

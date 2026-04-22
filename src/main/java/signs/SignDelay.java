@@ -2,8 +2,8 @@ package signs;
 
 import org.bukkit.block.Sign;
 
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import utils.Utils;
 
 public class SignDelay implements Runnable {
 
@@ -21,7 +21,7 @@ public class SignDelay implements Runnable {
 
         for (int i = 0; i < this.data.length; i++) {
 
-            TextComponent signData = Component.text(this.data[i]);
+            final TextComponent signData = Utils.legacySerializerAnyCase(this.data[i] != null ? this.data[i] : "");
             this.sign.line(i, signData);
 
         }

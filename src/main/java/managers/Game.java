@@ -319,6 +319,7 @@ public class Game {
             }
 
             getSign().update(this.map, false);
+            LobbyScoreboard.refreshGame(this);
 
         } else if (this.status == Status.DISABLED) {
 
@@ -351,6 +352,7 @@ public class Game {
         }
 
         setLobbyInv(player);
+        LobbyScoreboard.attach(player, this);
 
     }
 
@@ -443,6 +445,9 @@ public class Game {
             Listeners.diamondspade.remove(u.getName());
             Listeners.launchEggs.remove(u.getName());
             Listeners.moneymanager.remove(u.getName());
+
+            LobbyScoreboard.detach(player);
+            LobbyScoreboard.refreshGame(game);
 
             player.teleport(u.getGame().getMap().getLobby());
             u.setGame((Game) null);

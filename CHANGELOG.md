@@ -1,3 +1,21 @@
+**0.8.6:**
+
+- Added `/splegg random` to join a random playable map and a `getRandomMap()` utility that lays the groundwork for in-lobby map voting.
+
+- Added `/splegg help`, `/splegg list`, and `/splegg info <map>` to surface configured maps, their status, and setup next-steps.
+
+- Added tab completion for every `/splegg` subcommand and map-name argument.
+
+- Added a per-player lobby scoreboard driven by the existing `Scoreboard.*` config keys, refreshed on join, leave, and each countdown tick.
+
+- Fixed lobby signs rendering raw `&` color codes by serializing line content through the Adventure legacy serializer.
+
+- Fixed right-click-to-join and sign-break handling, which previously compared Adventure Component `toString()` output to raw config strings and never matched.
+
+- Added a distinct `[Starting]` status for lobby signs during the start countdown (`Sings.Status.Starting`) so operators can see at a glance that a match is about to begin.
+
+- Improved the sign player count line with color accents.
+
 **0.8.5:**
 
 - Fixed plugin startup with players already online by initializing tracked player storage before repopulating it.

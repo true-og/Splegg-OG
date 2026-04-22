@@ -52,7 +52,7 @@ Worlds:
   Lobby:
     - splegg_lobby
   InGame:
-    - splegg
+    - splegg_ingame
 Sings:
   Format:
     1: '&8[&2Splegg&r-&4OG&8]'
@@ -65,7 +65,8 @@ Sings:
     3: '%map%'
     4: '###########################'
   Status:
-    Join: '&4[Join]'
+    Join: '&2[Join]'
+    Starting: '&e[Starting]'
     Started: '&6[Started]'
     Disabled: '&4[Disabled]'
 Shovels:

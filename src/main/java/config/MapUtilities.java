@@ -1,7 +1,10 @@
 package config;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Random;
 
 import main.SpleggOG;
 import managers.Game;
@@ -56,31 +59,47 @@ public class MapUtilities {
 
     }
 
-    // TODO: Use getRandomMap in map voting as an option.
-    /*
-     * private Map getRandomMap() {
-     * 
-     * ArrayList<Map> all = new ArrayList<Map>(); Iterator<?> var3 =
-     * this.MAPS.values().iterator();
-     * 
-     * while(var3.hasNext()) {
-     * 
-     * Map map = (Map)var3.next();
-     * 
-     * if (map.isUsable()) {
-     * 
-     * all.add(map);
-     * 
-     * }
-     * 
-     * }
-     * 
-     * Object[] mapsa = all.toArray(); Map randomMap = (Map) mapsa[(new
-     * Random()).nextInt(mapsa.length)];
-     * 
-     * return randomMap;
-     * 
-     * }
-     */
+    // Returns a random usable (playable) map in LOBBY status, or null when none
+    // qualify.
+    // Used by /splegg random and will back in-lobby map voting once that ships.
+    public Map getRandomMap() {
+
+        final ArrayList<Map> candidates = new ArrayList<>();
+        final Iterator<Map> mapIterator = this.MAPS.values().iterator();
+        while (mapIterator.hasNext()) {
+
+            final Map map = mapIterator.next();
+            final Game game = SpleggOG.getPlugin().games.getGame(map.getName());
+            if (game == null) {
+
+                continue;
+
+            }
+
+            if (!map.isUsable(map)) {
+
+                continue;
+
+            }
+
+            if (game.getStatus() != Status.LOBBY) {
+
+                continue;
+
+            }
+
+            candidates.add(map);
+
+        }
+
+        if (candidates.isEmpty()) {
+
+            return null;
+
+        }
+
+        return candidates.get(new Random().nextInt(candidates.size()));
+
+    }
 
 }
