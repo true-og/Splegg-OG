@@ -355,6 +355,12 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
+    public DiamondBankAPIJava getDiamondBankAPI() {
+
+        return diamondBankAPI;
+
+    }
+
     // Getter for MyWorlds API.
     public static MyWorlds getMyWorlds() {
 

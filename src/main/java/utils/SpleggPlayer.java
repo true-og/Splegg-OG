@@ -46,4 +46,10 @@ public class SpleggPlayer {
 
     }
 
+    public void addBrokenBlock() {
+
+        this.broken++;
+
+    }
+
 }

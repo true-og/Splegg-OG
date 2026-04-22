@@ -1,3 +1,15 @@
+**0.8.7:**
+
+- Fixed the in-game round timer so matches now count down correctly and end on time limit instead of stopping immediately.
+
+- Added proper last-player-standing match completion, including server-wide winner chat, loser messaging, and winner payout handling.
+
+- Added a winner title that is shown only to the winning player, while the winner chat announcement remains server-wide.
+
+- Added broken-block tracking to match exits so players now see their block total when they leave a round.
+
+- Fixed leave messaging to name the player who actually left and cleaned up shovel-selection state more completely on exit.
+
 **0.8.6:**
 
 - Added `/splegg random` to join a random playable map and a `getRandomMap()` utility that lays the groundwork for in-lobby map voting.

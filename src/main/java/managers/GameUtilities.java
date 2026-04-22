@@ -99,7 +99,13 @@ public class GameUtilities {
 
     }
 
-    public void checkWinner(Game game) {
+    public boolean checkWinner(Game game) {
+
+        if (game == null || game.getStatus() != Status.INGAME) {
+
+            return false;
+
+        }
 
         int amountOfPlayersInGame = game.players.size();
         if (amountOfPlayersInGame <= 1) {
@@ -110,24 +116,19 @@ public class GameUtilities {
 
             } else {
 
-                Iterator<?> playersLeft = game.players.values().iterator();
-                while (playersLeft.hasNext()) {
+                SpleggPlayer winner = game.players.values().iterator().next();
 
-                    SpleggPlayer sp = (SpleggPlayer) playersLeft.next();
+                SpleggOG.getPlugin().getLogger().info("Winner detected: " + winner.getPlayer().getName());
 
-                    SpleggOG.getPlugin().getLogger()
-                            .info("Winner who should be removed from the game: " + sp.getPlayer().getName());
-
-                    game.leaveGame(sp.getUtilPlayer());
-                    game.players.clear();
-
-                }
-
-                game.splegg.game.stopGame(game, 5);
+                game.splegg.game.finishGame(game, winner);
 
             }
 
+            return true;
+
         }
+
+        return false;
 
     }
 

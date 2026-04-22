@@ -50,8 +50,6 @@ The resulting .jar file will be in build/libs/
 
 - Database to remember shop purchases across sessions (currently in-memory only).
 
-- Winner/loser broadcast messages at the end of a game (currently only logged to console).
-
 - Functional lobby menu items: wire up the Guide book and Cosmetics menu (items appear in lobby inventory but have no click handlers).
 
 - Power ups.

@@ -58,6 +58,7 @@ public class Game {
 
         this.splegg = splegg;
         this.map = map;
+        this.diamondBankAPI = splegg.getDiamondBankAPI();
         this.name = map.getName();
         this.status = Status.LOBBY;
         this.players = new HashMap<>();
@@ -432,24 +433,40 @@ public class Game {
 
         final Player player = u.getPlayer();
         final Game game = u.getGame();
+        final SpleggPlayer spleggPlayer = this.players.get(player.getName());
+        final int brokenBlocks = spleggPlayer != null ? spleggPlayer.getBroken() : 0;
         if (game != null) {
 
             // Tell player that left about their current state.
             Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.IndividualLeaveGame")
                     .replaceAll("%map%", u.getGame().getMap().getName()));
+            Utils.spleggOGMessage(player,
+                    config.getString("Messages.Youbrokeblocks").replaceAll("%broke%", String.valueOf(brokenBlocks)));
 
             this.players.remove(player.getName());
             Listeners.manager.remove(u.getName());
             Listeners.shopmanager.remove(u.getName());
+            Listeners.woodspade.remove(u.getName());
+            Listeners.stonespade.remove(u.getName());
             Listeners.goldspade.remove(u.getName());
             Listeners.diamondspade.remove(u.getName());
+            Listeners.netheritespade.remove(u.getName());
             Listeners.launchEggs.remove(u.getName());
             Listeners.moneymanager.remove(u.getName());
 
             LobbyScoreboard.detach(player);
             LobbyScoreboard.refreshGame(game);
 
-            player.teleport(u.getGame().getMap().getLobby());
+            if (u.getGame().getMap().lobbySet()) {
+
+                player.teleport(u.getGame().getMap().getLobby());
+
+            } else {
+
+                player.teleport(this.splegg.config.getLobby(player));
+
+            }
+
             u.setGame((Game) null);
             u.setAlive(false);
             player.setHealth(20.0D);
@@ -472,7 +489,7 @@ public class Game {
 
                     // Tell the rest of the people in the lobby that the player has left.
                     Utils.spleggOGMessage(p,
-                            config.getString("Messages.LeaveGame").replaceAll("%player%", p.getName())
+                            config.getString("Messages.LeaveGame").replaceAll("%player%", player.getName())
                                     .replaceAll("%count%", String.valueOf(this.players.size()))
                                     .replaceAll("%maxcount%", String.valueOf(this.map.getSpawnCount())));
 
@@ -480,9 +497,17 @@ public class Game {
 
             }
 
-            if (Listeners.moneymanager.contains(p.getName())) {
+            if (game != null && game.getStatus() == Status.INGAME && Listeners.moneymanager.contains(p.getName())
+                    && diamondBankAPI != null)
+            {
 
                 final int rewardInDiamonds = splegg.getConfig().getInt("Money.KillPlayer");
+                if (rewardInDiamonds <= 0) {
+
+                    continue;
+
+                }
+
                 final long rewardInShards = diamondBankAPI.diamondsToShards((float) rewardInDiamonds);
 
                 try {
@@ -519,6 +544,18 @@ public class Game {
     }
 
     public int getCount() {
+
+        return this.time;
+
+    }
+
+    public int tickTime() {
+
+        if (this.time > 0) {
+
+            this.time--;
+
+        }
 
         return this.time;
 

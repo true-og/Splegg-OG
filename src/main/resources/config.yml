@@ -32,6 +32,13 @@ Messages:
   BuyNetheriteShovel: '&BYou bought a Netherite Shovel!'
   VIPPrivilege: '&6Only &fOG &6players and above can enter the full game!'
   VIPJoinGame: '&6You have joined a full game thanks to your donor rank. Thank you for supporting &2True&4OG!'
+  # Winner/loser flow
+  WinnerGame: '&a%player% won Splegg on map &e%map%&a!'
+  WinnerTitle: '&a&lVICTORY!'
+  WinnerSubtitle: '&eYou won on &6%map%&e!'
+  YouWonGame: '&aYou won the match on &e%map%&a!'
+  LoseGame: '&cYou were eliminated from the match on &e%map%&c.'
+  FinishReward: '&BYou received %reward% &BDiamonds for winning!'
 Scoreboard:
   Title: '&2Splegg&r-&4OG'
   Queue: '&6Players Waiting:'
@@ -39,6 +46,7 @@ Scoreboard:
   BrokenBlocks: '&eBlocks Broken:'
 Money:
   KillPlayer: 0
+  # Diamonds awarded to the match winner.
   FinishGame: 1
 Options:
   Timer: 120

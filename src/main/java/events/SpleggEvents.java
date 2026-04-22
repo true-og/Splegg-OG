@@ -23,7 +23,9 @@ import org.bukkit.util.BlockIterator;
 import main.SpleggOG;
 import managers.Game;
 import managers.Status;
+import utils.SpleggPlayer;
 import utils.UtilPlayer;
+import utils.Utils;
 
 public class SpleggEvents implements Listener {
 
@@ -108,6 +110,13 @@ public class SpleggEvents implements Listener {
                             // Destroy the block that was hit by an egg.
                             hit.setType(Material.AIR);
 
+                            final SpleggPlayer spleggPlayer = game.getPlayer(player);
+                            if (spleggPlayer != null) {
+
+                                spleggPlayer.addBrokenBlock();
+
+                            }
+
                         }
 
                     }
@@ -187,6 +196,10 @@ public class SpleggEvents implements Listener {
                     .replaceAll("%player%", player.getName()));
             SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.PlayersRemaining")
                     .replaceAll("%count%", String.valueOf(game.getPlayers().size() - 1)), game);
+            Utils.spleggOGMessage(player,
+                    SpleggOG.getPlugin().getConfig()
+                            .getString("Messages.LoseGame", "&cYou were eliminated from the match on &e%map%&c.")
+                            .replaceAll("%map%", game.getMap().getName()));
 
             player.setFallDistance(0.0F);
             game.leaveGame(u);
