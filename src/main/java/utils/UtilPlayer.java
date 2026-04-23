@@ -1,5 +1,6 @@
 package utils;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import managers.Game;
@@ -11,6 +12,7 @@ public class UtilPlayer {
     boolean alive;
     Game game;
     InvStore store;
+    Location lastMainSmpLocation;
 
     public UtilPlayer(Player player) {
 
@@ -19,6 +21,7 @@ public class UtilPlayer {
         this.name = player.getName();
         this.alive = false;
         this.store = new InvStore(player);
+        this.lastMainSmpLocation = null;
 
     }
 
@@ -61,6 +64,18 @@ public class UtilPlayer {
     public void setGame(Game game) {
 
         this.game = game;
+
+    }
+
+    public Location getLastMainSmpLocation() {
+
+        return this.lastMainSmpLocation != null ? this.lastMainSmpLocation.clone() : null;
+
+    }
+
+    public void setLastMainSmpLocation(Location location) {
+
+        this.lastMainSmpLocation = location != null ? location.clone() : null;
 
     }
 

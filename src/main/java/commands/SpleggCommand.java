@@ -85,7 +85,17 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
                         if (u.getGame() != null && u.isAlive() && u.getGame().getLobbyCount() > 0) {
 
-                            player.teleport(u.getGame().getMap().getLobby());
+                            final Location queueLobby = u.getGame().getQueueLobbyLocation();
+                            if (queueLobby != null && queueLobby.getWorld() != null) {
+
+                                player.teleport(queueLobby);
+
+                            } else {
+
+                                Utils.spleggOGMessage(player,
+                                        "&cERROR: This map has no valid Splegg lobby configured right now.");
+
+                            }
 
                         } else {
 
@@ -203,7 +213,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
                         SpleggOG.getPlugin().config.setLobby(player.getLocation());
 
-                        Utils.spleggOGMessage(player, "&aThe lobby has been set.");
+                        Utils.spleggOGMessage(player, "&aThe global Splegg queue lobby has been set.");
 
                     } else {
 
@@ -667,6 +677,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
         sendUsage(player, tag, "create <map>", "Create a new map (disabled until floor + spawn exist).");
         sendUsage(player, tag, "delete <map>", "Delete a map.");
         sendUsage(player, tag, "info <map>", "Show map setup status (spawns, floors, lobby).");
+        sendUsage(player, tag, "setlobby", "Set the global Splegg queue lobby fallback.");
         sendUsage(player, tag, "setspawn <map> [next|#]", "Add or update a spawn point.");
         sendUsage(player, tag, "setlobby <map>", "Set the lobby teleport point.");
         sendUsage(player, tag, "addfloor <map>", "Add a WorldEdit selection as a floor.");

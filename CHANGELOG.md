@@ -1,8 +1,10 @@
+**0.9.0:**
+
+- Leaving Splegg now returns players to the exact main-SMP location they were at before joining, preserving overworld/nether/end context while still crossing back out of Splegg inventory isolation.
+
 **0.8.9:**
 
 - Re-keyed all per-player runtime state (match roster, shovel selections, money tracking, egg-launch flags) from player names to UUIDs so name changes, duplicate names, and offline-player lookups no longer corrupt match state.
-
-- Moved the static Splegg listener state to thread-safe sets and added a reset on plugin disable, preventing state leaks across reloads.
 
 - Fixed a NullPointerException in the egg-landing handler that could fire when the ray trace produced no candidate block.
 

@@ -2,8 +2,6 @@ package main;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -195,6 +193,14 @@ public class SpleggOG extends JavaPlugin {
         // Enable world-based inventory isolation.
         myWorlds.setUseWorldInventories(true);
 
+        // Create inventory group for main-network worlds.
+        List<String> mainWorlds = getMainWorlds();
+        if (!mainWorlds.isEmpty()) {
+
+            createInventoryGroup(mainWorlds, "main");
+
+        }
+
         // Create inventory group for lobby worlds.
         List<String> lobbyWorlds = getLobbyWorlds();
         if (!lobbyWorlds.isEmpty()) {
@@ -215,45 +221,14 @@ public class SpleggOG extends JavaPlugin {
 
     private void createInventoryGroup(List<String> worlds, String groupType) {
 
-        try {
+        final WorldInventory inventory = WorldInventory.create(myWorlds, worlds.get(0));
+        for (int i = 1; i < worlds.size(); i++) {
 
-            final Object inventory = createWorldInventory(worlds.get(0));
-            final Method addMethod = inventory.getClass().getMethod("add", String.class);
-
-            for (int i = 1; i < worlds.size(); i++) {
-
-                addMethod.invoke(inventory, worlds.get(i));
-
-            }
-
-            this.getLogger().info("Created MyWorlds inventory group for " + groupType + " worlds: " + worlds);
-
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exception) {
-
-            throw new IllegalStateException(
-                    "Failed to configure MyWorlds inventory group for " + groupType + " worlds: " + worlds, exception);
+            inventory.add(worlds.get(i));
 
         }
 
-    }
-
-    private Object createWorldInventory(String worldName)
-            throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
-    {
-
-        try {
-
-            final Method createMethod = WorldInventory.class.getMethod("create", MyWorlds.class, String.class);
-
-            return createMethod.invoke(null, myWorlds, worldName);
-
-        } catch (NoSuchMethodException ignored) {
-
-            final Method createMethod = WorldInventory.class.getMethod("create", String.class);
-
-            return createMethod.invoke(null, worldName);
-
-        }
+        this.getLogger().info("Created MyWorlds inventory group for " + groupType + " worlds: " + worlds);
 
     }
 

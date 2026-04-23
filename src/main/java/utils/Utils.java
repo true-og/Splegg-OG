@@ -106,34 +106,63 @@ public class Utils {
 
     public void setLobby(Location l) {
 
-        int x = l.getBlockX();
-        int y = l.getBlockY();
-        int z = l.getBlockZ();
-        float yaw = l.getYaw();
-        float pitch = l.getPitch();
-        String worldName = l.getWorld().getName();
-
-        this.config.set("Spawns.lobby.world", worldName);
-        this.config.set("Spawns.lobby.x", x);
-        this.config.set("Spawns.lobby.y", y);
-        this.config.set("Spawns.lobby.z", z);
-        this.config.set("Spawns.lobby.pitch", pitch);
-        this.config.set("Spawns.lobby.yaw", yaw);
-
-        saveSpawns();
+        setSpawn("Spawns.lobby", l);
 
     }
 
     public Location getLobby(Player player) {
 
-        int x = this.config.getInt("Spawns.lobby.x");
-        int y = this.config.getInt("Spawns.lobby.y");
-        int z = this.config.getInt("Spawns.lobby.z");
+        return getSpawn("Spawns.lobby");
 
-        float yaw = (float) this.config.getInt("Spawns.lobby.yaw");
-        float pitch = (float) this.config.getInt("Spawns.lobby.pitch");
+    }
 
-        World worldName = Bukkit.getWorld(this.config.getString("Spawns.lobby.world"));
+    private void setSpawn(String path, Location location) {
+
+        int x = location.getBlockX();
+        int y = location.getBlockY();
+        int z = location.getBlockZ();
+        float yaw = location.getYaw();
+        float pitch = location.getPitch();
+        String worldName = location.getWorld().getName();
+
+        this.config.set(path + ".world", worldName);
+        this.config.set(path + ".x", x);
+        this.config.set(path + ".y", y);
+        this.config.set(path + ".z", z);
+        this.config.set(path + ".pitch", pitch);
+        this.config.set(path + ".yaw", yaw);
+
+        saveSpawns();
+
+    }
+
+    private boolean hasSpawn(String path) {
+
+        return this.config.isString(path + ".world");
+
+    }
+
+    private Location getSpawn(String path) {
+
+        if (!hasSpawn(path)) {
+
+            return null;
+
+        }
+
+        int x = this.config.getInt(path + ".x");
+        int y = this.config.getInt(path + ".y");
+        int z = this.config.getInt(path + ".z");
+
+        float yaw = (float) this.config.getInt(path + ".yaw");
+        float pitch = (float) this.config.getInt(path + ".pitch");
+
+        World worldName = Bukkit.getWorld(this.config.getString(path + ".world"));
+        if (worldName == null) {
+
+            return null;
+
+        }
 
         return new Location(worldName, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
 

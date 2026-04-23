@@ -27,7 +27,7 @@ kotlin { jvmToolchain(17) }
 /* ----------------------------- Metadata ------------------------------ */
 group = "net.trueog.splegg-og" // Declare bundle identifier.
 
-version = "0.8.9" // Declare plugin version (will be in .jar).
+version = "0.9.0" // Declare plugin version (will be in .jar).
 
 val apiVersion = "1.19" // Declare minecraft server target version.
 

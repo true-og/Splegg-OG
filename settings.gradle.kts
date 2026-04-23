@@ -1,13 +1,21 @@
 rootProject.name = "Splegg-OG"
 
-ProcessBuilder("sh", "bootstrap.sh").directory(rootDir).inheritIO().start().let {
-    if (it.waitFor() != 0) throw GradleException("bootstrap.sh failed")
+val requiredLibraries = listOf("DiamondBank-OG", "GxUI-OG", "Utilities-OG")
+val missingLibraries = requiredLibraries.filter { libraryName -> !file("libs/$libraryName/build.gradle.kts").exists() }
+
+if (missingLibraries.isNotEmpty()) {
+    throw GradleException(
+        "Missing initialized git submodules: ${missingLibraries.joinToString(", ")}. " +
+            "Run ./bootstrap.sh or `git submodule update --init --recursive` before building."
+    )
 }
 
 file("libs")
     .listFiles()
-    ?.filter { it.isDirectory && !it.name.startsWith(".") }
-    ?.forEach { dir ->
-        include(":libs:${dir.name}")
-        project(":libs:${dir.name}").projectDir = dir
+    ?.filter { directory ->
+        directory.isDirectory && !directory.name.startsWith(".") && file("${directory.path}/build.gradle.kts").exists()
+    }
+    ?.forEach { directory ->
+        include(":libs:${directory.name}")
+        project(":libs:${directory.name}").projectDir = directory
     }

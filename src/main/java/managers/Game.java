@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -215,6 +216,12 @@ public class Game {
     public void joinGame(UtilPlayer playerWhoIsJoining) {
 
         final Player player = playerWhoIsJoining.getPlayer();
+        if (splegg.isMainWorld(player.getWorld())) {
+
+            playerWhoIsJoining.setLastMainSmpLocation(player.getLocation());
+
+        }
+
         if (playerWhoIsJoining.getGame() != null) {
 
             Utils.spleggOGMessage(player, config.getString("Messages.AlreadyInGame"));
@@ -242,16 +249,7 @@ public class Game {
                 Listeners.launchEggs.add(player.getUniqueId());
                 this.players.put(player.getUniqueId(), sp);
                 playerWhoIsJoining.setGame(this.splegg.games.getGame(this.name));
-
-                if (this.map.lobbySet()) {
-
-                    player.teleport(this.map.getLobby());
-
-                } else {
-
-                    player.teleport(this.splegg.config.getLobby(player));
-
-                }
+                teleportToQueueLobby(player);
 
                 preparePlayerForLobby(player);
                 Listeners.manager.add(player.getUniqueId());
@@ -287,16 +285,7 @@ public class Game {
 
                 players.put(player.getUniqueId(), sp);
                 playerWhoIsJoining.setGame(splegg.games.getGame(name));
-
-                if (map.lobbySet()) {
-
-                    player.teleport(this.map.getLobby());
-
-                } else {
-
-                    player.teleport(splegg.config.getLobby(player));
-
-                }
+                teleportToQueueLobby(player);
 
                 preparePlayerForLobby(player);
 
@@ -351,6 +340,52 @@ public class Game {
 
         setLobbyInv(player);
         LobbyScoreboard.attach(player, this);
+
+    }
+
+    public Location getQueueLobbyLocation() {
+
+        if (this.map.lobbySet()) {
+
+            final Location mapLobby = this.map.getLobby();
+            if (mapLobby != null && mapLobby.getWorld() != null) {
+
+                return mapLobby;
+
+            }
+
+        }
+
+        final Location globalQueueLobby = this.splegg.config.getLobby(null);
+        if (globalQueueLobby != null && globalQueueLobby.getWorld() != null) {
+
+            return globalQueueLobby;
+
+        }
+
+        if (this.map.getSpawnCount() > 0) {
+
+            final Location firstSpawn = this.map.getSpawn(1);
+            if (firstSpawn != null && firstSpawn.getWorld() != null) {
+
+                return firstSpawn;
+
+            }
+
+        }
+
+        return null;
+
+    }
+
+    private void teleportToQueueLobby(Player player) {
+
+        final Location queueLobby = getQueueLobbyLocation();
+        if (queueLobby != null && queueLobby.getWorld() != null) {
+
+            player.teleport(queueLobby);
+
+        }
 
     }
 
@@ -455,13 +490,24 @@ public class Game {
             LobbyScoreboard.detach(player);
             LobbyScoreboard.refreshGame(game);
 
-            if (u.getGame().getMap().lobbySet()) {
+            final Location returnLocation = u.getLastMainSmpLocation();
+            if (returnLocation != null && returnLocation.getWorld() != null) {
 
-                player.teleport(u.getGame().getMap().getLobby());
+                player.teleport(returnLocation);
 
             } else {
 
-                player.teleport(this.splegg.config.getLobby(player));
+                final List<String> mainWorlds = this.splegg.getMainWorlds();
+                if (!mainWorlds.isEmpty()) {
+
+                    final org.bukkit.World mainWorld = Bukkit.getWorld(mainWorlds.get(0));
+                    if (mainWorld != null) {
+
+                        player.teleport(mainWorld.getSpawnLocation());
+
+                    }
+
+                }
 
             }
 

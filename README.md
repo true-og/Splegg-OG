@@ -1,4 +1,4 @@
-# Splegg-OG BETA
+# Splegg-OG 0.9.0 BETA
 
 ![Icon](https://raw.githubusercontent.com/NotAlexNoyle/Splegg-OG/master/assets/splegg-logo.png)
 
@@ -18,6 +18,8 @@ Dependencies: WorldEdit, DiamondBank-OG, Essentials-OG, and MyWorlds.
 
 `/splegg setlobby my-map` Set a lobby area for the map during the voting/warm-up period.
 
+`/splegg setlobby` Set the global Splegg queue-lobby fallback used when a map-specific lobby is not configured.
+
 `//wand` Summon a wand with WorldEdit and then use it to select two points on a one-dimensional plane. The points you select will represent parallel corners of your floor.
 
 `/splegg addfloor my-map` Add the area you just selected with WorldEdit as a floor. You can add as many as you like.
@@ -36,11 +38,17 @@ Dependencies: WorldEdit, DiamondBank-OG, Essentials-OG, and MyWorlds.
 
 [Original Bukkit Page](https://dev.bukkit.org/projects/splegg-minigame).
 
-*The current Gradle build target is Purpur 1.19.4 on GraalVM CE 17.*
+*The current Gradle build target is Purpur 1.19.4 on GraalVM CE 17 / Java 17.*
 
 **To Build:**
 
+`./bootstrap.sh`
+
+`export JAVA_HOME=/path/to/java-17`
+
 `./gradlew build`
+
+Gradle must run on Java 17 or newer, and the git submodules under `libs/` must be initialized before the build.
 
 The resulting .jar file will be in build/libs/
 
