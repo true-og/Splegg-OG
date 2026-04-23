@@ -57,9 +57,7 @@ dependencies {
     compileOnly("io.github.miniplaceholders:miniplaceholders-api:2.2.3") // Import MiniPlaceholders API.
     compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.0-SNAPSHOT") // Import WorldEdit API.
     compileOnly("net.essentialsx:EssentialsX:2.21.0") // Import EssentialsX API.
-    compileOnly("com.github.regix1:MyWorlds:master-SNAPSHOT") {
-        isTransitive = false
-    } // Import MyWorlds API (from Jitpack).
+    compileOnly(files("libs/MyWorlds/MyWorlds-1.19.4-v1.jar")) // Import MyWorlds API (local build).
     compileOnly("com.bergerkiller.bukkit:BKCommonLib:1.21.10-v2-SNAPSHOT") {
         isTransitive = false
     } // Import BKCommonLib API (required by MyWorlds at compile time).

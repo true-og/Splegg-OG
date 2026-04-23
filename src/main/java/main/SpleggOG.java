@@ -221,7 +221,7 @@ public class SpleggOG extends JavaPlugin {
 
     private void createInventoryGroup(List<String> worlds, String groupType) {
 
-        final WorldInventory inventory = WorldInventory.create(myWorlds, worlds.get(0));
+        final WorldInventory inventory = WorldInventory.create(worlds.get(0));
         for (int i = 1; i < worlds.size(); i++) {
 
             inventory.add(worlds.get(i));
