@@ -19,14 +19,25 @@ public class MapConfig {
 
     public void setup() {
 
-        this.f = new File(SpleggOG.getPlugin().getDataFolder(), "maps.yml");
-        try {
+        final File dataFolder = SpleggOG.getPlugin().getDataFolder();
+        if (!dataFolder.exists()) {
 
-            this.f.createNewFile();
+            dataFolder.mkdirs();
 
-        } catch (IOException error) {
+        }
 
-            SpleggOG.getPlugin().getLogger().severe("An error occured while creating maps.yml.");
+        this.f = new File(dataFolder, "maps.yml");
+        if (!this.f.exists()) {
+
+            try {
+
+                this.f.createNewFile();
+
+            } catch (IOException error) {
+
+                SpleggOG.getPlugin().getLogger().severe("An error occured while creating maps.yml: " + error.getMessage());
+
+            }
 
         }
 
