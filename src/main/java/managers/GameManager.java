@@ -148,7 +148,7 @@ public class GameManager {
 
     }
 
-    public void ingameTimer(int count, HashMap<String, SpleggPlayer> players) {
+    public void ingameTimer(int count, HashMap<java.util.UUID, SpleggPlayer> players) {
 
         final Iterator<?> playersInGame = players.values().iterator();
         while (playersInGame.hasNext()) {

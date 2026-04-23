@@ -31,52 +31,38 @@ public class GameUtilities {
 
             return null;
 
-        } else {
+        }
 
-            SpleggPlayer sp = null;
-            Iterator<?> var4 = this.GAMES.values().iterator();
-            while (var4.hasNext()) {
+        final java.util.UUID playerId = player.getUniqueId();
+        for (Game g : this.GAMES.values()) {
 
-                Game games = (Game) var4.next();
+            final SpleggPlayer sp = g.players.get(playerId);
+            if (sp != null) {
 
-                Iterator<?> var6 = games.players.values().iterator();
-                while (var6.hasNext()) {
-
-                    SpleggPlayer sps = (SpleggPlayer) var6.next();
-
-                    if (sps.getPlayer().getName().equalsIgnoreCase(player.getName())) {
-
-                        sp = sps;
-
-                    }
-
-                }
+                return sp;
 
             }
 
-            return sp;
-
         }
+
+        return null;
 
     }
 
     public Game getMatchedGame(Player player) {
 
-        Game game = null;
-        Iterator<?> var4 = this.GAMES.values().iterator();
+        final java.util.UUID playerId = player.getUniqueId();
+        for (Game g : this.GAMES.values()) {
 
-        while (var4.hasNext()) {
+            if (g.players.containsKey(playerId)) {
 
-            Game g = (Game) var4.next();
-            if (g.players.containsKey(player.getName())) {
-
-                game = g;
+                return g;
 
             }
 
         }
 
-        return game;
+        return null;
 
     }
 

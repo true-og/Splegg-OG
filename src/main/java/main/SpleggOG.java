@@ -1,7 +1,6 @@
 package main;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -10,7 +9,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -152,19 +150,13 @@ public class SpleggOG extends JavaPlugin {
 
         this.disabling = true;
 
-        HandlerList.unregisterAll(new MapListener());
-        HandlerList.unregisterAll(new PlayerListener());
-        HandlerList.unregisterAll(new SpleggEvents());
-        HandlerList.unregisterAll(new SignListener());
-        HandlerList.unregisterAll(new Listeners(diamondBankAPI));
+        // JavaPlugin auto-unregisters our listeners; no manual unregister needed.
 
         int gameCounter = 0;
-        try {
+        if (this.games != null) {
 
-            final Iterator<?> gameIterator = this.games.GAMES.values().iterator();
-            while (gameIterator.hasNext()) {
+            for (Game game : this.games.GAMES.values()) {
 
-                final Game game = (Game) gameIterator.next();
                 if (game.getStatus() == Status.INGAME) {
 
                     gameCounter++;
@@ -175,14 +167,11 @@ public class SpleggOG extends JavaPlugin {
 
             }
 
-            this.getLogger().info("Splegg-OG Shut Down with " + gameCounter + " games running.");
-
-        } catch (NullPointerException nullPointerException) {
-
-            this.getLogger().info("Splegg-OG Shut Down with 0 games running.");
-            nullPointerException.printStackTrace();
-
         }
+
+        Listeners.clearAll();
+
+        this.getLogger().info("Splegg-OG Shut Down with " + gameCounter + " games running.");
 
     }
 
@@ -370,21 +359,8 @@ public class SpleggOG extends JavaPlugin {
 
     private MyWorlds findMyWorldsPlugin() {
 
-        Plugin plugin = this.getServer().getPluginManager().getPlugin("MyWorlds");
-        if (plugin instanceof MyWorlds) {
-
-            return (MyWorlds) plugin;
-
-        }
-
-        plugin = this.getServer().getPluginManager().getPlugin("My_Worlds");
-        if (plugin instanceof MyWorlds) {
-
-            return (MyWorlds) plugin;
-
-        }
-
-        return null;
+        final Plugin plugin = this.getServer().getPluginManager().getPlugin("MyWorlds");
+        return plugin instanceof MyWorlds ? (MyWorlds) plugin : null;
 
     }
 

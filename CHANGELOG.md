@@ -1,3 +1,19 @@
+**0.8.9:**
+
+- Re-keyed all per-player runtime state (match roster, shovel selections, money tracking, egg-launch flags) from player names to UUIDs so name changes, duplicate names, and offline-player lookups no longer corrupt match state.
+
+- Moved the static Splegg listener state to thread-safe sets and added a reset on plugin disable, preventing state leaks across reloads.
+
+- Fixed a NullPointerException in the egg-landing handler that could fire when the ray trace produced no candidate block.
+
+- Fixed the lobby-entry and match-exit flows that reset `FallDistance` to 1 instead of 0, leaving players with a one-block fall penalty after Splegg transitions.
+
+- Replaced the try/catch NPE swallow in the plugin shutdown path with a direct null-check so unrelated bugs no longer silently print stack traces.
+
+- Removed the noisy try/catch around `PlayerInteractEvent.getHand()` and the misleading `HandlerList.unregisterAll(new X())` no-ops from `onDisable`.
+
+- Removed the legacy `My_Worlds` softdepend and plugin-id fallback; `MyWorlds` is the only recognized world-manager plugin name.
+
 **0.8.8:**
 
 - Tightened playable-map validation so a map now requires at least 2 spawn points, at least 1 floor, and valid loaded world references before it can enter a playable lobby state.

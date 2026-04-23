@@ -4,7 +4,6 @@ version: '${version}'
 authors: [Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle]
 api-version: '${apiVersion}'
 depend: [DiamondBank-OG, Essentials-OG, WorldEdit, MyWorlds]
-softdepend: [My_Worlds]
 
 commands:
   splegg:

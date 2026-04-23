@@ -6,8 +6,6 @@
 
 Dependencies: WorldEdit, DiamondBank-OG, Essentials-OG, and MyWorlds.
 
-Legacy note: `My_Worlds` is still recognized as a fallback plugin name at runtime, but a MyWorlds-compatible world manager is required for Splegg-OG to start.
-
 **To Set Up:**:
 
 `/splegg create my-map` First, create a Splegg map with a name of your choosing.
@@ -38,7 +36,7 @@ Legacy note: `My_Worlds` is still recognized as a fallback plugin name at runtim
 
 [Original Bukkit Page](https://dev.bukkit.org/projects/splegg-minigame).
 
-*The current Gradle build target is Purpur 1.19.4 on Java 17.*
+*The current Gradle build target is Purpur 1.19.4 on GraalVM CE 17.*
 
 **To Build:**
 

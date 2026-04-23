@@ -75,6 +75,12 @@ public class SpleggEvents implements Listener {
 
                     }
 
+                    if (hit == null) {
+
+                        return;
+
+                    }
+
                     if (hit.getType() == Material.TNT) {
 
                         hitBlock.getWorld().createExplosion(hitLocation, 3.0F);

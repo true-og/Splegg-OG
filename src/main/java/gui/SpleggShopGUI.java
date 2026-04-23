@@ -2,6 +2,8 @@ package gui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -53,7 +55,7 @@ public class SpleggShopGUI extends GUIBase {
     }
 
     private void addShovel(int slot, Material material, String configPath, String successMessagePath,
-            ArrayList<String> selectedShovelList)
+            Set<UUID> selectedShovelList)
     {
 
         final Player player = getPlayer();
@@ -74,7 +76,7 @@ public class SpleggShopGUI extends GUIBase {
     }
 
     private GUIButton buildButton(Player player, String configPath, String successMessagePath,
-            ArrayList<String> selectedShovelList)
+            Set<UUID> selectedShovelList)
     {
 
         return new GUIButton() {
@@ -132,7 +134,7 @@ public class SpleggShopGUI extends GUIBase {
         lore.add(UtilitiesOG.trueogExpand(description));
         lore.add(UtilitiesOG.trueogExpand(affordable ? "&aAffordable right now." : "&cUnaffordable right now."));
 
-        if (!Listeners.canPurchasePremiumShovel(player.getName())) {
+        if (!Listeners.canPurchasePremiumShovel(player.getUniqueId())) {
 
             lore.add(UtilitiesOG.trueogExpand("&6Premium shovel already chosen for this round."));
 

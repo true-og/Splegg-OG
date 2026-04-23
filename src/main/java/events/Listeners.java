@@ -1,6 +1,8 @@
 package events;
 
-import java.util.ArrayList;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
@@ -31,19 +33,33 @@ import utils.Utils;
 
 public class Listeners implements Listener {
 
-    public static ArrayList<String> manager = new ArrayList<>();
-    public static ArrayList<String> moneymanager = new ArrayList<>();
-    public static ArrayList<String> shopmanager = new ArrayList<>();
-    public static ArrayList<String> woodspade = new ArrayList<>();
-    public static ArrayList<String> stonespade = new ArrayList<>();
-    public static ArrayList<String> diamondspade = new ArrayList<>();
-    public static ArrayList<String> goldspade = new ArrayList<>();
-    public static ArrayList<String> netheritespade = new ArrayList<>();
-    public static ArrayList<String> launchEggs = new ArrayList<>();
+    public static final Set<UUID> manager = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> moneymanager = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> shopmanager = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> woodspade = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> stonespade = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> diamondspade = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> goldspade = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> netheritespade = ConcurrentHashMap.newKeySet();
+    public static final Set<UUID> launchEggs = ConcurrentHashMap.newKeySet();
 
     public Listeners(DiamondBankAPIJava diamondBankAPI) {
 
         // Constructor retained for compatibility with existing registration call sites.
+
+    }
+
+    public static void clearAll() {
+
+        manager.clear();
+        moneymanager.clear();
+        shopmanager.clear();
+        woodspade.clear();
+        stonespade.clear();
+        goldspade.clear();
+        diamondspade.clear();
+        netheritespade.clear();
+        launchEggs.clear();
 
     }
 
@@ -67,10 +83,11 @@ public class Listeners implements Listener {
     }
 
     public static boolean handleShovelSelection(Player player, String configPath, String successMessagePath,
-            ArrayList<String> selectedShovelList)
+            Set<UUID> selectedShovelList)
     {
 
-        if (!shopmanager.contains(player.getName())) {
+        final UUID playerId = player.getUniqueId();
+        if (!shopmanager.contains(playerId)) {
 
             Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Haveyoueverbought"));
 
@@ -81,7 +98,7 @@ public class Listeners implements Listener {
         final int priceInDiamonds = SpleggOG.getPlugin().getConfig().getInt(configPath + ".Price");
         if (priceInDiamonds <= 0) {
 
-            selectPurchasedShovel(player.getName(), selectedShovelList);
+            selectPurchasedShovel(playerId, selectedShovelList);
             Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString(successMessagePath));
             player.closeInventory();
 
@@ -110,11 +127,11 @@ public class Listeners implements Listener {
 
         try {
 
-            diamondBankAPI.consumeFromPlayer(player.getUniqueId(), priceInShards,
+            diamondBankAPI.consumeFromPlayer(playerId, priceInShards,
                     "Player " + player.getName() + " purchased a " + currentShovelName(configPath) + " in Splegg.",
                     "Plugin: Splegg-OG");
 
-            selectPurchasedShovel(player.getName(), selectedShovelList);
+            selectPurchasedShovel(playerId, selectedShovelList);
             Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString(successMessagePath));
             player.closeInventory();
             return true;
@@ -126,13 +143,13 @@ public class Listeners implements Listener {
 
         } catch (EconomyDisabledException economyDisabledException) {
 
-            restoreDefaultLobbyState(player.getName());
+            restoreDefaultLobbyState(playerId);
             UtilitiesOG.trueogMessage(player, "&cERROR: The Diamond economy is currently unavailable.");
             return false;
 
         } catch (InvalidPlayerException | PlayerNotOnlineException playerException) {
 
-            restoreDefaultLobbyState(player.getName());
+            restoreDefaultLobbyState(playerId);
             UtilitiesOG.trueogMessage(player,
                     "&cERROR: Your player account could not be found. Contact an administrator.");
             return false;
@@ -143,7 +160,7 @@ public class Listeners implements Listener {
 
     public static boolean handleIronSelection(Player player) {
 
-        restoreDefaultLobbyState(player.getName());
+        restoreDefaultLobbyState(player.getUniqueId());
         Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.BuyIronShovel"));
         player.closeInventory();
 
@@ -183,9 +200,9 @@ public class Listeners implements Listener {
 
     }
 
-    public static boolean canPurchasePremiumShovel(String playerName) {
+    public static boolean canPurchasePremiumShovel(UUID playerId) {
 
-        return shopmanager.contains(playerName);
+        return shopmanager.contains(playerId);
 
     }
 
@@ -195,43 +212,30 @@ public class Listeners implements Listener {
 
     }
 
-    private static void selectPurchasedShovel(String playerName, ArrayList<String> selectedShovelList) {
+    private static void selectPurchasedShovel(UUID playerId, Set<UUID> selectedShovelList) {
 
-        clearSelectedShovels(playerName);
-        manager.remove(playerName);
-        shopmanager.remove(playerName);
-        if (!selectedShovelList.contains(playerName)) {
-
-            selectedShovelList.add(playerName);
-
-        }
+        clearSelectedShovels(playerId);
+        manager.remove(playerId);
+        shopmanager.remove(playerId);
+        selectedShovelList.add(playerId);
 
     }
 
-    private static void clearSelectedShovels(String playerName) {
+    private static void clearSelectedShovels(UUID playerId) {
 
-        woodspade.remove(playerName);
-        stonespade.remove(playerName);
-        goldspade.remove(playerName);
-        diamondspade.remove(playerName);
-        netheritespade.remove(playerName);
+        woodspade.remove(playerId);
+        stonespade.remove(playerId);
+        goldspade.remove(playerId);
+        diamondspade.remove(playerId);
+        netheritespade.remove(playerId);
 
     }
 
-    private static void restoreDefaultLobbyState(String playerName) {
+    private static void restoreDefaultLobbyState(UUID playerId) {
 
-        clearSelectedShovels(playerName);
-        if (!manager.contains(playerName)) {
-
-            manager.add(playerName);
-
-        }
-
-        if (!shopmanager.contains(playerName)) {
-
-            shopmanager.add(playerName);
-
-        }
+        clearSelectedShovels(playerId);
+        manager.add(playerId);
+        shopmanager.add(playerId);
 
     }
 
@@ -241,33 +245,33 @@ public class Listeners implements Listener {
 
     }
 
-    public static Material getSelectedShovelMaterial(String playerName) {
+    public static Material getSelectedShovelMaterial(UUID playerId) {
 
-        if (woodspade.contains(playerName)) {
+        if (woodspade.contains(playerId)) {
 
             return Material.WOODEN_SHOVEL;
 
         }
 
-        if (stonespade.contains(playerName)) {
+        if (stonespade.contains(playerId)) {
 
             return Material.STONE_SHOVEL;
 
         }
 
-        if (goldspade.contains(playerName)) {
+        if (goldspade.contains(playerId)) {
 
             return Material.GOLDEN_SHOVEL;
 
         }
 
-        if (diamondspade.contains(playerName)) {
+        if (diamondspade.contains(playerId)) {
 
             return Material.DIAMOND_SHOVEL;
 
         }
 
-        if (netheritespade.contains(playerName)) {
+        if (netheritespade.contains(playerId)) {
 
             return Material.NETHERITE_SHOVEL;
 
@@ -277,33 +281,33 @@ public class Listeners implements Listener {
 
     }
 
-    public static String getSelectedShovelConfigPath(String playerName) {
+    public static String getSelectedShovelConfigPath(UUID playerId) {
 
-        if (woodspade.contains(playerName)) {
+        if (woodspade.contains(playerId)) {
 
             return "Shovels.Wood";
 
         }
 
-        if (stonespade.contains(playerName)) {
+        if (stonespade.contains(playerId)) {
 
             return "Shovels.Stone";
 
         }
 
-        if (goldspade.contains(playerName)) {
+        if (goldspade.contains(playerId)) {
 
             return "Shovels.Gold";
 
         }
 
-        if (diamondspade.contains(playerName)) {
+        if (diamondspade.contains(playerId)) {
 
             return "Shovels.Diamond";
 
         }
 
-        if (netheritespade.contains(playerName)) {
+        if (netheritespade.contains(playerId)) {
 
             return "Shovels.Netherite";
 
@@ -313,26 +317,12 @@ public class Listeners implements Listener {
 
     }
 
-    public static void finalizePreGameShovelState(String playerName) {
+    public static void finalizePreGameShovelState(UUID playerId) {
 
-        manager.remove(playerName);
-        shopmanager.remove(playerName);
-        clearStaticSelectedShovels(playerName);
-        if (!moneymanager.contains(playerName)) {
-
-            moneymanager.add(playerName);
-
-        }
-
-    }
-
-    private static void clearStaticSelectedShovels(String playerName) {
-
-        woodspade.remove(playerName);
-        stonespade.remove(playerName);
-        goldspade.remove(playerName);
-        diamondspade.remove(playerName);
-        netheritespade.remove(playerName);
+        manager.remove(playerId);
+        shopmanager.remove(playerId);
+        clearSelectedShovels(playerId);
+        moneymanager.add(playerId);
 
     }
 
@@ -407,24 +397,13 @@ public class Listeners implements Listener {
 
         final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         final Game game = u.getGame();
-        if (!(game != null && Listeners.launchEggs.contains(u.getName()))) {
+        if (!(game != null && Listeners.launchEggs.contains(player.getUniqueId()))) {
 
             return;
 
         }
 
-        EquipmentSlot playerHand = null;
-        try {
-
-            playerHand = playerInteractEvent.getHand();
-
-        } catch (NullPointerException nullPointerException) {
-
-            SpleggOG.getPlugin().getLogger().severe("ERROR: Player's hand returned null.");
-            nullPointerException.printStackTrace();
-
-        }
-
+        final EquipmentSlot playerHand = playerInteractEvent.getHand();
         if (playerHand != EquipmentSlot.HAND) {
 
             return;

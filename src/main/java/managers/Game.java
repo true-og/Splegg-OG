@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -37,7 +38,7 @@ public class Game {
     String name;
     Map map;
     Status status;
-    public HashMap<String, SpleggPlayer> players;
+    public HashMap<UUID, SpleggPlayer> players;
     HashSet<Location> floor;
     ArrayList<Rollback> data;
     private int lobbycount;
@@ -104,11 +105,11 @@ public class Game {
                 while (PlayersInGame.hasNext()) {
 
                     final SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
-                    final String playerName = sp.getPlayer().getName();
+                    final UUID playerId = sp.getPlayer().getUniqueId();
                     sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.2F);
 
-                    final Material selectedShovel = Listeners.getSelectedShovelMaterial(playerName);
-                    final String selectedShovelConfigPath = Listeners.getSelectedShovelConfigPath(playerName);
+                    final Material selectedShovel = Listeners.getSelectedShovelMaterial(playerId);
+                    final String selectedShovelConfigPath = Listeners.getSelectedShovelConfigPath(playerId);
 
                     sp.getPlayer().getInventory().setItem(0, Utils.getItem(selectedShovel,
                             Utils.legacySerializerAnyCase(
@@ -117,7 +118,7 @@ public class Game {
                                     splegg.getConfig().getString(selectedShovelConfigPath + ".Lore")).content()));
                     sp.getPlayer().updateInventory();
 
-                    Listeners.finalizePreGameShovelState(playerName);
+                    Listeners.finalizePreGameShovelState(playerId);
 
                 }
 
@@ -154,7 +155,7 @@ public class Game {
 
     }
 
-    public HashMap<String, SpleggPlayer> getPlayers() {
+    public HashMap<UUID, SpleggPlayer> getPlayers() {
 
         return this.players;
 
@@ -177,7 +178,7 @@ public class Game {
 
     public SpleggPlayer getPlayer(Player player) {
 
-        return this.players.get(player.getName());
+        return this.players.get(player.getUniqueId());
 
     }
 
@@ -222,7 +223,7 @@ public class Game {
 
             Utils.spleggOGMessage(player, config.getString("Messages.NotInSpleggWorld"));
 
-        } else if (this.players.containsKey(player.getName())) {
+        } else if (this.players.containsKey(player.getUniqueId())) {
 
             Utils.spleggOGMessage(player, splegg.getConfig().getString("Messages.AlreadyInLobby"));
 
@@ -238,8 +239,8 @@ public class Game {
                 sp = new SpleggPlayer(playerWhoIsJoining);
                 playerWhoIsJoining.setAlive(true);
                 playerWhoIsJoining.getStore().save();
-                Listeners.launchEggs.add(sp.getPlayer().getName());
-                this.players.put(player.getName(), sp);
+                Listeners.launchEggs.add(player.getUniqueId());
+                this.players.put(player.getUniqueId(), sp);
                 playerWhoIsJoining.setGame(this.splegg.games.getGame(this.name));
 
                 if (this.map.lobbySet()) {
@@ -253,8 +254,8 @@ public class Game {
                 }
 
                 preparePlayerForLobby(player);
-                Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
-                Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
+                Listeners.manager.add(player.getUniqueId());
+                Listeners.shopmanager.add(player.getUniqueId());
 
                 this.splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("%player%", player.getName())
                         .replaceAll("%count%", String.valueOf(this.players.size()))
@@ -282,9 +283,9 @@ public class Game {
                 sp = new SpleggPlayer(playerWhoIsJoining);
                 playerWhoIsJoining.setAlive(true);
                 playerWhoIsJoining.getStore().save();
-                Listeners.launchEggs.add(sp.getPlayer().getName());
+                Listeners.launchEggs.add(player.getUniqueId());
 
-                players.put(player.getName(), sp);
+                players.put(player.getUniqueId(), sp);
                 playerWhoIsJoining.setGame(splegg.games.getGame(name));
 
                 if (map.lobbySet()) {
@@ -299,8 +300,8 @@ public class Game {
 
                 preparePlayerForLobby(player);
 
-                Listeners.manager.add(playerWhoIsJoining.getPlayer().getName());
-                Listeners.shopmanager.add(playerWhoIsJoining.getPlayer().getName());
+                Listeners.manager.add(player.getUniqueId());
+                Listeners.shopmanager.add(player.getUniqueId());
 
                 splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("%player%", player.getName())
                         .replaceAll("%count%", String.valueOf(this.players.size()))
@@ -334,7 +335,7 @@ public class Game {
         player.updateInventory();
         player.setFireTicks(0);
         player.setHealth(20.0D);
-        player.setFallDistance(1);
+        player.setFallDistance(0);
         player.setFoodLevel(20);
         player.setLevel(0);
         player.setExp(0.0F);
@@ -429,7 +430,8 @@ public class Game {
 
         final Player player = u.getPlayer();
         final Game game = u.getGame();
-        final SpleggPlayer spleggPlayer = this.players.get(player.getName());
+        final UUID playerId = player.getUniqueId();
+        final SpleggPlayer spleggPlayer = this.players.get(playerId);
         final int brokenBlocks = spleggPlayer != null ? spleggPlayer.getBroken() : 0;
         if (game != null) {
 
@@ -439,16 +441,16 @@ public class Game {
             Utils.spleggOGMessage(player,
                     config.getString("Messages.Youbrokeblocks").replaceAll("%broke%", String.valueOf(brokenBlocks)));
 
-            this.players.remove(player.getName());
-            Listeners.manager.remove(u.getName());
-            Listeners.shopmanager.remove(u.getName());
-            Listeners.woodspade.remove(u.getName());
-            Listeners.stonespade.remove(u.getName());
-            Listeners.goldspade.remove(u.getName());
-            Listeners.diamondspade.remove(u.getName());
-            Listeners.netheritespade.remove(u.getName());
-            Listeners.launchEggs.remove(u.getName());
-            Listeners.moneymanager.remove(u.getName());
+            this.players.remove(playerId);
+            Listeners.manager.remove(playerId);
+            Listeners.shopmanager.remove(playerId);
+            Listeners.woodspade.remove(playerId);
+            Listeners.stonespade.remove(playerId);
+            Listeners.goldspade.remove(playerId);
+            Listeners.diamondspade.remove(playerId);
+            Listeners.netheritespade.remove(playerId);
+            Listeners.launchEggs.remove(playerId);
+            Listeners.moneymanager.remove(playerId);
 
             LobbyScoreboard.detach(player);
             LobbyScoreboard.refreshGame(game);
@@ -466,7 +468,7 @@ public class Game {
             u.setGame((Game) null);
             u.setAlive(false);
             player.setHealth(20.0D);
-            player.setFallDistance(1);
+            player.setFallDistance(0);
 
         }
 
@@ -491,7 +493,7 @@ public class Game {
 
                 }
 
-                if (game.getStatus() == Status.INGAME && Listeners.moneymanager.contains(remaining.getName())
+                if (game.getStatus() == Status.INGAME && Listeners.moneymanager.contains(remaining.getUniqueId())
                         && diamondBankAPI != null)
                 {
 
