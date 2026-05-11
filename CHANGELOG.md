@@ -1,3 +1,8 @@
+**0.9.1:**
+
+- Improve MyWorlds support
+- Blacklist main 3 worlds
+
 **0.9.0:**
 
 - Leaving Splegg now returns players to the exact main-SMP location they were at before joining, preserving overworld/nether/end context while still crossing back out of Splegg inventory isolation.

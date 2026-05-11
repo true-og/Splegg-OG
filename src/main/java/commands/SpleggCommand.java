@@ -40,6 +40,14 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
         }
 
+        if (SpleggOG.isProtectedMainWorld(player.getWorld())) {
+
+            Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.InProtectedMainWorld",
+                    "&cERROR: Splegg cannot modify the vanilla overworld, nether, or end. Move to a Splegg lobby or in-game world first."));
+            return false;
+
+        }
+
         Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NotInSpleggWorld"));
         return false;
 
@@ -317,6 +325,12 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
                     } else if (args[0].equalsIgnoreCase("create")) {
 
                         if (player.hasPermission("splegg.admin")) {
+
+                            if (!ensureSpleggWorld(player)) {
+
+                                return false;
+
+                            }
 
                             firstUserCommandArgument = args[1];
                             if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {

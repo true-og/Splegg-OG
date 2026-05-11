@@ -35,7 +35,8 @@ public class MapConfig {
 
             } catch (IOException error) {
 
-                SpleggOG.getPlugin().getLogger().severe("An error occured while creating maps.yml: " + error.getMessage());
+                SpleggOG.getPlugin().getLogger()
+                        .severe("An error occured while creating maps.yml: " + error.getMessage());
 
             }
 

@@ -1,7 +1,12 @@
 package main;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -32,6 +37,16 @@ import utils.UtilPlayer;
 import utils.Utils;
 
 public class SpleggOG extends JavaPlugin {
+
+    // Vanilla overworld dimension worlds. Splegg refuses to read, write, or
+    // configure these under any circumstance: no map can be created in them, no
+    // inventory group is built for them, no listener treats them as splegg
+    // territory. Their inventory grouping is left to the server admin / MyWorlds
+    // config. Match casing on disk is irrelevant -- the comparison is
+    // case-insensitive so admins cannot accidentally bypass the guard by
+    // renaming the world directory.
+    public static final Set<String> PROTECTED_MAIN_WORLDS = Collections
+            .unmodifiableSet(new LinkedHashSet<>(Arrays.asList("world", "world_nether", "world_the_end")));
 
     private static SpleggOG plugin;
     public Utils chat;
@@ -190,19 +205,14 @@ public class SpleggOG extends JavaPlugin {
 
     private void configureMyWorlds() {
 
-        // Enable world-based inventory isolation.
+        // Required for any per-world inventory isolation to take effect at all
+        // (lobby vs. in-game vs. SMP). Splegg does not, however, manage the SMP
+        // ("Main") inventory group itself -- vanilla overworld/nether/end stay
+        // entirely under MyWorlds admin control. See PROTECTED_MAIN_WORLDS.
         myWorlds.setUseWorldInventories(true);
 
-        // Create inventory group for main-network worlds.
-        List<String> mainWorlds = getMainWorlds();
-        if (!mainWorlds.isEmpty()) {
-
-            createInventoryGroup(mainWorlds, "main");
-
-        }
-
         // Create inventory group for lobby worlds.
-        List<String> lobbyWorlds = getLobbyWorlds();
+        final List<String> lobbyWorlds = sanitizeForGroup(getLobbyWorlds(), "Worlds.Lobby");
         if (!lobbyWorlds.isEmpty()) {
 
             createInventoryGroup(lobbyWorlds, "lobby");
@@ -210,12 +220,50 @@ public class SpleggOG extends JavaPlugin {
         }
 
         // Create inventory group for in-game worlds.
-        List<String> inGameWorlds = getInGameWorlds();
+        final List<String> inGameWorlds = sanitizeForGroup(getInGameWorlds(), "Worlds.InGame");
         if (!inGameWorlds.isEmpty()) {
 
             createInventoryGroup(inGameWorlds, "in-game");
 
         }
+
+    }
+
+    // Strip protected SMP worlds and unloaded worlds from a configured list
+    // before handing it to MyWorlds. An admin pasting "world" into
+    // Worlds.Lobby would otherwise cause splegg to claim ownership of the
+    // overworld -- exactly what PROTECTED_MAIN_WORLDS exists to prevent.
+    private List<String> sanitizeForGroup(List<String> worlds, String configPath) {
+
+        final List<String> filtered = new ArrayList<>();
+        for (String name : worlds) {
+
+            if (name == null || name.isBlank()) {
+
+                continue;
+
+            }
+
+            if (isProtectedMainWorld(name)) {
+
+                this.getLogger().warning("Refusing to add protected SMP world '" + name + "' from " + configPath
+                        + " to a Splegg inventory group. Remove it from config.yml.");
+                continue;
+
+            }
+
+            if (Bukkit.getWorld(name) == null) {
+
+                this.getLogger().warning("Configured Splegg world '" + name + "' from " + configPath
+                        + " is not loaded. Load it via MyWorlds (/mw load " + name + ") before starting matches.");
+
+            }
+
+            filtered.add(name);
+
+        }
+
+        return filtered;
 
     }
 
@@ -232,9 +280,13 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
+    // SMP/main-network worlds that splegg must never touch. Exposed for
+    // teleport-back helpers (e.g. returning a player to overworld spawn after
+    // leaving a match); not derived from config so a typo in config.yml cannot
+    // unprotect them.
     public List<String> getMainWorlds() {
 
-        return this.getConfig().getStringList("Worlds.Main");
+        return new ArrayList<>(PROTECTED_MAIN_WORLDS);
 
     }
 
@@ -252,27 +304,70 @@ public class SpleggOG extends JavaPlugin {
 
     public List<String> getEnabledSpleggWorlds() {
 
-        List<String> all = new ArrayList<>(getLobbyWorlds());
-        all.addAll(getInGameWorlds());
+        final List<String> all = new ArrayList<>();
+        for (String name : getLobbyWorlds()) {
+
+            if (!isProtectedMainWorld(name)) {
+
+                all.add(name);
+
+            }
+
+        }
+
+        for (String name : getInGameWorlds()) {
+
+            if (!isProtectedMainWorld(name)) {
+
+                all.add(name);
+
+            }
+
+        }
+
         return all;
+
+    }
+
+    public static boolean isProtectedMainWorld(String worldName) {
+
+        if (worldName == null) {
+
+            return false;
+
+        }
+
+        return PROTECTED_MAIN_WORLDS.contains(worldName.toLowerCase(Locale.ROOT));
+
+    }
+
+    public static boolean isProtectedMainWorld(World world) {
+
+        return world != null && isProtectedMainWorld(world.getName());
 
     }
 
     public boolean isMainWorld(String worldName) {
 
-        return worldName != null && this.getMainWorlds().contains(worldName);
+        return isProtectedMainWorld(worldName);
 
     }
 
     public boolean isMainWorld(World world) {
 
-        return world != null && this.isMainWorld(world.getName());
+        return isProtectedMainWorld(world);
 
     }
 
     public boolean isSpleggWorld(String worldName) {
 
-        return worldName != null && this.getEnabledSpleggWorlds().contains(worldName);
+        if (worldName == null || isProtectedMainWorld(worldName)) {
+
+            return false;
+
+        }
+
+        return getEnabledSpleggWorlds().contains(worldName);
 
     }
 
@@ -290,7 +385,13 @@ public class SpleggOG extends JavaPlugin {
 
     public boolean isSpleggLobbyWorld(String worldName) {
 
-        return worldName != null && this.getLobbyWorlds().contains(worldName);
+        if (worldName == null || isProtectedMainWorld(worldName)) {
+
+            return false;
+
+        }
+
+        return getLobbyWorlds().contains(worldName);
 
     }
 
@@ -302,7 +403,13 @@ public class SpleggOG extends JavaPlugin {
 
     public boolean isSpleggInGameWorld(String worldName) {
 
-        return worldName != null && this.getInGameWorlds().contains(worldName);
+        if (worldName == null || isProtectedMainWorld(worldName)) {
+
+            return false;
+
+        }
+
+        return getInGameWorlds().contains(worldName);
 
     }
 

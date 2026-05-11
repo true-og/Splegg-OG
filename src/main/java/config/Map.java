@@ -103,7 +103,7 @@ public class Map {
         for (int i = 1; i <= this.spawncount; i++) {
 
             final String spawnWorld = this.config.getString("Spawns." + i + ".world");
-            if (spawnWorld == null || Bukkit.getWorld(spawnWorld) == null) {
+            if (!isWorldEligible(spawnWorld, "spawn " + i)) {
 
                 return false;
 
@@ -115,8 +115,8 @@ public class Map {
 
             final String floorOneWorld = this.config.getString("Floors." + i + ".p1.world");
             final String floorTwoWorld = this.config.getString("Floors." + i + ".p2.world");
-            if (floorOneWorld == null || floorTwoWorld == null || Bukkit.getWorld(floorOneWorld) == null
-                    || Bukkit.getWorld(floorTwoWorld) == null || !floorOneWorld.equals(floorTwoWorld))
+            if (!isWorldEligible(floorOneWorld, "floor " + i + " p1")
+                    || !isWorldEligible(floorTwoWorld, "floor " + i + " p2") || !floorOneWorld.equals(floorTwoWorld))
             {
 
                 return false;
@@ -128,7 +128,7 @@ public class Map {
         if (this.lobbySet()) {
 
             final String lobbyWorld = this.config.getString("Spawns.lobby.world");
-            if (lobbyWorld == null || Bukkit.getWorld(lobbyWorld) == null) {
+            if (!isWorldEligible(lobbyWorld, "match lobby")) {
 
                 return false;
 
@@ -137,6 +137,31 @@ public class Map {
         }
 
         return true;
+
+    }
+
+    // A configured world is eligible for splegg use only when it (1) is loaded
+    // by the server, and (2) is NOT in the SMP-protected list. Log loudly when
+    // an admin has somehow saved a protected world into a map config -- that is
+    // the bug the rest of the safety net is designed to prevent ever happening.
+    private boolean isWorldEligible(String worldName, String label) {
+
+        if (worldName == null) {
+
+            return false;
+
+        }
+
+        if (SpleggOG.isProtectedMainWorld(worldName)) {
+
+            SpleggOG.getPlugin().getLogger()
+                    .warning("Map '" + this.name + "' has " + label + " configured in protected SMP world '" + worldName
+                            + "'. Map will stay DISABLED. Reconfigure it inside a Splegg lobby or in-game world.");
+            return false;
+
+        }
+
+        return Bukkit.getWorld(worldName) != null;
 
     }
 

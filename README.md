@@ -6,9 +6,28 @@
 
 Dependencies: WorldEdit, DiamondBank-OG, Essentials-OG, and MyWorlds.
 
-**To Set Up:**:
+**Protected vanilla worlds:** Splegg will *never* read, write, or configure the vanilla overworld dimensions (`world`, `world_nether`, `world_the_end`). This guard is hard-coded -- listing those names under `Worlds.Lobby` or `Worlds.InGame` in `config.yml` is rejected at startup, and `/splegg create`, `/splegg setspawn`, `/splegg setlobby`, and `/splegg addfloor` all refuse to run while you are standing in one of them. Run splegg only inside dedicated worlds that you create yourself.
 
-`/splegg create my-map` First, create a Splegg map with a name of your choosing.
+**World Setup (do this first):**
+
+Splegg requires at least one dedicated *lobby* world (where queued players wait before a match) and one dedicated *in-game* world (where matches play out). Both must exist as real MyWorlds worlds before any map can be created.
+
+1. Install [MyWorlds](https://www.spigotmc.org/resources/my-worlds.39252/) and start the server once so its config is generated.
+2. Create the worlds with MyWorlds. The defaults assume `splegg_lobby` and `splegg_ingame`:
+
+    `/mw create splegg_lobby void` -- creates a void-generator lobby world.
+
+    `/mw create splegg_ingame void` -- creates a void-generator world for matches. Build your map terrain here (or paste it in with WorldEdit).
+
+    `/mw load splegg_lobby` / `/mw load splegg_ingame` if either is not auto-loaded.
+
+3. Open `plugins/Splegg-OG/config.yml` and confirm the two world names appear under `Worlds.Lobby` and `Worlds.InGame`. Add additional worlds to either list if you want more than one of each. Vanilla names (`world`, `world_nether`, `world_the_end`) are silently rejected -- do not put them here.
+4. Reload the server (or `/reload confirm`). The startup log prints a `Created MyWorlds inventory group for ...` line for each list; inventories are then isolated so that match items cannot leak back to the SMP overworld.
+5. Teleport into your in-game world with `/mw tp splegg_ingame` (or `/mvtp` if you also use Multiverse aliases). All `/splegg` setup commands must be issued from inside one of the configured Splegg worlds.
+
+**Map Setup:**
+
+`/splegg create my-map` First, create a Splegg map with a name of your choosing. You must be standing inside a configured Splegg lobby or in-game world for this to succeed.
 
 `/splegg setspawn my-map` The amount of spawn points you set is the amount of players that will be able to join the map.
 
