@@ -31,6 +31,7 @@ import events.SpleggEvents;
 import managers.Game;
 import managers.GameManager;
 import managers.GameUtilities;
+import managers.GameWorldManager;
 import managers.Status;
 import net.trueog.diamondbankog.api.DiamondBankAPIJava;
 import utils.UtilPlayer;
@@ -63,6 +64,7 @@ public class SpleggOG extends JavaPlugin {
     private DiamondBankAPIJava diamondBankAPI;
     private static Essentials essentials;
     private static MyWorlds myWorlds;
+    private GameWorldManager gameWorldManager;
 
     // TODO: If a shovel in the Splegg shop is too expensive, close the inventory
     // and tell the user about it.
@@ -124,6 +126,8 @@ public class SpleggOG extends JavaPlugin {
             this.maps = new MapUtilities();
             this.games = new GameUtilities();
             this.game = new GameManager();
+            this.gameWorldManager = new GameWorldManager(this);
+            this.gameWorldManager.purgeStaleCopies();
             this.pm = new Utils();
             this.utils = new Utils();
             this.config = new Utils();
@@ -168,15 +172,14 @@ public class SpleggOG extends JavaPlugin {
         int gameCounter = 0;
         if (this.games != null) {
 
-            for (Game game : this.games.GAMES.values()) {
+            for (Game game : new ArrayList<>(this.games.GAMES.values())) {
 
-                if (game.getStatus() == Status.INGAME) {
-
-                    gameCounter++;
-
-                    this.game.stopGame(game, 1);
-
-                }
+                if (game.getStatus() == Status.DISABLED)
+                    continue;
+                if (game.getPlayers().isEmpty() && game.getStatus() != Status.INGAME)
+                    continue;
+                gameCounter++;
+                this.game.stopGame(game, 1);
 
             }
 
@@ -367,7 +370,18 @@ public class SpleggOG extends JavaPlugin {
 
         }
 
-        return getEnabledSpleggWorlds().contains(worldName);
+        if (getEnabledSpleggWorlds().contains(worldName))
+            return true;
+
+        // Per-game world copies are ephemeral and not in config; ask the live
+        // game registry. Guard against early-boot calls before games exists.
+        return this.games != null && this.games.isActiveGameWorld(worldName);
+
+    }
+
+    public GameWorldManager getGameWorldManager() {
+
+        return this.gameWorldManager;
 
     }
 

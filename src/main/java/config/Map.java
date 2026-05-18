@@ -11,7 +11,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import main.SpleggOG;
 import managers.Game;
-import managers.Status;
 
 public class Map {
 
@@ -67,25 +66,14 @@ public class Map {
     public void usableDecider(Map map) {
 
         final boolean valid = this.spawncount >= 2 && this.floorcount > 0 && hasValidConfiguredWorlds();
-        final Game game = SpleggOG.getPlugin().games.getGame(this.getName());
         if (valid) {
 
             SpleggOG.getPlugin().getLogger().info("Floor and spawn point(s) detected. The map is ready to go!");
             this.usable = true;
-            if (game != null) {
-
-                game.setStatus(Status.LOBBY);
-
-            }
 
         } else {
 
             this.usable = false;
-            if (game != null) {
-
-                game.setStatus(Status.DISABLED);
-
-            }
 
         }
 
@@ -286,13 +274,25 @@ public class Map {
 
     public void addSpawn(Location l, Game game) {
 
+        addSpawn(l);
+
+    }
+
+    public void addSpawn(Location l) {
+
         this.spawncount++;
         this.savenumbers();
-        this.setSpawn(game.getMap(), this.spawncount, l);
+        this.setSpawn(this, this.spawncount, l);
 
     }
 
     public void addFloor(Location p1, Location p2, Game game) {
+
+        addFloor(p1, p2);
+
+    }
+
+    public void addFloor(Location p1, Location p2) {
 
         this.floorcount++;
         this.savenumbers();
@@ -308,7 +308,7 @@ public class Map {
 
         this.save();
 
-        usableDecider(game.getMap());
+        usableDecider(this);
 
     }
 
@@ -418,6 +418,70 @@ public class Map {
         World world = Bukkit.getWorld(config.getString("Spawns.lobby.world"));
 
         return new Location(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, yaw, pitch);
+
+    }
+
+    // Rebase helpers: return template-configured coordinates anchored to the
+    // supplied per-game world. Used by Game/GameManager so map locations point
+    // at the live per-game copy, not the template world.
+
+    public Location getSpawnIn(World world, int id) {
+
+        if (world == null)
+            return getSpawn(id);
+        int x = config.getInt("Spawns." + id + ".x");
+        int y = config.getInt("Spawns." + id + ".y");
+        int z = config.getInt("Spawns." + id + ".z");
+        float yaw = (float) config.getInt("Spawns." + id + ".yaw");
+        float pitch = (float) config.getInt("Spawns." + id + ".pitch");
+        return new Location(world, x + 0.5D, y + 0.5D, z + 0.5D, yaw, pitch);
+
+    }
+
+    public Location getFloorIn(World world, int id, String pos) {
+
+        if (world == null)
+            return getFloor(id, pos);
+        int x = config.getInt("Floors." + id + ".p" + pos + ".x");
+        int y = config.getInt("Floors." + id + ".p" + pos + ".y");
+        int z = config.getInt("Floors." + id + ".p" + pos + ".z");
+        return new Location(world, x, y, z);
+
+    }
+
+    public Location getLobbyIn(World world) {
+
+        if (world == null)
+            return getLobby();
+        if (!lobbySet())
+            return null;
+        int x = config.getInt("Spawns.lobby.x");
+        int y = config.getInt("Spawns.lobby.y");
+        int z = config.getInt("Spawns.lobby.z");
+        float yaw = (float) config.getInt("Spawns.lobby.yaw");
+        float pitch = (float) config.getInt("Spawns.lobby.pitch");
+        return new Location(world, x + 0.5D, y + 0.5D, z + 0.5D, yaw, pitch);
+
+    }
+
+    public Location getSpecIn(World world) {
+
+        if (world == null)
+            return getSpawnSpec();
+        int x = config.getInt("Spec.x");
+        int y = config.getInt("Spec.y");
+        int z = config.getInt("Spec.z");
+        float yaw = (float) config.getInt("Spec.yaw");
+        float pitch = (float) config.getInt("Spec.pitch");
+        return new Location(world, x + 0.5D, y + 0.5D, z + 0.5D, yaw, pitch);
+
+    }
+
+    @SuppressWarnings("unused")
+    private static Game gameTypeReference() {
+
+        // Anchors the Game import for addSpawn(Game)/addFloor(Game) callers.
+        return null;
 
     }
 

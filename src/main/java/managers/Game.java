@@ -2,23 +2,21 @@ package managers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.block.Block;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
 
 import config.Map;
 import events.Listeners;
@@ -35,18 +33,17 @@ import utils.Utils;
 
 public class Game {
 
+    private static final AtomicInteger GAME_ID_SEQUENCE = new AtomicInteger(1);
+
     SpleggOG splegg;
     String name;
+    String gameId;
     Map map;
     Status status;
     public HashMap<UUID, SpleggPlayer> players;
-    HashSet<Location> floor;
-    ArrayList<Rollback> data;
+    private World gameWorld;
     private int lobbycount;
     int time;
-    int y1;
-    int y2;
-    int small;
     int counter;
     int timer;
     boolean starting;
@@ -62,15 +59,11 @@ public class Game {
         this.map = map;
         this.diamondBankAPI = splegg.getDiamondBankAPI();
         this.name = map.getName();
+        this.gameId = String.valueOf(GAME_ID_SEQUENCE.getAndIncrement());
         this.status = Status.LOBBY;
         this.players = new HashMap<>();
-        this.floor = new HashSet<>();
-        this.data = new ArrayList<>();
         this.time = 601;
         this.lobbycount = 31;
-        this.y1 = -64;
-        this.y2 = -64;
-        this.small = -64;
 
         this.setSign(new LobbySign(map, splegg));
 
@@ -86,6 +79,24 @@ public class Game {
         }).runTaskLater(splegg, 10L);
 
         this.setStarting(false);
+
+    }
+
+    public String getGameId() {
+
+        return this.gameId;
+
+    }
+
+    public World getGameWorld() {
+
+        return this.gameWorld;
+
+    }
+
+    public void setGameWorld(World world) {
+
+        this.gameWorld = world;
 
     }
 
@@ -144,18 +155,6 @@ public class Game {
 
     }
 
-    public HashSet<Location> getFloor() {
-
-        return this.floor;
-
-    }
-
-    public ArrayList<Rollback> getDatas() {
-
-        return this.data;
-
-    }
-
     public HashMap<UUID, SpleggPlayer> getPlayers() {
 
         return this.players;
@@ -209,7 +208,18 @@ public class Game {
 
     public int getLowestPossible() {
 
-        return this.small;
+        // The lowest Y the floor extends to. Computed once from the map config.
+        // No mutable state needed -- the per-game world is reset by being
+        // deleted between games.
+        int small = Integer.MAX_VALUE;
+        for (int i = 1; i <= map.getFloors(); i++) {
+
+            small = Math.min(small, Math.min(config.getInt("Floors." + i + ".p1.y", small),
+                    config.getInt("Floors." + i + ".p2.y", small)));
+
+        }
+
+        return small == Integer.MAX_VALUE ? -64 : small;
 
     }
 
@@ -226,7 +236,9 @@ public class Game {
 
             Utils.spleggOGMessage(player, config.getString("Messages.AlreadyInGame"));
 
-        } else if (splegg.isMainWorld(this.map.getWorldName()) || !splegg.isSpleggWorld(this.map.getWorldName())) {
+        } else if (this.gameWorld == null || splegg.isMainWorld(this.gameWorld)
+                || !splegg.isSpleggWorld(this.gameWorld))
+        {
 
             Utils.spleggOGMessage(player, config.getString("Messages.NotInSpleggWorld"));
 
@@ -248,7 +260,7 @@ public class Game {
                 playerWhoIsJoining.getStore().save();
                 Listeners.launchEggs.add(player.getUniqueId());
                 this.players.put(player.getUniqueId(), sp);
-                playerWhoIsJoining.setGame(this.splegg.games.getGame(this.name));
+                playerWhoIsJoining.setGame(this);
                 teleportToQueueLobby(player);
 
                 preparePlayerForLobby(player);
@@ -284,7 +296,7 @@ public class Game {
                 Listeners.launchEggs.add(player.getUniqueId());
 
                 players.put(player.getUniqueId(), sp);
-                playerWhoIsJoining.setGame(splegg.games.getGame(name));
+                playerWhoIsJoining.setGame(this);
                 teleportToQueueLobby(player);
 
                 preparePlayerForLobby(player);
@@ -347,7 +359,7 @@ public class Game {
 
         if (this.map.lobbySet()) {
 
-            final Location mapLobby = this.map.getLobby();
+            final Location mapLobby = this.map.getLobbyIn(this.gameWorld);
             if (mapLobby != null && mapLobby.getWorld() != null) {
 
                 return mapLobby;
@@ -365,7 +377,7 @@ public class Game {
 
         if (this.map.getSpawnCount() > 0) {
 
-            final Location firstSpawn = this.map.getSpawn(1);
+            final Location firstSpawn = this.map.getSpawnIn(this.gameWorld, 1);
             if (firstSpawn != null && firstSpawn.getWorld() != null) {
 
                 return firstSpawn;
@@ -607,80 +619,61 @@ public class Game {
 
     }
 
+    /**
+     * Pre-game world-state setup. No-op now that each game owns a fresh world copy
+     * from {@link GameWorldManager} -- the world starts in template state and is
+     * deleted when the game ends, so block-level rollback is not needed.
+     */
     public boolean loadFloors() {
 
-        this.floor.clear();
-        this.data.clear();
-
-        if (this.map.getFloors() <= 0) {
-
-            return false;
-
-        } else {
-
-            for (int i = 1; i <= this.map.getFloors(); ++i) {
-
-                final Location l1 = this.map.getFloor(i, "1");
-                final Location l2 = this.map.getFloor(i, "2");
-
-                final CuboidRegion sel = new CuboidRegion(
-                        BlockVector3.at(l1.getBlockX(), l1.getBlockY(), l1.getBlockZ()),
-                        BlockVector3.at(l2.getBlockX(), l2.getBlockY(), l2.getBlockZ()));
-
-                final BlockVector3 min = sel.getMinimumPoint();
-                final BlockVector3 max = sel.getMaximumPoint();
-
-                final int minX = min.x();
-                final int minY = min.y();
-                this.y1 = minY;
-                final int minZ = min.z();
-                final int maxX = max.x();
-                final int maxY = max.y();
-                this.y2 = maxY;
-                final int maxZ = max.z();
-                this.small = Math.min(this.y1, this.y2);
-
-                for (int x = minX; x <= maxX; ++x) {
-
-                    for (int y = minY; y <= maxY; ++y) {
-
-                        for (int z = minZ; z <= maxZ; ++z) {
-
-                            final Location l = new Location(l1.getWorld(), (double) x, (double) y, (double) z);
-                            this.floor.add(l);
-
-                            final Block block = l.getWorld().getBlockAt(x, y, z);
-                            this.data.add(new Rollback(l.getWorld().getName(), block.getType(), block.getBlockData(), x,
-                                    y, z));
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-            return true;
-
-        }
+        return this.map.getFloors() > 0;
 
     }
 
-    public void resetArena() {
+    /**
+     * Returns true when the supplied {@link Location} lies inside any of this
+     * game's floor cuboids (per the map config), rebased onto the per-game world
+     * copy. Used by the egg-impact handler to decide if an egg should vaporize a
+     * block.
+     */
+    public boolean isInsideFloor(Location target) {
 
-        final Iterator<?> var2 = this.data.iterator();
-        while (var2.hasNext()) {
+        if (target == null)
+            return false;
+        if (this.gameWorld == null)
+            return false;
+        if (target.getWorld() == null || !this.gameWorld.equals(target.getWorld()))
+            return false;
+        int tx = target.getBlockX();
+        int ty = target.getBlockY();
+        int tz = target.getBlockZ();
+        for (int i = 1; i <= map.getFloors(); i++) {
 
-            final Rollback d = (Rollback) var2.next();
-            final Location l = new Location(Bukkit.getWorld(d.getWorld()), (double) d.getX(), (double) d.getY(),
-                    (double) d.getZ());
-
-            l.getBlock().setType(d.getPrevid());
-            l.getBlock().setBlockData(d.getPrevdata());
-            l.getBlock().getState().update();
+            int p1x = config.getInt("Floors." + i + ".p1.x");
+            int p1y = config.getInt("Floors." + i + ".p1.y");
+            int p1z = config.getInt("Floors." + i + ".p1.z");
+            int p2x = config.getInt("Floors." + i + ".p2.x");
+            int p2y = config.getInt("Floors." + i + ".p2.y");
+            int p2z = config.getInt("Floors." + i + ".p2.z");
+            int minX = Math.min(p1x, p2x), maxX = Math.max(p1x, p2x);
+            int minY = Math.min(p1y, p2y), maxY = Math.max(p1y, p2y);
+            int minZ = Math.min(p1z, p2z), maxZ = Math.max(p1z, p2z);
+            if (tx >= minX && tx <= maxX && ty >= minY && ty <= maxY && tz >= minZ && tz <= maxZ)
+                return true;
 
         }
+
+        return false;
+
+    }
+
+    /**
+     * Post-game world-state reset. World is deleted by {@link GameManager#stopGame}
+     * via {@link GameWorldManager#cleanupWorld}, so no block-level reset runs.
+     */
+    public void resetArena() {
+
+        // intentional: world deletion handles state reset
 
     }
 

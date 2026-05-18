@@ -9,8 +9,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import main.SpleggOG;
-import managers.Game;
-import managers.Status;
 
 public class MapConfig {
 
@@ -53,15 +51,11 @@ public class MapConfig {
             String maps = (String) enabledMapIterator.next();
             SpleggOG.getPlugin().maps.addMap(maps);
 
+            // No per-map Game is created at boot. Games are now spawned on
+            // demand when a player joins via sign/command, and each owns its
+            // own ephemeral world copy via GameWorldManager.
             Map map = SpleggOG.getPlugin().maps.getMap(maps);
-            Game game = new Game(SpleggOG.getPlugin(), map);
-            SpleggOG.getPlugin().games.addGame(map.getName(), game);
-
-            if (!map.isUsable(map)) {
-
-                game.setStatus(Status.DISABLED);
-
-            }
+            map.isUsable(map); // populates the usable flag for status displays
 
         }
 

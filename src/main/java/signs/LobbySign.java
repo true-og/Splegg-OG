@@ -3,6 +3,7 @@ package signs;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -16,6 +17,12 @@ import managers.Status;
 import net.kyori.adventure.text.TextComponent;
 import utils.Utils;
 
+/**
+ * Renders the join-sign for a given map. With multi-game support, signs no
+ * longer mirror a single {@link Game}'s status -- they aggregate across every
+ * live game for the bound map. Idle (zero games) state advertises "click to
+ * join" so a fresh game spawns on demand.
+ */
 public class LobbySign {
 
     SpleggOG splegg;
@@ -97,58 +104,20 @@ public class LobbySign {
             }
 
             Sign s = (Sign) location.getBlock().getState();
-            String[] sign;
+
+            String[] sign = renderLines(map);
+
             if (force) {
 
-                String[] array = new String[] { splegg.getConfig().getString("Sings.Restarting.1"),
+                String[] flashing = new String[] { splegg.getConfig().getString("Sings.Restarting.1"),
                         splegg.getConfig().getString("Sings.Restarting.2"),
                         splegg.getConfig().getString("Sings.Restarting.3").replaceAll("%map%", map.getName()),
                         splegg.getConfig().getString("Sings.Restarting.4") };
-                this.setSign(array, s);
-                sign = new String[4];
-                Game game = this.splegg.games.getGame(map.getName());
-                if (game == null) {
-
-                    sign[0] = "";
-                    sign[1] = "&cPlease remove";
-                    sign[2] = "&4this sign";
-                    sign[3] = "";
-
-                } else {
-
-                    sign[0] = splegg.getConfig().getString("Sings.Format.1")
-                            .replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName())
-                            .replaceAll("%count%/%maxcount%", this.getPlayers(game));
-                    sign[1] = splegg.getConfig().getString("Sings.Format.2")
-                            .replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName())
-                            .replaceAll("%count%/%maxcount%", this.getPlayers(game));
-                    sign[2] = splegg.getConfig().getString("Sings.Format.3").replaceAll("%map%", map.getName())
-                            .replaceAll("%status%", this.getFancyStatus(game))
-                            .replaceAll("%count%/%maxcount%", this.getPlayers(game));
-                    sign[3] = splegg.getConfig().getString("Sings.Format.4")
-                            .replaceAll("%count%/%maxcount%", this.getPlayers(game))
-                            .replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName());
-
-                }
-
+                this.setSign(flashing, s);
                 Bukkit.getScheduler().scheduleSyncDelayedTask(this.splegg, new SignDelay(sign, s), 40L);
 
             } else {
 
-                Game game = this.splegg.games.getGame(map.getName());
-                sign = new String[] {
-                        splegg.getConfig().getString("Sings.Format.1").replaceAll("%status%", this.getFancyStatus(game))
-                                .replaceAll("%map%", map.getName())
-                                .replaceAll("%count%/%maxcount%", this.getPlayers(game)),
-                        splegg.getConfig().getString("Sings.Format.2").replaceAll("%status%", this.getFancyStatus(game))
-                                .replaceAll("%map%", map.getName())
-                                .replaceAll("%count%/%maxcount%", this.getPlayers(game)),
-                        splegg.getConfig().getString("Sings.Format.3").replaceAll("%map%", map.getName())
-                                .replaceAll("%status%", this.getFancyStatus(game))
-                                .replaceAll("%count%/%maxcount%", this.getPlayers(game)),
-                        splegg.getConfig().getString("Sings.Format.4")
-                                .replaceAll("%count%/%maxcount%", this.getPlayers(game))
-                                .replaceAll("%status%", this.getFancyStatus(game)).replaceAll("%map%", map.getName()) };
                 this.setSign(sign, s);
 
             }
@@ -157,24 +126,81 @@ public class LobbySign {
 
     }
 
-    private String getPlayers(Game game) {
+    private String[] renderLines(Map map) {
 
-        String players = "";
-        if (game.getStatus() == Status.DISABLED) {
+        String status = getFancyStatus(map);
+        String players = getPlayers(map);
 
-            players = "";
+        return new String[] {
+                splegg.getConfig().getString("Sings.Format.1").replaceAll("%status%", status)
+                        .replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", players),
+                splegg.getConfig().getString("Sings.Format.2").replaceAll("%status%", status)
+                        .replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", players),
+                splegg.getConfig().getString("Sings.Format.3").replaceAll("%map%", map.getName())
+                        .replaceAll("%status%", status).replaceAll("%count%/%maxcount%", players),
+                splegg.getConfig().getString("Sings.Format.4").replaceAll("%count%/%maxcount%", players)
+                        .replaceAll("%status%", status).replaceAll("%map%", map.getName()) };
 
-        } else if (game.getMap().getSpawnCount() <= 1) {
+    }
 
-            players = "&5Players: &d" + game.getPlayers().size();
+    private String getPlayers(Map map) {
 
-        } else {
+        if (!map.isUsable(map))
+            return "";
 
-            players = "&5" + game.getPlayers().size() + "&8/&d" + game.getMap().getSpawnCount();
+        List<Game> games = splegg.games.gamesForMap(map.getName());
+        int totalPlayers = 0;
+        for (Game g : games)
+            totalPlayers += g.getPlayers().size();
+
+        int slotsPerGame = map.getSpawnCount();
+        if (slotsPerGame <= 1)
+            return "&5Players: &d" + totalPlayers;
+        return "&5" + totalPlayers + "&8/&d" + slotsPerGame;
+
+    }
+
+    private String getFancyStatus(Map map) {
+
+        if (!map.isUsable(map))
+            return splegg.getConfig().getString("Sings.Status.Disabled");
+
+        List<Game> games = splegg.games.gamesForMap(map.getName());
+
+        // Idle: no live game. Treat as "click to join" so new game spawns on
+        // demand. Falls back to the Join string from config.
+        if (games.isEmpty())
+            return splegg.getConfig().getString("Sings.Status.Join");
+
+        boolean anyJoinable = false;
+        boolean anyStarting = false;
+        boolean anyInGame = false;
+        for (Game g : games) {
+
+            Status st = g.getStatus();
+            if (st == Status.LOBBY) {
+
+                if (g.isStarting())
+                    anyStarting = true;
+                else if (g.getPlayers().size() < map.getSpawnCount())
+                    anyJoinable = true;
+
+            } else if (st == Status.INGAME) {
+
+                anyInGame = true;
+
+            }
 
         }
 
-        return players;
+        if (anyJoinable)
+            return splegg.getConfig().getString("Sings.Status.Join");
+        if (anyStarting)
+            return splegg.getConfig().getString("Sings.Status.Starting", "&e[Starting]");
+        if (anyInGame)
+            return splegg.getConfig().getString("Sings.Status.Started");
+
+        return splegg.getConfig().getString("Sings.Status.Join");
 
     }
 
@@ -188,40 +214,6 @@ public class LobbySign {
         }
 
         s.update();
-
-    }
-
-    private String getFancyStatus(Game game) {
-
-        String status = "";
-        final Status st = game.getStatus();
-        if (st == Status.LOBBY) {
-
-            if (game.isStarting()) {
-
-                status = splegg.getConfig().getString("Sings.Status.Starting", "&e[Starting]");
-
-            } else {
-
-                status = splegg.getConfig().getString("Sings.Status.Join");
-
-            }
-
-        } else if (st == Status.DISABLED) {
-
-            status = splegg.getConfig().getString("Sings.Status.Disabled");
-
-        } else if (st == Status.INGAME) {
-
-            status = splegg.getConfig().getString("Sings.Status.Started");
-
-        } else {
-
-            status = "&2" + st.toString().toLowerCase();
-
-        }
-
-        return status;
 
     }
 

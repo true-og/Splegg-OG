@@ -101,7 +101,7 @@ public class SpleggEvents implements Listener {
                     }
 
                     Game game = u.getGame();
-                    if (game.getFloor().contains(hitLocation)) {
+                    if (game.isInsideFloor(hitLocation)) {
 
                         // If the game is in-progress, do this.
                         if (game.getStatus() == Status.INGAME) {

@@ -55,7 +55,7 @@ public class GameManager {
 
             }
 
-            sp.getPlayer().teleport(map.getSpawn(c));
+            sp.getPlayer().teleport(map.getSpawnIn(game.getGameWorld(), c));
             c++;
             sp.getPlayer().setLevel(0);
             sp.getPlayer().setExp(0.0F);
@@ -72,15 +72,12 @@ public class GameManager {
 
     public void stopGame(Game game, int r) {
 
-        SpleggOG.getPlugin().getLogger().info("Commencing shutdown of: " + game.getMap().getName() + ".");
+        SpleggOG.getPlugin().getLogger()
+                .info("Commencing shutdown of game " + game.getGameId() + " on map " + game.getMap().getName() + ".");
 
         game.status = Status.ENDING;
         game.stopGameTimer();
         game.time = 601;
-        game.setStatus(Status.LOBBY);
-        game.resetArena();
-        game.data.clear();
-        game.floor.clear();
         game.setStarting(false);
 
         final Iterator<?> playersInGame = new ArrayList<>(game.players.values()).iterator();
@@ -92,15 +89,21 @@ public class GameManager {
 
         }
 
+        game.players.clear();
+
+        // Delete the per-game world copy and remove this game from the
+        // registry. New games for this map will be created on demand.
+        SpleggOG.getPlugin().getGameWorldManager().cleanupWorld(game);
+        SpleggOG.getPlugin().games.removeGame(game);
+
         if (!splegg.disabling) {
 
             game.getSign().update(game.map, true);
 
         }
 
-        game.players.clear();
-
-        SpleggOG.getPlugin().getLogger().info("Map " + game.map.getName() + " was reset.");
+        SpleggOG.getPlugin().getLogger()
+                .info("Game " + game.getGameId() + " on map '" + game.map.getName() + "' shut down.");
 
     }
 

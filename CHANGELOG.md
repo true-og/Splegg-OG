@@ -1,3 +1,19 @@
+**0.9.2:**
+
+- Players on the same map in different game instances no longer share an arena, scoreboard, or block state.
+
+- Games are now created on demand when a player joins a lobby, instead of being statically generated at startup.
+
+- Replaced block-level floor rollback with whole-world recycling.
+
+- Added join signs
+
+- Added `PlayerKickEvent` handling so kicked players are removed from their match after its conclusion.
+
+- Added `WorldUnloadEvent` handling so any game whose template or per-game world is unloaded out from under it is shut down cleanly.
+
+- Refused to copy, load, or purge any world whose name matches a protected main world.
+
 **0.9.1:**
 
 - Improve MyWorlds support

@@ -12,7 +12,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
@@ -329,15 +331,57 @@ public class Listeners implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent playerQuitEvent) {
 
-        final Player player = playerQuitEvent.getPlayer();
-        final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-        final Game game = u.getGame();
+        handlePlayerExit(playerQuitEvent.getPlayer());
 
-        if (game != null) {
+    }
 
-            game.leaveGame(u);
+    @EventHandler
+    public void onPlayerKick(PlayerKickEvent playerKickEvent) {
+
+        handlePlayerExit(playerKickEvent.getPlayer());
+
+    }
+
+    @EventHandler
+    public void onWorldUnload(WorldUnloadEvent worldUnloadEvent) {
+
+        final String worldName = worldUnloadEvent.getWorld().getName();
+        if (!SpleggOG.getPlugin().isSpleggWorld(worldName))
+            return;
+
+        final java.util.List<Game> affected = new java.util.ArrayList<>();
+        for (Game g : SpleggOG.getPlugin().games.GAMES.values()) {
+
+            if (g.getMap() == null)
+                continue;
+            // Skip games already shutting down -- our own cleanup is what
+            // triggered this unload.
+            if (g.getStatus() == managers.Status.ENDING)
+                continue;
+            final String mapWorld = g.getMap().getWorldName();
+            org.bukkit.World gameWorld = g.getGameWorld();
+            String gameWorldName = gameWorld == null ? null : gameWorld.getName();
+            if ((mapWorld != null && mapWorld.equals(worldName))
+                    || (gameWorldName != null && gameWorldName.equals(worldName)))
+                affected.add(g);
 
         }
+
+        for (Game g : affected)
+            SpleggOG.getPlugin().game.stopGame(g, g.getPlayers().size());
+
+    }
+
+    private void handlePlayerExit(Player player) {
+
+        if (player == null)
+            return;
+        final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+        if (u == null)
+            return;
+        final Game game = u.getGame();
+        if (game != null)
+            game.leaveGame(u);
 
     }
 

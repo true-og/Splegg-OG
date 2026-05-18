@@ -263,8 +263,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
                                     secondUserCommandArgumentIsText = args[2];
                                     if (secondUserCommandArgumentIsText.equalsIgnoreCase("next")) {
 
-                                        map.addSpawn(player.getLocation(),
-                                                SpleggOG.getPlugin().games.getGame(map.getName()));
+                                        map.addSpawn(player.getLocation());
                                         Utils.spleggOGMessage(player, "&aSpawn &6" + map.getSpawnCount()
                                                 + " &aset for map: &e" + map.getName() + "&a.");
 
@@ -303,8 +302,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
                                 } catch (ArrayIndexOutOfBoundsException error) {
 
-                                    map.addSpawn(player.getLocation(),
-                                            SpleggOG.getPlugin().games.getGame(map.getName()));
+                                    map.addSpawn(player.getLocation());
                                     Utils.spleggOGMessage(player, "&aThe spawn: &6" + map.getSpawnCount()
                                             + " &ahas been set for the map: &e" + map.getName() + "&a.");
 
@@ -535,8 +533,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
                                             new Location(player.getWorld(), sel.getMinimumPoint().x(),
                                                     sel.getMinimumPoint().y(), sel.getMinimumPoint().z()),
                                             new Location(player.getWorld(), sel.getMaximumPoint().x(),
-                                                    sel.getMaximumPoint().y(), sel.getMaximumPoint().z()),
-                                            SpleggOG.getPlugin().games.getGame(map.getName()));
+                                                    sel.getMaximumPoint().y(), sel.getMaximumPoint().z()));
 
                                     Utils.spleggOGMessage(player, "&aFloor &6" + map.getFloors() + " &aadded to map: &e"
                                             + map.getName() + "&a.");
@@ -568,12 +565,20 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
                                 firstUserCommandArgument = args[1];
                                 if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
 
-                                    game = SpleggOG.getPlugin().games.getGame(firstUserCommandArgument);
-                                    if (game != null && SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument)
-                                            .isUsable(game.getMap()))
-                                    {
+                                    Map targetMap = SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument);
+                                    if (targetMap.isUsable(targetMap)) {
 
-                                        game.joinGame(u);
+                                        game = SpleggOG.getPlugin().games.findOrCreateForMap(targetMap);
+                                        if (game != null) {
+
+                                            game.joinGame(u);
+
+                                        } else {
+
+                                            Utils.spleggOGMessage(player, "&cERROR: Failed to start a game for map &e"
+                                                    + firstUserCommandArgument + "&c. Check the server console.");
+
+                                        }
 
                                     } else {
 
@@ -712,31 +717,43 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
         Utils.spleggOGMessage(player, "&6Splegg maps:");
         for (Map map : SpleggOG.getPlugin().maps.getMaps()) {
 
-            final Game game = SpleggOG.getPlugin().games.getGame(map.getName());
+            final List<Game> games = SpleggOG.getPlugin().games.gamesForMap(map.getName());
             final String statusLabel;
-            final int playerCount;
-            if (game == null) {
+            int playerCount = 0;
+            for (Game g : games)
+                playerCount += g.getPlayers().size();
 
-                statusLabel = "&8UNKNOWN";
-                playerCount = 0;
+            if (!map.isUsable(map)) {
+
+                statusLabel = "&cDISABLED";
+
+            } else if (games.isEmpty()) {
+
+                statusLabel = "&aIDLE";
 
             } else {
 
-                switch (game.getStatus()) {
+                int inGame = 0, lobby = 0;
+                for (Game g : games) {
 
-                    case LOBBY -> statusLabel = game.isStarting() ? "&eSTARTING" : "&aLOBBY";
-                    case INGAME -> statusLabel = "&6INGAME";
-                    case DISABLED -> statusLabel = "&cDISABLED";
-                    default -> statusLabel = "&7" + game.getStatus();
+                    if (g.getStatus() == managers.Status.INGAME)
+                        inGame++;
+                    else if (g.getStatus() == managers.Status.LOBBY)
+                        lobby++;
 
                 }
 
-                playerCount = game.getPlayers().size();
+                if (inGame > 0 && lobby > 0)
+                    statusLabel = "&6" + games.size() + " ACTIVE";
+                else if (inGame > 0)
+                    statusLabel = "&6INGAME &7x" + inGame;
+                else
+                    statusLabel = "&aLOBBY &7x" + lobby;
 
             }
 
             Utils.spleggOGMessage(player, "&e" + map.getName() + " &7- " + statusLabel + " &7(&f" + playerCount
-                    + "&7/&f" + map.getSpawnCount() + "&7)");
+                    + "&7/&f" + (map.getSpawnCount() * Math.max(1, games.size())) + "&7)");
 
         }
 
@@ -745,17 +762,18 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
     private void sendMapInfo(Player player, String mapName) {
 
         final Map map = SpleggOG.getPlugin().maps.getMap(mapName);
-        final Game game = SpleggOG.getPlugin().games.getGame(mapName);
+        final List<Game> games = SpleggOG.getPlugin().games.gamesForMap(mapName);
 
         Utils.spleggOGMessage(player, "&6Map info: &e" + map.getName());
-        Utils.spleggOGMessage(player,
-                "&6World: &f" + (map.getWorldName() != null ? map.getWorldName() : "&cunset (set a spawn first)"));
+        Utils.spleggOGMessage(player, "&6Template world: &f"
+                + (map.getWorldName() != null ? map.getWorldName() : "&cunset (set a spawn first)"));
         Utils.spleggOGMessage(player, "&6Spawn points: &f" + map.getSpawnCount());
         Utils.spleggOGMessage(player, "&6Floor regions: &f" + map.getFloors());
         Utils.spleggOGMessage(player,
                 "&6Match lobby: " + (map.lobbySet() ? "&aset" : "&cunset (falls back to global lobby)"));
+        Utils.spleggOGMessage(player, "&6Active games: &f" + games.size());
 
-        final boolean playable = game != null && map.isUsable(map);
+        final boolean playable = map.isUsable(map);
         Utils.spleggOGMessage(player, "&6Playable: " + (playable ? "&ayes" : "&cno"));
 
         if (!playable) {
@@ -805,7 +823,14 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
         }
 
-        final Game game = SpleggOG.getPlugin().games.getGame(chosen.getName());
+        final Game game = SpleggOG.getPlugin().games.findOrCreateForMap(chosen);
+        if (game == null) {
+
+            Utils.spleggOGMessage(player, "&cERROR: Failed to start a game on &e" + chosen.getName() + "&c.");
+            return;
+
+        }
+
         Utils.spleggOGMessage(player, "&aJoining random map: &e" + chosen.getName() + "&a.");
         game.joinGame(u);
 

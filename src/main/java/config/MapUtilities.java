@@ -8,7 +8,6 @@ import java.util.Random;
 
 import main.SpleggOG;
 import managers.Game;
-import managers.Status;
 
 public class MapUtilities {
 
@@ -26,14 +25,9 @@ public class MapUtilities {
     public void deleteMap(String name) {
 
         Map m = this.getMap(name);
-        Game game = SpleggOG.getPlugin().games.getGame(name);
-        if (game.getStatus() == Status.INGAME) {
-
+        // Stop every active game for this map -- N concurrent games allowed.
+        for (Game game : new ArrayList<>(SpleggOG.getPlugin().games.gamesForMap(name)))
             SpleggOG.getPlugin().game.stopGame(game, 0);
-
-        }
-
-        SpleggOG.getPlugin().games.GAMES.remove(m.getName());
 
         this.MAPS.remove(name, m);
         this.c.removeMap(name);
@@ -64,31 +58,15 @@ public class MapUtilities {
     // Used by /splegg random and will back in-lobby map voting once that ships.
     public Map getRandomMap() {
 
+        // With on-demand games, any usable map is a valid candidate -- a new
+        // game can always be spun up when none are joinable.
         final ArrayList<Map> candidates = new ArrayList<>();
         final Iterator<Map> mapIterator = this.MAPS.values().iterator();
         while (mapIterator.hasNext()) {
 
             final Map map = mapIterator.next();
-            final Game game = SpleggOG.getPlugin().games.getGame(map.getName());
-            if (game == null) {
-
-                continue;
-
-            }
-
-            if (!map.isUsable(map)) {
-
-                continue;
-
-            }
-
-            if (game.getStatus() != Status.LOBBY) {
-
-                continue;
-
-            }
-
-            candidates.add(map);
+            if (map.isUsable(map))
+                candidates.add(map);
 
         }
 
