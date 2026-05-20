@@ -1,3 +1,15 @@
+**0.9.3:**
+
+- Added `/hub` so players can leave an active Splegg game or return to a protected main-world spawn.
+
+- Added TheHerobrine-OG-style in-lobby map voting with `/vote`, `/v`, clickable vote messages, vote reminders, configurable vote choices, and configurable voting cutoff.
+
+- Players who reconnect inside configured Splegg worlds or per-game world copies are now moved back to the overworld.
+
+- Updated the default lobby sign layout to show header, map, status, and player count.
+
+- Stopped forcing health and fall-distance resets during final game-leave cleanup.
+
 **0.9.2:**
 
 - Players on the same map in different game instances no longer share an arena, scoreboard, or block state.
@@ -6,7 +18,7 @@
 
 - Replaced block-level floor rollback with whole-world recycling.
 
-- Added join signs
+- Added join signs.
 
 - Added `PlayerKickEvent` handling so kicked players are removed from their match after its conclusion.
 

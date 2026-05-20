@@ -53,6 +53,9 @@ Options:
   Timer: 120
   AutoStartPlayers: 4
   GraceTime: 10
+  VotingMaps: 2
+  EndVotingAt: 10
+  VotingReminder: 30
 # Splegg only manages dedicated lobby and in-game worlds. The vanilla overworld
 # (world, world_nether, world_the_end) is hard-blacklisted in code and cannot
 # be added here -- splegg will refuse to put a map, inventory group, or any
@@ -66,9 +69,9 @@ Worlds:
     - splegg_ingame
 Sings:
   Format:
-    1: '&8[&2Splegg&r-&4OG&8]'
-    2: '%status%'
-    3: '%map%'
+    1: '&2Splegg&4-OG'
+    2: '%map%'
+    3: '%status%'
     4: '&5%count%/%maxcount%'
   Restarting:
     1: '###########################'

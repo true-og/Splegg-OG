@@ -1,8 +1,10 @@
 package managers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,11 +23,15 @@ import org.bukkit.scheduler.BukkitRunnable;
 import config.Map;
 import events.Listeners;
 import main.SpleggOG;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.trueog.diamondbankog.DiamondBankException.EconomyDisabledException;
 import net.trueog.diamondbankog.api.DiamondBankAPIJava;
 import net.trueog.utilitiesog.UtilitiesOG;
 import runnables.GameTime;
 import runnables.LobbyCountdown;
+import runnables.MapVotingRunnable;
 import signs.LobbySign;
 import utils.SpleggPlayer;
 import utils.UtilPlayer;
@@ -49,6 +55,11 @@ public class Game {
     boolean starting;
     LobbySign sign;
     DiamondBankAPIJava diamondBankAPI;
+    private LinkedHashMap<Integer, VotingMap> votingMaps;
+    private HashMap<UUID, Integer> playerVotes;
+    private boolean votingRunning;
+    private boolean votingClosed;
+    private int votingReminderTask;
 
     // Enable the conversion of text from config.yml to objects.
     public FileConfiguration config = SpleggOG.getPlugin().getConfig();
@@ -62,6 +73,11 @@ public class Game {
         this.gameId = String.valueOf(GAME_ID_SEQUENCE.getAndIncrement());
         this.status = Status.LOBBY;
         this.players = new HashMap<>();
+        this.votingMaps = new LinkedHashMap<>();
+        this.playerVotes = new HashMap<>();
+        this.votingRunning = false;
+        this.votingClosed = false;
+        this.votingReminderTask = -1;
         this.time = 601;
         this.lobbycount = 31;
 
@@ -197,12 +213,423 @@ public class Game {
     public void setMap(Map map) {
 
         this.map = map;
+        this.name = map != null ? map.getName() : null;
+        this.setSign(map != null ? new LobbySign(map, this.splegg) : null);
 
     }
 
     public Map getMap() {
 
         return this.map;
+
+    }
+
+    public java.util.Map<Integer, VotingMap> getVotingMaps() {
+
+        return Collections.unmodifiableMap(this.votingMaps);
+
+    }
+
+    public boolean isVotingRunning() {
+
+        return this.votingRunning;
+
+    }
+
+    public int getVotingReminderTaskId() {
+
+        return this.votingReminderTask;
+
+    }
+
+    public void clearVotingReminderTaskId() {
+
+        this.votingReminderTask = -1;
+
+    }
+
+    public int getVotingReminderSeconds() {
+
+        return Math.max(1, this.config.getInt("Options.VotingReminder", 30));
+
+    }
+
+    private int getVotingMapCount() {
+
+        return Math.max(1, this.config.getInt("Options.VotingMaps", 2));
+
+    }
+
+    private int getEndVotingAt() {
+
+        return Math.max(0, this.config.getInt("Options.EndVotingAt", 10));
+
+    }
+
+    private void ensureVotingReady() {
+
+        if (this.status != Status.LOBBY) {
+
+            return;
+
+        }
+
+        if (this.votingClosed) {
+
+            return;
+
+        }
+
+        if (this.votingMaps.isEmpty()) {
+
+            pickVotingMaps();
+
+        }
+
+        if (!this.votingMaps.isEmpty()) {
+
+            this.votingRunning = true;
+            startVotingReminder();
+
+        }
+
+    }
+
+    private void pickVotingMaps() {
+
+        this.votingMaps.clear();
+        this.playerVotes.clear();
+        this.votingClosed = false;
+
+        final List<Map> candidates = new ArrayList<>();
+        if (this.map != null && this.map.isUsable(this.map)) {
+
+            candidates.add(this.map);
+
+        }
+
+        final List<Map> remaining = new ArrayList<>();
+        for (Map candidate : this.splegg.maps.getMaps()) {
+
+            if (candidate == null || !candidate.isUsable(candidate)) {
+
+                continue;
+
+            }
+
+            if (this.map != null && candidate.getName().equals(this.map.getName())) {
+
+                continue;
+
+            }
+
+            remaining.add(candidate);
+
+        }
+
+        Collections.shuffle(remaining);
+        for (Map candidate : remaining) {
+
+            if (candidates.size() >= getVotingMapCount()) {
+
+                break;
+
+            }
+
+            candidates.add(candidate);
+
+        }
+
+        int id = 1;
+        for (Map candidate : candidates) {
+
+            this.votingMaps.put(id, new VotingMap(id, candidate));
+            id++;
+
+        }
+
+        this.votingRunning = !this.votingMaps.isEmpty();
+
+    }
+
+    private void startVotingReminder() {
+
+        if (this.votingReminderTask != -1) {
+
+            return;
+
+        }
+
+        this.votingReminderTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.splegg,
+                new MapVotingRunnable(this), 0L, 20L);
+
+    }
+
+    public void stopVoting() {
+
+        this.votingRunning = false;
+        if (this.votingReminderTask != -1) {
+
+            Bukkit.getScheduler().cancelTask(this.votingReminderTask);
+            this.votingReminderTask = -1;
+
+        }
+
+    }
+
+    public void resetVoting() {
+
+        stopVoting();
+        this.votingClosed = false;
+        this.votingMaps.clear();
+        this.playerVotes.clear();
+
+        if (this.players.isEmpty()) {
+
+            return;
+
+        }
+
+        ensureVotingReady();
+        for (SpleggPlayer spleggPlayer : this.players.values()) {
+
+            final Player player = spleggPlayer.getPlayer();
+            this.playerVotes.put(player.getUniqueId(), 0);
+            sendVotingMessage(player);
+
+        }
+
+    }
+
+    private void registerVotingPlayer(Player player) {
+
+        if (this.votingClosed) {
+
+            return;
+
+        }
+
+        ensureVotingReady();
+        if (this.votingMaps.isEmpty()) {
+
+            return;
+
+        }
+
+        this.playerVotes.put(player.getUniqueId(), 0);
+        sendVotingMessage(player);
+
+    }
+
+    private void removeVotingPlayer(Player player) {
+
+        final Integer previousVote = this.playerVotes.remove(player.getUniqueId());
+        if (previousVote != null && previousVote != 0) {
+
+            final VotingMap previousMap = this.votingMaps.get(previousVote);
+            if (previousMap != null) {
+
+                previousMap.decrementVotes();
+
+            }
+
+        }
+
+        if (this.players.isEmpty() && this.votingReminderTask != -1) {
+
+            Bukkit.getScheduler().cancelTask(this.votingReminderTask);
+            this.votingReminderTask = -1;
+
+        }
+
+    }
+
+    public void sendVotingMessage(Player player) {
+
+        final ArrayList<Player> toSend = new ArrayList<>();
+        if (player == null) {
+
+            for (SpleggPlayer spleggPlayer : this.players.values()) {
+
+                toSend.add(spleggPlayer.getPlayer());
+
+            }
+
+        } else {
+
+            toSend.add(player);
+
+        }
+
+        for (Player recipient : toSend) {
+
+            Utils.spleggOGMessage(recipient, "&6Vote for a map with /v #.");
+            Utils.spleggOGMessage(recipient, "&6Map choices up for voting:");
+            for (java.util.Map.Entry<Integer, VotingMap> entry : this.votingMaps.entrySet()) {
+
+                final int id = entry.getKey();
+                final VotingMap votingMap = entry.getValue();
+                final String mapName = votingMap.getMap().getName();
+                final TextComponent textComponent = Utils
+                        .legacySerializerAnyCase(Utils.prefix + "&6&l" + id + ". &6" + mapName + " (&b"
+                                + votingMap.getVotes() + "&6 votes)")
+                        .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                Utils.legacySerializerAnyCase("&6Click here to vote for &b" + mapName)))
+                        .clickEvent(ClickEvent.runCommand("/v " + id));
+                recipient.sendMessage(textComponent);
+
+            }
+
+            recipient.sendMessage(" ");
+
+        }
+
+    }
+
+    public void vote(Player player, int mapId) {
+
+        if (!this.votingMaps.containsKey(mapId)) {
+
+            Utils.spleggOGMessage(player, "&cInvalid map!");
+            sendVotingMessage(player);
+            return;
+
+        }
+
+        final UUID playerId = player.getUniqueId();
+        final int previousVote = this.playerVotes.getOrDefault(playerId, 0);
+        if (previousVote == mapId) {
+
+            Utils.spleggOGMessage(player, "&cYou have already voted for this map!");
+            return;
+
+        }
+
+        if (previousVote != 0) {
+
+            final VotingMap previousMap = this.votingMaps.get(previousVote);
+            if (previousMap != null) {
+
+                previousMap.decrementVotes();
+
+            }
+
+        }
+
+        this.playerVotes.put(playerId, mapId);
+        final VotingMap selectedMap = this.votingMaps.get(mapId);
+        selectedMap.incrementVotes();
+        Utils.spleggOGMessage(player, "&6Vote received. &b" + selectedMap.getMap().getName() + "&6 now has &b"
+                + selectedMap.getVotes() + "&6 votes.");
+
+    }
+
+    public boolean selectMapFromVote() {
+
+        if (!this.votingRunning || this.votingMaps.isEmpty()) {
+
+            return true;
+
+        }
+
+        VotingMap highest = null;
+        int highestVotes = -1;
+        for (VotingMap candidate : this.votingMaps.values()) {
+
+            if (candidate.getVotes() > highestVotes) {
+
+                highest = candidate;
+                highestVotes = candidate.getVotes();
+
+            }
+
+        }
+
+        if (highest == null) {
+
+            this.votingRunning = false;
+            return false;
+
+        }
+
+        this.splegg.chat.bc("&6Voting has ended! The map &b" + highest.getMap().getName() + "&6 has won!", this);
+        this.votingRunning = false;
+        this.votingClosed = true;
+        if (this.votingReminderTask != -1) {
+
+            Bukkit.getScheduler().cancelTask(this.votingReminderTask);
+            this.votingReminderTask = -1;
+
+        }
+
+        return switchToVotedMap(highest.getMap());
+
+    }
+
+    public void selectMapFromVoteIfDue(int secondsRemaining) {
+
+        if (this.votingRunning && secondsRemaining <= getEndVotingAt()) {
+
+            selectMapFromVote();
+
+        }
+
+    }
+
+    private boolean switchToVotedMap(Map selectedMap) {
+
+        if (selectedMap == null || !selectedMap.isUsable(selectedMap)) {
+
+            return false;
+
+        }
+
+        if (this.map != null && this.map.getName().equals(selectedMap.getName())) {
+
+            LobbyScoreboard.refreshGame(this);
+            return true;
+
+        }
+
+        final Map previousMap = this.map;
+        final World previousWorld = this.gameWorld;
+        setMap(selectedMap);
+
+        final World selectedWorld = this.splegg.getGameWorldManager().prepareWorld(this);
+        if (selectedWorld == null) {
+
+            setMap(previousMap);
+            this.gameWorld = previousWorld;
+            this.splegg.chat.bc("&cVoting winner could not be loaded. Staying on &e" + previousMap.getName() + "&c.",
+                    this);
+            return false;
+
+        }
+
+        this.gameWorld = selectedWorld;
+        for (SpleggPlayer spleggPlayer : this.players.values()) {
+
+            final Player player = spleggPlayer.getPlayer();
+            teleportToQueueLobby(player);
+            preparePlayerForLobby(player);
+
+        }
+
+        if (previousWorld != null && !previousWorld.getName().equals(selectedWorld.getName())) {
+
+            this.splegg.getGameWorldManager().cleanupWorld(previousWorld);
+
+        }
+
+        if (previousMap != null) {
+
+            new LobbySign(previousMap, this.splegg).update(previousMap, false);
+
+        }
+
+        this.getSign().update(this.map, false);
+        LobbyScoreboard.refreshGame(this);
+        return true;
 
     }
 
@@ -264,6 +691,7 @@ public class Game {
                 teleportToQueueLobby(player);
 
                 preparePlayerForLobby(player);
+                registerVotingPlayer(player);
                 Listeners.manager.add(player.getUniqueId());
                 Listeners.shopmanager.add(player.getUniqueId());
 
@@ -300,6 +728,7 @@ public class Game {
                 teleportToQueueLobby(player);
 
                 preparePlayerForLobby(player);
+                registerVotingPlayer(player);
 
                 Listeners.manager.add(player.getUniqueId());
                 Listeners.shopmanager.add(player.getUniqueId());
@@ -489,6 +918,7 @@ public class Game {
                     config.getString("Messages.Youbrokeblocks").replaceAll("%broke%", String.valueOf(brokenBlocks)));
 
             this.players.remove(playerId);
+            removeVotingPlayer(player);
             Listeners.manager.remove(playerId);
             Listeners.shopmanager.remove(playerId);
             Listeners.woodspade.remove(playerId);
@@ -525,8 +955,6 @@ public class Game {
 
             u.setGame((Game) null);
             u.setAlive(false);
-            player.setHealth(20.0D);
-            player.setFallDistance(0);
 
         }
 

@@ -87,9 +87,19 @@ public class SignListener implements Listener {
 
             if (line0Plain.equalsIgnoreCase(formatHeader)) {
 
-                final String map = PlainTextComponentSerializer.plainText().serialize(s.line(2)).trim();
+                String map = null;
+                for (config.Map candidate : SpleggOG.getPlugin().maps.getMaps()) {
 
-                if (SpleggOG.getPlugin().maps.mapExists(map)) {
+                    if (LobbySignUtils.get().isLobbySign(e.getClickedBlock().getLocation(), candidate.getName())) {
+
+                        map = candidate.getName();
+                        break;
+
+                    }
+
+                }
+
+                if (map != null && SpleggOG.getPlugin().maps.mapExists(map)) {
 
                     player.chat("/splegg join " + map);
                     player.updateInventory();

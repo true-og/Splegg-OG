@@ -1,6 +1,8 @@
 package events;
 
 import org.apache.commons.lang3.StringUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,6 +13,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import main.SpleggOG;
+import managers.GameWorldManager;
 import utils.UtilPlayer;
 import utils.Utils;
 
@@ -92,6 +95,11 @@ public class PlayerListener implements Listener {
         final UtilPlayer u = new UtilPlayer(player);
 
         SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
+        if (isSpleggReconnectWorld(player.getWorld())) {
+
+            Bukkit.getScheduler().runTask(SpleggOG.getPlugin(), () -> returnToMainWorld(player));
+
+        }
 
     }
 
@@ -126,7 +134,7 @@ public class PlayerListener implements Listener {
         }
 
         final UtilPlayer u = getTrackedPlayer(player);
-        if (!(u.getGame() != null && u.isAlive() && !StringUtils.startsWith(event.getMessage(), "/splegg")
+        if (!(u.getGame() != null && u.isAlive() && !isAllowedGameCommand(event.getMessage())
                 && !player.hasPermission("splegg.admin")))
         {
 
@@ -137,6 +145,74 @@ public class PlayerListener implements Listener {
         event.setCancelled(true);
 
         Utils.spleggOGMessage(player, "&6You cannot use that command in &3Splegg&6!");
+
+    }
+
+    private boolean isAllowedGameCommand(String message) {
+
+        return isCommand(message, "/splegg") || isCommand(message, "/sp") || isCommand(message, "/hub")
+                || isCommand(message, "/vote") || isCommand(message, "/v");
+
+    }
+
+    private boolean isCommand(String message, String command) {
+
+        return StringUtils.equalsIgnoreCase(message, command)
+                || StringUtils.startsWithIgnoreCase(message, command + " ");
+
+    }
+
+    private boolean isSpleggReconnectWorld(World world) {
+
+        if (world == null) {
+
+            return false;
+
+        }
+
+        String worldName = world.getName();
+        return SpleggOG.getPlugin().isSpleggWorld(worldName) || worldName.startsWith(GameWorldManager.COPY_PREFIX);
+
+    }
+
+    private void returnToMainWorld(Player player) {
+
+        if (!player.isOnline()) {
+
+            return;
+
+        }
+
+        World mainWorld = null;
+        for (String worldName : SpleggOG.getPlugin().getMainWorlds()) {
+
+            mainWorld = Bukkit.getWorld(worldName);
+            if (mainWorld != null) {
+
+                break;
+
+            }
+
+        }
+
+        if (mainWorld == null && !Bukkit.getWorlds().isEmpty()) {
+
+            mainWorld = Bukkit.getWorlds().get(0);
+
+        }
+
+        if (mainWorld == null) {
+
+            Utils.spleggOGMessage(player, "&cNo main world is available.");
+            return;
+
+        }
+
+        if (!player.teleport(mainWorld.getSpawnLocation())) {
+
+            Utils.spleggOGMessage(player, "&cUnable to return you to the hub.");
+
+        }
 
     }
 

@@ -76,6 +76,7 @@ public class GameManager {
                 .info("Commencing shutdown of game " + game.getGameId() + " on map " + game.getMap().getName() + ".");
 
         game.status = Status.ENDING;
+        game.stopVoting();
         game.stopGameTimer();
         game.time = 601;
         game.setStarting(false);

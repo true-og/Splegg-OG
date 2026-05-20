@@ -240,12 +240,20 @@ public class GameWorldManager {
         World gameWorld = game.getGameWorld();
         if (gameWorld == null)
             return;
+        cleanupWorld(gameWorld);
+        game.setGameWorld(null);
+
+    }
+
+    public void cleanupWorld(World gameWorld) {
+
+        if (gameWorld == null)
+            return;
 
         String name = gameWorld.getName();
         if (SpleggOG.isProtectedMainWorld(name)) {
 
             plugin.getLogger().severe("Refusing to clean protected main world '" + name + "'.");
-            game.setGameWorld(null);
             return;
 
         }
@@ -267,8 +275,6 @@ public class GameWorldManager {
         if (!deleted)
             plugin.getLogger()
                     .warning("WorldConfig.deleteWorld() returned false for '" + name + "'; directory may persist.");
-
-        game.setGameWorld(null);
 
     }
 

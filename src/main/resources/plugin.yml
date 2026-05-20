@@ -9,6 +9,12 @@ commands:
   splegg:
     description: The command prefix for all Splegg-OG commands.
     aliases: [sp]
+  hub:
+    description: Leave the Splegg lobby or game and return to the main world.
+  vote:
+    description: Vote for a Splegg map.
+    usage: /<command> <map number>
+    aliases: [v]
     
 permissions:
   splegg.use:

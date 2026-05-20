@@ -685,6 +685,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
         sendUsage(player, tag, "leave", "Leave your current match or lobby.");
         sendUsage(player, tag, "list", "List every configured map and its status.");
         sendUsage(player, tag, "help", "Show this help message.");
+        Utils.spleggOGMessage(player, "&c/vote &d<map number> &5- &bVote for a lobby map. Alias: &e/v");
 
         if (!admin) {
 

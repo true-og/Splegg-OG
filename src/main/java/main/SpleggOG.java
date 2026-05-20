@@ -21,7 +21,10 @@ import com.bergerkiller.bukkit.mw.WorldInventory;
 import com.earth2me.essentials.Essentials;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 
+import commands.HubCommand;
 import commands.SpleggCommand;
+import commands.VoteCommand;
+import commands.VoteCompleter;
 import config.MapUtilities;
 import events.Listeners;
 import events.MapListener;
@@ -157,6 +160,10 @@ public class SpleggOG extends JavaPlugin {
             final SpleggCommand spleggCommand = new SpleggCommand();
             this.getCommand("splegg").setExecutor(spleggCommand);
             this.getCommand("splegg").setTabCompleter(spleggCommand);
+            this.getCommand("hub").setExecutor(new HubCommand());
+            final VoteCommand voteCommand = new VoteCommand();
+            this.getCommand("vote").setExecutor(voteCommand);
+            this.getCommand("vote").setTabCompleter(new VoteCompleter());
 
         }
 

@@ -28,6 +28,7 @@ public class LobbyCountdown implements Runnable {
 
             this.lobbycount--;
             this.game.setLobbyCount(this.lobbycount);
+            this.game.selectMapFromVoteIfDue(this.lobbycount);
 
             SpleggPlayer sp;
             Iterator<?> playersInGameIterator = this.game.getPlayers().values().iterator();
@@ -89,6 +90,7 @@ public class LobbyCountdown implements Runnable {
 
             this.game.setStarting(false);
             this.game.setLobbyCount(SpleggOG.getPlugin().getConfig().getInt("Options.Timer"));
+            this.game.resetVoting();
             this.game.getSign().update(this.game.getMap(), false);
             LobbyScoreboard.refreshGame(this.game);
 
