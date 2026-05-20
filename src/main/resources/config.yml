@@ -62,7 +62,19 @@ Options:
 # listener side effect into those worlds even if their names appear below.
 # Create the worlds you list here in MyWorlds first (e.g. /mw create splegg_lobby
 # void; /mw create splegg_ingame void) and then add them to these lists.
+#
+# MapBase (optional): cold-storage directory holding map templates. Each
+# Worlds.InGame name is resolved to <MapBase>/<Name>/ on startup; the world is
+# copied to the server root and (re-)loaded from that fresh copy on every boot.
+# Spawns/floors/match-lobby coords stored in plugins/Splegg-OG/<map>.yml carry
+# over across reboots. In-game terrain edits to a template world are wiped on
+# the next restart -- to make terrain changes stick, replace the files under
+# <MapBase>/<Name>/ externally. Leave empty to keep the legacy behavior, where
+# worlds live directly at the server root and are managed entirely by MyWorlds.
+# Relative paths resolve against the server's world container (server root on
+# a default install). Absolute paths are accepted.
 Worlds:
+  MapBase: ''
   Lobby:
     - splegg_lobby
   InGame:

@@ -16,64 +16,73 @@ Current feature state:
 
 **Protected vanilla worlds:** Splegg will *never* read, write, or configure the vanilla overworld dimensions (`world`, `world_nether`, `world_the_end`). This guard is hard-coded -- listing those names under `Worlds.Lobby` or `Worlds.InGame` in `config.yml` is rejected with startup warnings, and `/splegg create`, `/splegg setspawn`, `/splegg setlobby`, and `/splegg addfloor` all refuse to run while you are standing in one of them. Run Splegg only inside dedicated worlds that you create yourself.
 
-**World Setup (do this first):**
+## Step-by-Step Setup Guide
 
-Splegg requires at least one dedicated *lobby* world (where queued players wait before a match) and one dedicated *in-game* world (where matches play out). Both must exist as real MyWorlds worlds before any map can be created.
+Follow these steps in order to get your first map running.
 
-1. Install [MyWorlds](https://www.spigotmc.org/resources/my-worlds.39252/) and start the server once so its config is generated.
-2. Create the worlds with MyWorlds. The defaults assume `splegg_lobby` and `splegg_ingame`:
+### 1. Choose Your Map Source
+Decide how you want to create your arena:
+- **Option 1A (Manual):** Create a fresh void world and build your map from scratch.
+- **Option 1B (Import):** Use a pre-built world folder (e.g., from PlanetMinecraft).
 
-    `/mw create splegg_lobby void` -- creates a void-generator lobby world.
+#### 1A. Create Base Worlds (Manual Path)
+Splegg requires dedicated worlds for lobbies and games.
+1. Install [MyWorlds](https://github.com/true-og/MyWorlds).
+2. Create a lobby world: `/mw create splegg_lobby void`
+3. Create an in-game world: `/mw create splegg_ingame void`
+4. Load them: `/mw load splegg_lobby` and `/mw load splegg_ingame`
 
-    `/mw create splegg_ingame void` -- creates a void-generator world for matches. Build your map terrain here (or paste it in with WorldEdit).
+#### 1B. Import Pre-built Maps (Import Path)
+If you have a downloaded world folder:
+1. In `config.yml`, set `Worlds.MapBase` to `maps`.
+2. Drop your world folder (e.g., `MyAwesomeMap`) into the `/maps/` directory at your server root.
+3. Add `MyAwesomeMap` to the `Worlds.InGame` list in `config.yml`.
+4. Restart the server. Splegg will automatically deploy the map.
 
-    `/mw load splegg_lobby` / `/mw load splegg_ingame` if either is not auto-loaded.
+### 2. Configure the Plugin
+1. Open `plugins/Splegg-OG/config.yml`.
+2. Ensure `splegg_lobby` is under `Worlds.Lobby` and your in-game world (e.g., `splegg_ingame` or `MyAwesomeMap`) is under `Worlds.InGame`.
+3. Restart your server or run `/reload confirm`.
 
-3. Open `plugins/Splegg-OG/config.yml` and confirm the two world names appear under `Worlds.Lobby` and `Worlds.InGame`. Add additional worlds to either list if you want more than one of each. Vanilla names (`world`, `world_nether`, `world_the_end`) are rejected -- do not put them here.
-4. Reload the server (or `/reload confirm`). The startup log prints a `Created MyWorlds inventory group for ...` line for each list; inventories are then isolated so that match items cannot leak back to the SMP overworld.
-5. Teleport into your in-game world with `/mw tp splegg_ingame` (or `/mvtp` if you also use Multiverse aliases). All `/splegg` setup commands must be issued from inside one of the configured Splegg worlds.
+### 3. Initialize the Splegg Map
+Teleport to your in-game world (`/mw tp <world_name>`) and run:
+- `/splegg create <map-name>` (e.g., `/splegg create my-first-map`)
 
-**Map Setup:**
+### 4. Define the Arena
+While standing in the map:
+1. **Set Spawns:** Run `/splegg setspawn <map-name>` at every player starting position. You need at least two. Use `next` or a number to modify them.
+2. **Set Lobby:** Run `/splegg setlobby <map-name>` where players should wait before the game starts.
+3. **Define Floors:** 
+   - Use the WorldEdit wand (`//wand`) to select two parallel corners of a floor.
+   - Run `/splegg addfloor <map-name>`. Repeat for as many floors as needed.
 
-`/splegg create my-map` First, create a Splegg map with a name of your choosing. You must be standing inside a configured Splegg lobby or in-game world for this to succeed.
+### 5. Test Your Map
+Run `/splegg join <map-name>` to ensure everything is working correctly.
 
-`/splegg setspawn my-map` The amount of spawn points you set is the amount of players that will be able to join the map. A playable map needs at least two spawn points.
+## 🛠 Command Reference
 
-`/splegg setspawn my-map next` You can define new spawn points for a map with or without the "next" keyword.
+### Management & Setup
+- `/splegg create <map>` - Initialize a new map.
+- `/splegg setspawn <map> [next|#]` - Define/modify player start points.
+- `/splegg setlobby <map>` - Set map-specific warm-up area.
+- `/splegg setlobby` - Set the global fallback lobby.
+- `/splegg addfloor <map>` - Add selected WorldEdit region as a floor.
+- `/splegg info <map>` - Check setup status (spawns, floors, etc.).
 
-`/splegg setspawn my-map 3` At any time, you can modify existing spawn points by using the number of the order in which you created them.
+### Gameplay
+- `/splegg join <map>` - Join a specific map.
+- `/splegg random` - Join a random available map.
+- `/vote [#]` - View or cast votes for the current lobby's maps.
+- `/splegg leave` - Exit a lobby or match.
+- `/hub` - Return to the main world spawn.
 
-`/splegg setlobby my-map` Set a lobby area for the map during the voting/warm-up period.
+### Administration
+- `/splegg start [map]` - Force start a match.
+- `/splegg stop [map]` - End a match immediately.
+- `/splegg list` - List all maps, their status, and player counts.
+- `/splegg help` - Full command reference.
 
-`/splegg setlobby` Set the global Splegg queue-lobby fallback used when a map-specific lobby is not configured.
-
-`//wand` Summon a wand with WorldEdit and then use it to select two points on a one-dimensional plane. The points you select will represent parallel corners of your floor.
-
-`/splegg addfloor my-map` Add the area you just selected with WorldEdit as a floor. You can add as many as you like.
-
-`/splegg join my-map` You can now join the map you just created, and so can anyone else with splegg.join permission.
-
-`/splegg random` Join a random playable map, chosen from every map currently in a LOBBY state.
-
-`/vote` Show the current lobby's map choices.
-
-`/vote 1` Vote for a map by number. `/v 1` is also supported, and the vote list is clickable in chat.
-
-`/splegg leave` Leave your current Splegg lobby or match.
-
-`/hub` Leave your active Splegg game, or return to a protected main-world spawn if you are not currently in a game.
-
-`/splegg start [my-map]` Anyone with splegg.admin permission can start a game early once at least two players have joined.
-
-`/splegg stop [my-map]` Stop an in-progress match.
-
-`/splegg list` List every configured map with its status and player count.
-
-`/splegg info my-map` Inspect a map's setup: spawns, floors, lobby, playable state, and remaining next-steps.
-
-`/splegg help` Show the full command reference. Tab completion is available on every subcommand and map-name argument.
-
-The main command alias is `/sp`.
+*Alias: `/sp` can be used instead of `/splegg`.*
 
 **Map Voting:**
 

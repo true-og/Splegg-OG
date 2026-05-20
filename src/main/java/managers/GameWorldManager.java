@@ -290,6 +290,172 @@ public class GameWorldManager {
 
     }
 
+    /**
+     * Refreshes each in-game world from its cold-storage template under MapBase.
+     * For every configured Worlds.InGame name, this evacuates any loaded copy at
+     * the server root, deletes it, copies <mapBase>/<name>/ into place, sanitizes
+     * stale uid.dat / session.lock, then re-loads via MyWorlds. Per-match world
+     * copies (splegg-<id>-<name>) are untouched and continue to be sourced from the
+     * freshly refreshed live world.
+     *
+     * Silently no-ops when mapBaseDir is null. Logs warnings (does not throw) for
+     * individual world failures so one bad template cannot prevent others from
+     * refreshing.
+     */
+    public void refreshInGameTemplatesFromMapBase(List<String> inGameWorlds, File mapBaseDir) {
+
+        if (mapBaseDir == null)
+            return;
+        if (!mapBaseDir.isDirectory()) {
+
+            plugin.getLogger().info("MapBase directory '" + mapBaseDir.getPath()
+                    + "' does not exist; skipping template refresh. Create it to enable map-folder workflow.");
+            return;
+
+        }
+
+        if (inGameWorlds == null || inGameWorlds.isEmpty())
+            return;
+
+        File container = plugin.getServer().getWorldContainer();
+        for (String name : inGameWorlds) {
+
+            if (name == null || name.isBlank())
+                continue;
+
+            if (SpleggOG.isProtectedMainWorld(name)) {
+
+                plugin.getLogger().warning("Refusing to refresh protected world name '" + name + "' from MapBase.");
+                continue;
+
+            }
+
+            File source = new File(mapBaseDir, name);
+            File levelDat = new File(source, "level.dat");
+            if (!source.isDirectory() || !levelDat.isFile()) {
+
+                plugin.getLogger().warning("MapBase template missing or invalid: " + source.getPath()
+                        + " (expected level.dat). Skipping refresh for '" + name + "'.");
+                continue;
+
+            }
+
+            File dest = new File(container, name);
+            // Source under MapBase must not collide with the destination -- otherwise
+            // we would delete the source before copying it back.
+            try {
+
+                if (dest.exists() && source.getCanonicalFile().equals(dest.getCanonicalFile())) {
+
+                    plugin.getLogger().warning("MapBase entry '" + name + "' resolves to the server world container"
+                            + "; refusing to wipe and re-copy onto itself. Move templates outside the world container.");
+                    continue;
+
+                }
+
+            } catch (IOException ex) {
+
+                plugin.getLogger().warning("Could not canonicalize paths for template '" + name + "': "
+                        + ex.getMessage() + ". Skipping refresh to be safe.");
+                continue;
+
+            }
+
+            if (!forceUnloadIfPresent(name)) {
+
+                plugin.getLogger().warning(
+                        "Could not unload existing world '" + name + "' before refresh; skipping to avoid data loss.");
+                continue;
+
+            }
+
+            try {
+
+                if (dest.exists())
+                    deleteRecursive(dest.toPath());
+                copyRecursive(source.toPath(), dest.toPath());
+                sanitizeWorldFolder(dest);
+
+            } catch (IOException ex) {
+
+                plugin.getLogger().severe("Failed to refresh template '" + name + "' from MapBase: " + ex.getMessage());
+                continue;
+
+            }
+
+            WorldConfig wc = WorldConfig.get(name);
+            World loaded;
+            try {
+
+                loaded = wc.loadWorld();
+
+            } catch (Exception ex) {
+
+                plugin.getLogger().severe("Exception loading refreshed template '" + name + "': " + ex.getMessage());
+                continue;
+
+            }
+
+            if (loaded == null) {
+
+                plugin.getLogger().severe("MyWorlds returned null when loading refreshed template '" + name + "'.");
+                continue;
+
+            }
+
+            plugin.getLogger().info("Refreshed in-game template '" + name + "' from " + source.getPath() + ".");
+
+        }
+
+    }
+
+    private boolean forceUnloadIfPresent(String name) {
+
+        WorldConfig wc = WorldConfig.get(name);
+        if (!wc.isLoaded())
+            return true;
+        World existing = Bukkit.getWorld(name);
+        if (existing != null)
+            evictPlayers(existing);
+        boolean unloaded = wc.unloadWorld();
+        if (!unloaded)
+            plugin.getLogger().warning("Failed to unload world '" + name + "' before template refresh.");
+        return unloaded;
+
+    }
+
+    private static void sanitizeWorldFolder(File worldDir) {
+
+        if (worldDir == null)
+            return;
+        File uid = new File(worldDir, "uid.dat");
+        if (uid.exists()) {
+
+            try {
+
+                Files.deleteIfExists(uid.toPath());
+
+            } catch (IOException ignored) {
+
+            }
+
+        }
+
+        File lock = new File(worldDir, "session.lock");
+        if (lock.exists()) {
+
+            try {
+
+                Files.deleteIfExists(lock.toPath());
+
+            } catch (IOException ignored) {
+
+            }
+
+        }
+
+    }
+
     private static void deleteRecursive(Path root) throws IOException {
 
         if (!Files.exists(root))

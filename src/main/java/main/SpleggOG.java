@@ -1,5 +1,6 @@
 package main;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -148,6 +149,11 @@ public class SpleggOG extends JavaPlugin {
 
             this.getConfig().options().copyDefaults(true);
             this.saveConfig();
+
+            // Refresh in-game world templates from MapBase (cold-storage map dir)
+            // before MyWorlds inventory groups are wired, so the inventory bundle
+            // is attached to the freshly loaded copies, not stale leftover worlds.
+            refreshInGameTemplatesFromMapBase();
 
             // Configure MyWorlds inventory isolation for Splegg worlds.
             configureMyWorlds();
@@ -309,6 +315,41 @@ public class SpleggOG extends JavaPlugin {
     public List<String> getInGameWorlds() {
 
         return this.getConfig().getStringList("Worlds.InGame");
+
+    }
+
+    /**
+     * Returns the configured MapBase directory containing cold-storage world
+     * templates, or null when the feature is opt-out (empty/missing config).
+     * Relative paths resolve against the server's world container (which equals the
+     * server root for default Bukkit/Purpur installs).
+     */
+    public File getMapBaseDir() {
+
+        final String raw = this.getConfig().getString("Worlds.MapBase", "");
+        if (raw == null || raw.isBlank())
+            return null;
+        final File asPath = new File(raw);
+        if (asPath.isAbsolute())
+            return asPath;
+        return new File(this.getServer().getWorldContainer(), raw);
+
+    }
+
+    private void refreshInGameTemplatesFromMapBase() {
+
+        final File mapBaseDir = getMapBaseDir();
+        if (mapBaseDir == null)
+            return;
+
+        if (this.gameWorldManager == null) {
+
+            this.getLogger().warning("Template refresh skipped: GameWorldManager not initialized yet.");
+            return;
+
+        }
+
+        this.gameWorldManager.refreshInGameTemplatesFromMapBase(getInGameWorlds(), mapBaseDir);
 
     }
 
