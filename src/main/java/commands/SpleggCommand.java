@@ -261,7 +261,9 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
                                 try {
 
                                     secondUserCommandArgumentIsText = args[2];
-                                    if (secondUserCommandArgumentIsText.equalsIgnoreCase("next")) {
+                                    if (secondUserCommandArgumentIsText.equalsIgnoreCase("next")
+                                            || secondUserCommandArgumentIsText.equalsIgnoreCase("append"))
+                                    {
 
                                         map.addSpawn(player.getLocation());
                                         Utils.spleggOGMessage(player, "&aSpawn &6" + map.getSpawnCount()
@@ -698,7 +700,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
         sendUsage(player, tag, "delete <map>", "Delete a map.");
         sendUsage(player, tag, "info <map>", "Show map setup status (spawns, floors, lobby).");
         sendUsage(player, tag, "setlobby", "Set the global Splegg queue lobby fallback.");
-        sendUsage(player, tag, "setspawn <map> [next|#]", "Add or update a spawn point.");
+        sendUsage(player, tag, "setspawn <map> [next|append|#]", "Add or update a spawn point.");
         sendUsage(player, tag, "setlobby <map>", "Set the lobby teleport point.");
         sendUsage(player, tag, "addfloor <map>", "Add a WorldEdit selection as a floor.");
         sendUsage(player, tag, "start [map]", "Start a map early.");
@@ -868,7 +870,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 3 && args[0].equalsIgnoreCase("setspawn")) {
 
-            return filterPrefix(Collections.singletonList("next"), args[2]);
+            return filterPrefix(Arrays.asList("next", "append"), args[2]);
 
         }
 

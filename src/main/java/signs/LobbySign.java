@@ -155,8 +155,8 @@ public class LobbySign {
 
         int slotsPerGame = map.getSpawnCount();
         if (slotsPerGame <= 1)
-            return "&5Players: &d" + totalPlayers;
-        return "&5" + totalPlayers + "&8/&d" + slotsPerGame;
+            return "&0Players: &0" + totalPlayers;
+        return "&0" + totalPlayers + "&8/&0" + slotsPerGame;
 
     }
 

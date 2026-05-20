@@ -19,6 +19,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import signs.LobbySign;
 import signs.LobbySignUtils;
 import utils.Utils;
+import utils.UtilPlayer;
 
 public class SignListener implements Listener {
 
@@ -27,24 +28,39 @@ public class SignListener implements Listener {
 
         Player player = event.getPlayer();
         final String header = PlainTextComponentSerializer.plainText().serialize(event.line(0)).trim();
-        final String action = PlainTextComponentSerializer.plainText().serialize(event.line(1)).trim();
 
-        if (header.equalsIgnoreCase("[splegg]") && action.equalsIgnoreCase("join")
-                && player.hasPermission("splegg.admin"))
-        {
+        if (!header.equalsIgnoreCase("[Splegg]"))
+            return;
 
-            final String map = PlainTextComponentSerializer.plainText().serialize(event.line(2)).trim();
-            if (SpleggOG.getPlugin().maps.mapExists(map)) {
+        if (!player.hasPermission("splegg.admin")) {
 
-                LobbySign ls = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
-                ls.create(event.getBlock().getLocation(), SpleggOG.getPlugin().maps.getMap(map));
-
-                Utils.spleggOGMessage(player,
-                        SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("%map%", map));
-
-            }
+            Utils.spleggOGMessage(player, "&cYou don't have permission to create Splegg signs.");
+            event.setCancelled(true);
+            return;
 
         }
+
+        final String map = PlainTextComponentSerializer.plainText().serialize(event.line(1)).trim();
+        if (map.isEmpty()) {
+
+            Utils.spleggOGMessage(player, "&cLine 2 must be the map name.");
+            event.setCancelled(true);
+            return;
+
+        }
+
+        if (!SpleggOG.getPlugin().maps.mapExists(map)) {
+
+            Utils.spleggOGMessage(player, "&cMap '" + map + "' does not exist.");
+            event.setCancelled(true);
+            return;
+
+        }
+
+        LobbySign ls = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
+        ls.create(event.getBlock().getLocation(), SpleggOG.getPlugin().maps.getMap(map));
+        Utils.spleggOGMessage(player,
+                SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("%map%", map));
 
     }
 
@@ -99,20 +115,50 @@ public class SignListener implements Listener {
 
                 }
 
-                if (map != null && SpleggOG.getPlugin().maps.mapExists(map)) {
+                e.setCancelled(true);
 
-                    player.chat("/splegg join " + map);
-                    player.updateInventory();
+                if (map == null || !SpleggOG.getPlugin().maps.mapExists(map)) {
 
-                    e.setCancelled(true);
+                    Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist"));
+                    return;
+
+                }
+
+                UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+                if (u == null) {
+
+                    return;
+
+                }
+
+                if (u.getGame() != null) {
+
+                    Utils.spleggOGMessage(player, "&cERROR: You are already playing.");
+                    return;
+
+                }
+
+                config.Map targetMap = SpleggOG.getPlugin().maps.getMap(map);
+                if (!targetMap.isUsable(targetMap)) {
+
+                    Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist"));
+                    return;
+
+                }
+
+                managers.Game game = SpleggOG.getPlugin().games.findOrCreateForMap(targetMap);
+                if (game != null) {
+
+                    game.joinGame(u);
 
                 } else {
 
-                    Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist"));
-
-                    e.setCancelled(true);
+                    Utils.spleggOGMessage(player,
+                            "&cERROR: Failed to start a game for map &e" + map + "&c. Check the server console.");
 
                 }
+
+                player.updateInventory();
 
             }
 

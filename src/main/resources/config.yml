@@ -80,7 +80,7 @@ Sings:
     4: '###########################'
   Status:
     Join: '&2[Join]'
-    Starting: '&e[Starting]'
+    Starting: '&6[Starting]'
     Started: '&6[Started]'
     Disabled: '&4[Disabled]'
 Shovels:
