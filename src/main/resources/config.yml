@@ -76,9 +76,9 @@ Options:
 Worlds:
   MapBase: ''
   Lobby:
-    - splegg_lobby
+    - SP1-hub
   InGame:
-    - splegg_ingame
+    - Shake_It
 Sings:
   Format:
     1: '&2Splegg&4-OG'
