@@ -2,7 +2,8 @@ Messages:
   Prefix: '&8[&2Splegg&8-&4OG&8] &3'
   NoPermission: '&cYou do not have permission!'
   NotInSpleggWorld: '&cERROR: Splegg can only be used in configured splegg worlds.'
-  InProtectedMainWorld: '&cERROR: Splegg cannot modify the vanilla overworld, nether, or end. Move to a Splegg lobby or in-game world first.'
+  InProtectedMainWorld: '&cERROR: Splegg cannot modify the vanilla overworld, nether,
+    or end. Move to a Splegg lobby or in-game world first.'
   JoinGame: '&6%player% has joined the game. &7[&e%count%/%maxcount%&7]'
   LeaveGame: '&6%player% has left the game. &7[&e%count%/%maxcount%&7]'
   IndividualLeaveGame: '&6You have left the lobby for map &a%map%&6.'
@@ -32,7 +33,8 @@ Messages:
   BuyDiamondShovel: '&BYou bought a Diamond Shovel!'
   BuyNetheriteShovel: '&BYou bought a Netherite Shovel!'
   VIPPrivilege: '&6Only &fOG &6players and above can enter the full game!'
-  VIPJoinGame: '&6You have joined a full game thanks to your donor rank. Thank you for supporting &2True&4OG!'
+  VIPJoinGame: '&6You have joined a full game thanks to your premium rank. Thank you
+    for supporting &aTrue&cOG &eNetwork!'
   # Winner/loser flow
   WinnerGame: '&a%player% won Splegg on map &e%map%&a!'
   WinnerTitle: '&a&lVICTORY!'
@@ -81,9 +83,9 @@ Worlds:
     - Shake_It
 Sings:
   Format:
-    1: '&2Splegg&4-OG'
-    2: '%map%'
-    3: '%status%'
+    1: '&8[&2Splegg&r-&4OG&8]'
+    2: '%status%'
+    3: '%map%'
     4: '&5%count%/%maxcount%'
   Restarting:
     1: '###########################'
@@ -91,10 +93,10 @@ Sings:
     3: '%map%'
     4: '###########################'
   Status:
-    Join: '&2[Join]'
-    Starting: '&6[Starting]'
-    Started: '&6[Started]'
-    Disabled: '&4[Disabled]'
+    Join: '&a[Join]'
+    Starting: '&6Starting...'
+    Started: '&2Started'
+    Disabled: '&cDISABLED'
 Shovels:
   Wood:
     Name: '&6&lWooden Shovel'
@@ -120,27 +122,33 @@ GUI:
     Size: 9
     WoodShovel:
       Name: '&6&lWooden Shovel'
-      Description: '&6A classic &6Wooden Shovel&6 for style points. Price: &B%price% Diamonds&6.'
+      Description: '&6A classic &6Wooden Shovel&6 for style points. Price: &B%price%
+        Diamonds&6.'
       Price: 100
     StoneShovel:
       Name: '&7&lStone Shovel'
-      Description: '&6Upgrade your look with a &7Stone Shovel&6. Price: &B%price% Diamonds&6.'
+      Description: '&6Upgrade your look with a &7Stone Shovel&6. Price: &B%price%
+        Diamonds&6.'
       Price: 250
     IronShovel:
       Name: '&f&lIron Shovel'
-      Description: '&6The standard &fIron Shovel &6comes with every match. Price: &B%price% Diamonds&6.'
+      Description: '&6The standard &fIron Shovel &6comes with every match. Price:
+        &B%price% Diamonds&6.'
       Price: 0
     GoldShovel:
       Name: '&e&lGolden Shovel'
-      Description: '&6Impress your SO with this fancy &eGolden Shovel&6! Price: &B%price% Diamonds&6.'
+      Description: '&6Impress your SO with this fancy &eGolden Shovel&6! Price: &B%price%
+        Diamonds&6.'
       Price: 500
     DiamondShovel:
       Name: '&b&lDiamond Shovel'
-      Description: '&6The illustrious &BDiamond Shovel &6shoots TWO eggs at a time! Price: &B%price% Diamonds&6.'
+      Description: '&6The illustrious &BDiamond Shovel &6shoots TWO eggs at a time!
+        Price: &B%price% Diamonds&6.'
       Price: 1000
     NetheriteShovel:
       Name: '&8&lNetherite Shovel'
-      Description: '&6The fearsome &8Netherite Shovel &6shoots THREE eggs at a time! Price: &B%price% Diamonds&6.'
+      Description: '&6The fearsome &8Netherite Shovel &6shoots THREE eggs at a time!
+        Price: &B%price% Diamonds&6.'
       Price: 1500
 Guide:
   Item: ENCHANTED_BOOK
@@ -161,4 +169,4 @@ Leave:
   Item: SLIME_BALL
   Slot: 8
   Name: '&4Leave Game'
-  Lore: '&eReturn to &2True&4OG &2SMP&e!'
+  Lore: '&eReturn to &aTrue&cOG &2SMP&e!'
