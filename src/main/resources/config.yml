@@ -62,21 +62,27 @@ Options:
 # (world, world_nether, world_the_end) is hard-blacklisted in code and cannot
 # be added here -- splegg will refuse to put a map, inventory group, or any
 # listener side effect into those worlds even if their names appear below.
-# Create the worlds you list here in MyWorlds first (e.g. /mw create splegg_lobby
-# void; /mw create splegg_ingame void) and then add them to these lists.
+# Worlds listed here are loaded by Splegg itself on the first tick after startup;
+# create them with MyWorlds first (e.g. /mw create splegg_lobby void) or place
+# them under MapBase. Folder names match case-insensitively and ignoring - and _.
 #
-# MapBase (optional): cold-storage directory holding map templates. Each
-# Worlds.InGame name is resolved to <MapBase>/<Name>/ on startup; the world is
-# copied to the server root and (re-)loaded from that fresh copy on every boot.
-# Spawns/floors/match-lobby coords stored in plugins/Splegg-OG/<map>.yml carry
-# over across reboots. In-game terrain edits to a template world are wiped on
-# the next restart -- to make terrain changes stick, replace the files under
-# <MapBase>/<Name>/ externally. Leave empty to keep the legacy behavior, where
-# worlds live directly at the server root and are managed entirely by MyWorlds.
+# MapBase (optional): cold-storage directory holding world templates. Each
+# Worlds.Lobby and Worlds.InGame name is resolved to <MapBase>/<Name>/ on
+# startup; the world is copied to the server root and (re-)loaded from that fresh
+# copy on every boot. Spawns/floors/match-lobby coords stored in
+# plugins/Splegg-OG/<map>.yml carry over across reboots. In-game terrain edits to
+# a template world are wiped on the next restart -- to make terrain changes stick,
+# replace the files under <MapBase>/<Name>/ externally. Leave empty to keep the
+# legacy behavior, where worlds live directly at the server root.
 # Relative paths resolve against the server's world container (server root on
 # a default install). Absolute paths are accepted.
+#
+# VoidGenerator: pin the bundled void chunk generator onto every world Splegg
+# loads or copies. A copied world folder carries no MyWorlds generator setting,
+# so without this chunks outside the built arena generate vanilla terrain.
 Worlds:
   MapBase: ''
+  VoidGenerator: true
   Lobby:
     - SP1-hub
   InGame:

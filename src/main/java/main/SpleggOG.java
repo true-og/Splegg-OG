@@ -13,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -37,6 +38,7 @@ import managers.GameManager;
 import managers.GameUtilities;
 import managers.GameWorldManager;
 import managers.Status;
+import managers.VoidChunkGenerator;
 import net.trueog.diamondbankog.api.DiamondBankAPIJava;
 import utils.UtilPlayer;
 import utils.Utils;
@@ -52,6 +54,9 @@ public class SpleggOG extends JavaPlugin {
     // renaming the world directory.
     public static final Set<String> PROTECTED_MAIN_WORLDS = Collections
             .unmodifiableSet(new LinkedHashSet<>(Arrays.asList("world", "world_nether", "world_the_end")));
+
+    // Plugin names MyWorlds is published under, in the order they are tried.
+    private static final String[] MY_WORLDS_PLUGIN_NAMES = { "MyWorlds", "My_Worlds" };
 
     private static SpleggOG plugin;
     public Utils chat;
@@ -150,13 +155,10 @@ public class SpleggOG extends JavaPlugin {
             this.getConfig().options().copyDefaults(true);
             this.saveConfig();
 
-            // Refresh in-game world templates from MapBase (cold-storage map dir)
-            // before MyWorlds inventory groups are wired, so the inventory bundle
-            // is attached to the freshly loaded copies, not stale leftover worlds.
-            refreshInGameTemplatesFromMapBase();
-
-            // Configure MyWorlds inventory isolation for Splegg worlds.
-            configureMyWorlds();
+            // World provisioning runs on the first tick rather than here: loading a
+            // world pumps the chunk system, and the resulting ChunkLoadEvent reaches
+            // plugins that have not finished their own startup yet.
+            this.getServer().getScheduler().runTask(this, this::provisionWorlds);
 
             this.getServer().getPluginManager().registerEvents(new MapListener(), this);
             this.getServer().getPluginManager().registerEvents(new PlayerListener(), this);
@@ -219,6 +221,21 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
+    // Refresh templates from cold storage, load the configured worlds, then wire
+    // the inventory groups onto the worlds that actually came up. Runs one tick
+    // after enable so no world is created while other plugins are still starting.
+    private void provisionWorlds() {
+
+        if (this.disabling || !this.isEnabled())
+            return;
+
+        // Templates are refreshed before the inventory groups are wired, so the
+        // bundle is attached to the freshly loaded copies, not stale leftovers.
+        refreshTemplatesFromMapBase();
+        configureMyWorlds();
+
+    }
+
     private void configureMyWorlds() {
 
         // Required for any per-world inventory isolation to take effect at all
@@ -245,8 +262,8 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
-    // Strip protected SMP worlds and unloaded worlds from a configured list
-    // before handing it to MyWorlds. An admin pasting "world" into
+    // Strip protected SMP worlds from a configured list and load whatever is not
+    // loaded yet before handing it to MyWorlds. An admin pasting "world" into
     // Worlds.Lobby would otherwise cause splegg to claim ownership of the
     // overworld -- exactly what PROTECTED_MAIN_WORLDS exists to prevent.
     private List<String> sanitizeForGroup(List<String> worlds, String configPath) {
@@ -268,14 +285,19 @@ public class SpleggOG extends JavaPlugin {
 
             }
 
-            if (Bukkit.getWorld(name) == null) {
+            // Splegg owns its worlds: bring the world up itself instead of asking an
+            // admin to run /mw load, and leave it out of the group when that fails.
+            final World loaded = this.gameWorldManager == null ? null : this.gameWorldManager.ensureWorldLoaded(name);
+            if (loaded == null) {
 
                 this.getLogger().warning("Configured Splegg world '" + name + "' from " + configPath
-                        + " is not loaded. Load it via MyWorlds (/mw load " + name + ") before starting matches.");
+                        + " could not be loaded; leaving it out of the inventory group.");
+                continue;
 
             }
 
-            filtered.add(name);
+            // Group by the name the server uses, not the spelling in config.yml.
+            filtered.add(loaded.getName());
 
         }
 
@@ -284,6 +306,19 @@ public class SpleggOG extends JavaPlugin {
     }
 
     private void createInventoryGroup(List<String> worlds, String groupType) {
+
+        // Detach first: a Splegg world that is still a member of the server's main
+        // bundle would otherwise share the SMP inventory with everyone in it.
+        try {
+
+            WorldInventory.detach(worlds);
+
+        } catch (Throwable t) {
+
+            this.getLogger().warning("Failed to detach " + groupType + " worlds from their MyWorlds inventory bundle: "
+                    + t.getMessage());
+
+        }
 
         final WorldInventory inventory = WorldInventory.create(worlds.get(0));
         for (int i = 1; i < worlds.size(); i++) {
@@ -318,12 +353,10 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
-    /**
-     * Returns the configured MapBase directory containing cold-storage world
-     * templates, or null when the feature is opt-out (empty/missing config).
-     * Relative paths resolve against the server's world container (which equals the
-     * server root for default Bukkit/Purpur installs).
-     */
+    // Returns the configured MapBase directory containing cold-storage world
+    // templates, or null when the feature is opt-out (empty/missing config).
+    // Relative paths resolve against the server's world container (which equals
+    // the server root for default Bukkit/Purpur installs).
     public File getMapBaseDir() {
 
         final String raw = this.getConfig().getString("Worlds.MapBase", "");
@@ -336,7 +369,9 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
-    private void refreshInGameTemplatesFromMapBase() {
+    // Lobby worlds are refreshed alongside in-game worlds: both are disposable
+    // copies of a template, and nothing a match writes into them is meant to last.
+    private void refreshTemplatesFromMapBase() {
 
         final File mapBaseDir = getMapBaseDir();
         if (mapBaseDir == null)
@@ -349,7 +384,24 @@ public class SpleggOG extends JavaPlugin {
 
         }
 
-        this.gameWorldManager.refreshInGameTemplatesFromMapBase(getInGameWorlds(), mapBaseDir);
+        this.gameWorldManager.refreshTemplatesFromMapBase(getLobbyWorlds(), mapBaseDir, "Worlds.Lobby");
+        this.gameWorldManager.refreshTemplatesFromMapBase(getInGameWorlds(), mapBaseDir, "Worlds.InGame");
+
+    }
+
+    // Whether copied worlds get the bundled void chunk generator pinned onto them.
+    public boolean isVoidGeneratorEnabled() {
+
+        return this.getConfig().getBoolean("Worlds.VoidGenerator", true);
+
+    }
+
+    @Override
+    public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
+
+        // MyWorlds passes the chunk-generator id set on the WorldConfig.
+        // Anything (or "void") yields the void generator.
+        return new VoidChunkGenerator();
 
     }
 
@@ -501,10 +553,25 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
+    // MyWorlds also ships under the fork name My_Worlds, so both are accepted.
     private MyWorlds findMyWorldsPlugin() {
 
-        final Plugin plugin = this.getServer().getPluginManager().getPlugin("MyWorlds");
-        return plugin instanceof MyWorlds ? (MyWorlds) plugin : null;
+        for (String pluginName : MY_WORLDS_PLUGIN_NAMES) {
+
+            final Plugin candidate = this.getServer().getPluginManager().getPlugin(pluginName);
+            if (candidate == null || !candidate.isEnabled())
+                continue;
+
+            if (candidate instanceof MyWorlds)
+                return (MyWorlds) candidate;
+
+            this.getLogger()
+                    .severe("Detected '" + pluginName + "' but it is not a MyWorlds implementation Splegg can use.");
+            return null;
+
+        }
+
+        return null;
 
     }
 

@@ -11,6 +11,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -23,17 +25,19 @@ import com.bergerkiller.bukkit.mw.WorldInventory;
 import config.Map;
 import main.SpleggOG;
 
-/**
- * Owns the per-game world lifecycle for Splegg matches.
- *
- * Each {@link Game} is bound to a copy of its template world; the copy lives at
- * {@code <worldContainer>/splegg-<gameId>-<templateName>/} and is deleted when
- * the game ends. The original template world remains loaded for admin editing
- * and is never modified by gameplay.
- */
+// Owns the per-game world lifecycle for Splegg matches.
+// Each game is bound to a copy of its template world; the copy lives at
+// <worldContainer>/splegg-<gameId>-<templateName>/ and is deleted when the game
+// ends. The original template world remains loaded for admin editing and is
+// never modified by gameplay.
 public class GameWorldManager {
 
     public static final String COPY_PREFIX = "splegg-";
+
+    // Per-game world names, splegg-<gameId>-<template>. Safe to purge wholesale
+    // before any game registers: every match builds its own copy from scratch.
+    private static final Pattern COPY_NAME = Pattern.compile("^" + Pattern.quote(COPY_PREFIX) + ".+$",
+            Pattern.CASE_INSENSITIVE);
 
     private final SpleggOG plugin;
 
@@ -43,23 +47,21 @@ public class GameWorldManager {
 
     }
 
-    /**
-     * Removes stale per-game world directories left behind from a previous run
-     * (e.g. server crash). Safe to call at plugin enable before any games register.
-     */
-    public void purgeStaleCopies() {
+    // Removes stale per-game world directories left behind from a previous run
+    // (e.g. server crash). Safe to call at plugin enable before any games register.
+    // Returns how many worlds were removed.
+    public int purgeStaleCopies() {
 
         File container = plugin.getServer().getWorldContainer();
-        File[] children = container.listFiles();
+        File[] children = container.listFiles(File::isDirectory);
         if (children == null)
-            return;
+            return 0;
 
+        int purged = 0;
         for (File child : children) {
 
-            if (!child.isDirectory())
-                continue;
             String name = child.getName();
-            if (!name.startsWith(COPY_PREFIX))
+            if (!COPY_NAME.matcher(name).matches())
                 continue;
 
             if (SpleggOG.isProtectedMainWorld(name)) {
@@ -69,26 +71,201 @@ public class GameWorldManager {
 
             }
 
-            try {
+            if (deleteStaleCopy(name, child))
+                purged++;
 
-                deleteRecursive(child.toPath());
-                plugin.getLogger().info("Purged stale Splegg game world directory: " + name);
+        }
 
-            } catch (Exception ex) {
+        if (purged > 0)
+            plugin.getLogger().info("Purged " + purged + " stale Splegg game world(s) from a previous run.");
 
-                plugin.getLogger().warning("Failed to purge stale game world '" + name + "': " + ex.getMessage());
+        return purged;
+
+    }
+
+    // MyWorlds owns the world registration, so ask it to drop the world first and
+    // only fall back to deleting the directory when it cannot.
+    private boolean deleteStaleCopy(String name, File worldDir) {
+
+        // A reload can leave players standing in a copy no game claims yet.
+        // Pulling it out from under them is worse than keeping the directory.
+        World live = Bukkit.getWorld(name);
+        if (live != null && !live.getPlayers().isEmpty()) {
+
+            plugin.getLogger().warning("Not purging stale game world '" + name + "': it still has players in it.");
+            return false;
+
+        }
+
+        WorldConfig worldConfig = WorldConfig.getIfExists(name);
+        if (worldConfig != null) {
+
+            if (worldConfig.isLoaded() && !worldConfig.unloadWorld()) {
+
+                plugin.getLogger().warning("Could not unload stale game world '" + name + "'; leaving it in place.");
+                return false;
 
             }
+
+            if (worldConfig.deleteWorld())
+                return true;
+
+        }
+
+        try {
+
+            deleteRecursive(worldDir.toPath());
+            return true;
+
+        } catch (Exception ex) {
+
+            plugin.getLogger().warning("Failed to purge stale game world '" + name + "': " + ex.getMessage());
+            return false;
 
         }
 
     }
 
-    /**
-     * Copy template -> game world and load via MyWorlds. The template world must be
-     * loaded by the server (so we can flush its chunks to disk before reading
-     * them). Returns null on failure; caller must abort game creation.
-     */
+    // World folder lookup that tolerates the spelling an admin actually typed:
+    // exact name first, then case-insensitive, then ignoring separators as well so
+    // 'shake-it' still finds 'Shake_It' on a case-sensitive filesystem. Returns
+    // null when nothing matches.
+    public static File resolveWorldDir(File baseDir, String name) {
+
+        if (baseDir == null || name == null || name.isBlank())
+            return null;
+
+        File exact = new File(baseDir, name);
+        if (exact.isDirectory())
+            return exact;
+
+        File[] candidates = baseDir.listFiles(File::isDirectory);
+        if (candidates == null)
+            return null;
+
+        for (File candidate : candidates)
+            if (candidate.getName().equalsIgnoreCase(name))
+                return candidate;
+
+        String flattened = flattenName(name);
+        for (File candidate : candidates)
+            if (flattenName(candidate.getName()).equals(flattened))
+                return candidate;
+
+        return null;
+
+    }
+
+    private static String flattenName(String name) {
+
+        return name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+
+    }
+
+    // Lists the world folders that do exist under a directory, for error messages.
+    public static String describeWorldDirs(File baseDir) {
+
+        File[] candidates = baseDir == null ? null : baseDir.listFiles(File::isDirectory);
+        if (candidates == null || candidates.length == 0)
+            return "No world folders found in " + (baseDir == null ? "(unset)" : baseDir.getPath()) + ".";
+
+        StringBuilder sb = new StringBuilder("Available world folders in " + baseDir.getPath() + ": ");
+        for (int i = 0; i < candidates.length; i++) {
+
+            if (i > 0)
+                sb.append(", ");
+            sb.append(candidates[i].getName());
+
+        }
+
+        return sb.append(".").toString();
+
+    }
+
+    // Pins the void chunk generator onto a world about to be loaded. A copied
+    // world directory carries no MyWorlds generator setting, so without this the
+    // copy generates vanilla terrain outside the saved region even though the
+    // template was created with /mw create <world> void.
+    private void applyVoidGenerator(WorldConfig wc) {
+
+        if (!plugin.isVoidGeneratorEnabled())
+            return;
+
+        // An admin who already picked a generator for this world keeps it; only a
+        // world with no generator of its own (every fresh copy) gets the void one.
+        String existing = wc.getChunkGeneratorName();
+        if (existing != null && !existing.isBlank())
+            return;
+
+        wc.setChunkGeneratorName(plugin.getName() + ":void");
+
+    }
+
+    // Loads a configured Splegg world through MyWorlds when the server does not
+    // have it loaded already. Returns the live world, or null when it could not be
+    // loaded. The returned name is the one the server actually uses, which is the
+    // folder name and may differ in case from the configured one.
+    public World ensureWorldLoaded(String name) {
+
+        if (name == null || name.isBlank())
+            return null;
+
+        if (SpleggOG.isProtectedMainWorld(name)) {
+
+            plugin.getLogger().warning("Refusing to load protected main world '" + name + "' as a Splegg world.");
+            return null;
+
+        }
+
+        World existing = Bukkit.getWorld(name);
+        if (existing != null)
+            return existing;
+
+        File container = plugin.getServer().getWorldContainer();
+        File worldDir = resolveWorldDir(container, name);
+        if (worldDir == null) {
+
+            plugin.getLogger()
+                    .warning("Configured Splegg world '" + name + "' has no world folder in " + container.getPath()
+                            + ". Create it with MyWorlds (/mw create " + name + " void) or add it to "
+                            + "the MapBase directory.");
+            return null;
+
+        }
+
+        if (!worldDir.getName().equals(name))
+            plugin.getLogger().info("Configured Splegg world '" + name + "' resolved to folder '" + worldDir.getName()
+                    + "'; rename it or fix config.yml to match exactly.");
+
+        WorldConfig wc = WorldConfig.get(worldDir.getName());
+        applyVoidGenerator(wc);
+        World loaded;
+        try {
+
+            loaded = wc.loadWorld();
+
+        } catch (Exception ex) {
+
+            plugin.getLogger().severe("Exception loading Splegg world '" + name + "': " + ex.getMessage());
+            return null;
+
+        }
+
+        if (loaded == null) {
+
+            plugin.getLogger().severe("MyWorlds returned null when loading Splegg world '" + name + "'.");
+            return null;
+
+        }
+
+        plugin.getLogger().info("Loaded Splegg world '" + loaded.getName() + "' via MyWorlds.");
+        return loaded;
+
+    }
+
+    // Copy template -> game world and load via MyWorlds. The template world must
+    // be loaded by the server (so its chunks can be flushed to disk before they
+    // are read). Returns null on failure; caller must abort game creation.
     public World prepareWorld(Game game) {
 
         Map map = game.getMap();
@@ -112,11 +289,23 @@ public class GameWorldManager {
         World template = Bukkit.getWorld(templateName);
         if (template == null) {
 
+            // Bring the template up rather than refusing the match: a template only
+            // has to exist on disk, not be loaded by an admin ahead of time.
+            template = ensureWorldLoaded(templateName);
+
+        }
+
+        if (template == null) {
+
             plugin.getLogger().warning("Cannot prepare world for game '" + game.getGameId() + "': template world '"
-                    + templateName + "' is not loaded.");
+                    + templateName + "' is not loaded and could not be loaded.");
             return null;
 
         }
+
+        // From here on use the name the server knows the world by, which is the
+        // folder name and may differ in case from the configured one.
+        templateName = template.getName();
 
         String copyName = COPY_PREFIX + game.getGameId() + "-" + templateName;
         if (SpleggOG.isProtectedMainWorld(copyName)) {
@@ -136,12 +325,13 @@ public class GameWorldManager {
         }
 
         File container = plugin.getServer().getWorldContainer();
-        File templateDir = new File(container, templateName);
+        File templateDir = resolveWorldDir(container, templateName);
         File copyDir = new File(container, copyName);
 
-        if (!templateDir.exists() || !templateDir.isDirectory()) {
+        if (templateDir == null) {
 
-            plugin.getLogger().warning("Template world directory missing: " + templateDir.getPath());
+            plugin.getLogger().warning("Template world directory missing: "
+                    + new File(container, templateName).getPath() + ". " + describeWorldDirs(container));
             return null;
 
         }
@@ -183,6 +373,7 @@ public class GameWorldManager {
         }
 
         WorldConfig wc = WorldConfig.get(copyName);
+        applyVoidGenerator(wc);
         World copy;
         try {
 
@@ -231,10 +422,8 @@ public class GameWorldManager {
 
     }
 
-    /**
-     * Evict players, unload via MyWorlds, and delete the game world directory.
-     * No-op when the game has no world (game never started its world copy).
-     */
+    // Evict players, unload via MyWorlds, and delete the game world directory.
+    // No-op when the game has no world (game never started its world copy).
     public void cleanupWorld(Game game) {
 
         World gameWorld = game.getGameWorld();
@@ -290,19 +479,16 @@ public class GameWorldManager {
 
     }
 
-    /**
-     * Refreshes each in-game world from its cold-storage template under MapBase.
-     * For every configured Worlds.InGame name, this evacuates any loaded copy at
-     * the server root, deletes it, copies <mapBase>/<name>/ into place, sanitizes
-     * stale uid.dat / session.lock, then re-loads via MyWorlds. Per-match world
-     * copies (splegg-<id>-<name>) are untouched and continue to be sourced from the
-     * freshly refreshed live world.
-     *
-     * Silently no-ops when mapBaseDir is null. Logs warnings (does not throw) for
-     * individual world failures so one bad template cannot prevent others from
-     * refreshing.
-     */
-    public void refreshInGameTemplatesFromMapBase(List<String> inGameWorlds, File mapBaseDir) {
+    // Refreshes each configured Splegg world from its cold-storage template under
+    // MapBase. For every name in the list this evacuates any loaded world at the
+    // server root, deletes it, copies <mapBase>/<name>/ into place, sanitizes
+    // stale uid.dat / session.lock, then re-loads via MyWorlds. Per-match world
+    // copies (splegg-<id>-<name>) are untouched and continue to be sourced from
+    // the freshly refreshed live world.
+    // Silently no-ops when mapBaseDir is null. Logs warnings (does not throw) for
+    // individual world failures so one bad template cannot prevent others from
+    // refreshing.
+    public void refreshTemplatesFromMapBase(List<String> worlds, File mapBaseDir, String configPath) {
 
         if (mapBaseDir == null)
             return;
@@ -314,11 +500,11 @@ public class GameWorldManager {
 
         }
 
-        if (inGameWorlds == null || inGameWorlds.isEmpty())
+        if (worlds == null || worlds.isEmpty())
             return;
 
         File container = plugin.getServer().getWorldContainer();
-        for (String name : inGameWorlds) {
+        for (String name : worlds) {
 
             if (name == null || name.isBlank())
                 continue;
@@ -330,11 +516,19 @@ public class GameWorldManager {
 
             }
 
-            File source = new File(mapBaseDir, name);
-            File levelDat = new File(source, "level.dat");
-            if (!source.isDirectory() || !levelDat.isFile()) {
+            File source = resolveWorldDir(mapBaseDir, name);
+            if (source == null) {
 
-                plugin.getLogger().warning("MapBase template missing or invalid: " + source.getPath()
+                plugin.getLogger().warning("MapBase template missing for '" + name + "' from " + configPath + ": "
+                        + new File(mapBaseDir, name).getPath() + ". " + describeWorldDirs(mapBaseDir));
+                continue;
+
+            }
+
+            File levelDat = new File(source, "level.dat");
+            if (!levelDat.isFile()) {
+
+                plugin.getLogger().warning("MapBase template is not a world: " + source.getPath()
                         + " (expected level.dat). Skipping refresh for '" + name + "'.");
                 continue;
 
@@ -384,6 +578,7 @@ public class GameWorldManager {
             }
 
             WorldConfig wc = WorldConfig.get(name);
+            applyVoidGenerator(wc);
             World loaded;
             try {
 
@@ -403,7 +598,7 @@ public class GameWorldManager {
 
             }
 
-            plugin.getLogger().info("Refreshed in-game template '" + name + "' from " + source.getPath() + ".");
+            plugin.getLogger().info("Refreshed " + configPath + " world '" + name + "' from " + source.getPath() + ".");
 
         }
 

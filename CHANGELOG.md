@@ -1,3 +1,23 @@
+**0.9.4:**
+
+- Splegg now loads its configured lobby and in-game worlds itself instead of asking an admin to run `/mw load` first, and per-match world copies fall back to loading their template on demand.
+
+- World provisioning happens on the first tick after startup rather than during plugin enable, so loading a world no longer fires chunk events at plugins that are still starting.
+
+- Copied and refreshed worlds keep a void chunk generator (`Worlds.VoidGenerator`, on by default), because a directory copy carries no MyWorlds generator setting and would otherwise grow vanilla terrain outside the arena.
+
+- World and MapBase template folders now match case-insensitively and ignoring `-`/`_`, and a missing template is reported with the list of folders that do exist.
+
+- MapBase refresh covers `Worlds.Lobby` as well as `Worlds.InGame`.
+
+- Splegg worlds are detached from their previous MyWorlds inventory bundle before being grouped, so a Splegg world can no longer share the SMP inventory.
+
+- MyWorlds is also recognized under its `My_Worlds` fork name.
+
+- Stale per-game worlds are now unloaded and dropped through MyWorlds before falling back to deleting the directory, and the purge reports how many it removed.
+
+- Downgraded the BKCommonLib compile dependency to the locally built 1.19.4-v2 jar, matching the MyWorlds build Splegg runs against.
+
 **0.9.3:**
 
 - Added `/hub` so players can leave an active Splegg game or return to a protected main-world spawn.
