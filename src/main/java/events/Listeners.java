@@ -21,7 +21,6 @@ import org.bukkit.inventory.ItemStack;
 import com.destroystokyo.paper.event.player.PlayerAdvancementCriterionGrantEvent;
 
 import gui.SpleggShopGUI;
-import io.papermc.paper.event.player.AsyncChatEvent;
 import main.SpleggOG;
 import managers.Game;
 import net.trueog.diamondbankog.DiamondBankException.EconomyDisabledException;
@@ -476,42 +475,10 @@ public class Listeners implements Listener {
 
     }
 
-    @EventHandler
-    public void onAsyncPlayerChat(AsyncChatEvent asyncChatEvent) {
-
-        final Player sender = asyncChatEvent.getPlayer();
-        final SpleggOG splegg = SpleggOG.getPlugin();
-
-        if (!splegg.isSpleggWorld(sender.getWorld())) {
-
-            // Not in a Splegg world, don't filter.
-            return;
-
-        }
-
-        final UtilPlayer senderState = splegg.pm.getPlayer(sender);
-        final Game senderGame = senderState != null ? senderState.getGame() : null;
-        final String senderWorldName = sender.getWorld().getName();
-
-        asyncChatEvent.viewers().removeIf(viewer -> {
-
-            if (!(viewer instanceof Player recipient)) {
-
-                return false;
-
-            }
-
-            if (senderGame != null) {
-
-                final UtilPlayer recipientState = splegg.pm.getPlayer(recipient);
-                return recipientState == null || recipientState.getGame() != senderGame;
-
-            }
-
-            return !recipient.getWorld().getName().equals(senderWorldName);
-
-        });
-
-    }
+    // Chat scoping now belongs to Chat-OG, which routes per world and mirrors to
+    // the Splegg Discord
+    // channel. Filtering viewers() here never worked anyway, because Chat-OG
+    // cancels AsyncChatEvent
+    // and builds its own recipient set.
 
 }

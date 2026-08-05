@@ -80,9 +80,14 @@ Options:
 # VoidGenerator: pin the bundled void chunk generator onto every world Splegg
 # loads or copies. A copied world folder carries no MyWorlds generator setting,
 # so without this chunks outside the built arena generate vanilla terrain.
+#
+# GamePrefix: per-game worlds are named <GamePrefix><gameId>-<map>, for example SP1-Shake_It.
+# Lobby worlds use the matching <GamePrefix><number>-hub shape, for example SP1-hub.
+# Chat-OG keys its per-game Discord channel off this prefix, so keep the two in sync.
 Worlds:
   MapBase: ''
   VoidGenerator: true
+  GamePrefix: SP
   Lobby:
     - SP1-hub
   InGame:

@@ -13,7 +13,6 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import main.SpleggOG;
-import managers.GameWorldManager;
 import utils.UtilPlayer;
 import utils.Utils;
 
@@ -171,7 +170,8 @@ public class PlayerListener implements Listener {
         }
 
         String worldName = world.getName();
-        return SpleggOG.getPlugin().isSpleggWorld(worldName) || worldName.startsWith(GameWorldManager.COPY_PREFIX);
+        return SpleggOG.getPlugin().isSpleggWorld(worldName)
+                || SpleggOG.getPlugin().getGameWorldManager().isGameCopyName(worldName);
 
     }
 

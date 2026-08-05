@@ -353,6 +353,14 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
+    // Per-game worlds are named <prefix><gameId>-<map> so Chat-OG can link them to
+    // a Discord channel.
+    public String getGameWorldPrefix() {
+
+        return this.getConfig().getString("Worlds.GamePrefix", "SP");
+
+    }
+
     // Returns the configured MapBase directory containing cold-storage world
     // templates, or null when the feature is opt-out (empty/missing config).
     // Relative paths resolve against the server's world container (which equals

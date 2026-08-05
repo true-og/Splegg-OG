@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -27,23 +26,54 @@ import main.SpleggOG;
 
 // Owns the per-game world lifecycle for Splegg matches.
 // Each game is bound to a copy of its template world; the copy lives at
-// <worldContainer>/splegg-<gameId>-<templateName>/ and is deleted when the game
+// <worldContainer>/<prefix><gameId>-<templateName>/ and is deleted when the game
 // ends. The original template world remains loaded for admin editing and is
 // never modified by gameplay.
 public class GameWorldManager {
-
-    public static final String COPY_PREFIX = "splegg-";
-
-    // Per-game world names, splegg-<gameId>-<template>. Safe to purge wholesale
-    // before any game registers: every match builds its own copy from scratch.
-    private static final Pattern COPY_NAME = Pattern.compile("^" + Pattern.quote(COPY_PREFIX) + ".+$",
-            Pattern.CASE_INSENSITIVE);
 
     private final SpleggOG plugin;
 
     public GameWorldManager(SpleggOG plugin) {
 
         this.plugin = plugin;
+
+    }
+
+    // Matches <prefix><digits>-<rest>, the shape prepareWorld builds. Walks the
+    // name instead of a regex.
+    public boolean isGameCopyName(String name) {
+
+        String prefix = plugin.getGameWorldPrefix();
+        if (prefix.isEmpty() || !name.regionMatches(true, 0, prefix, 0, prefix.length()))
+            return false;
+
+        int index = prefix.length();
+        int digitStart = index;
+        while (index < name.length() && Character.isDigit(name.charAt(index)))
+            index++;
+
+        if (index == digitStart || index >= name.length() || name.charAt(index) != '-')
+            return false;
+
+        if (index + 1 >= name.length())
+            return false;
+
+        // A configured lobby or template world is the admin's, never a match copy.
+        return !isConfiguredWorld(name);
+
+    }
+
+    private boolean isConfiguredWorld(String name) {
+
+        for (String configured : plugin.getLobbyWorlds())
+            if (configured.equalsIgnoreCase(name))
+                return true;
+
+        for (String configured : plugin.getInGameWorlds())
+            if (configured.equalsIgnoreCase(name))
+                return true;
+
+        return false;
 
     }
 
@@ -61,7 +91,7 @@ public class GameWorldManager {
         for (File child : children) {
 
             String name = child.getName();
-            if (!COPY_NAME.matcher(name).matches())
+            if (!isGameCopyName(name))
                 continue;
 
             if (SpleggOG.isProtectedMainWorld(name)) {
@@ -307,7 +337,7 @@ public class GameWorldManager {
         // folder name and may differ in case from the configured one.
         templateName = template.getName();
 
-        String copyName = COPY_PREFIX + game.getGameId() + "-" + templateName;
+        String copyName = plugin.getGameWorldPrefix() + game.getGameId() + "-" + templateName;
         if (SpleggOG.isProtectedMainWorld(copyName)) {
 
             plugin.getLogger()
