@@ -85,7 +85,7 @@ Options:
 # Lobby worlds use the matching <GamePrefix><number>-hub shape, for example SP1-hub.
 # Chat-OG keys its per-game Discord channel off this prefix, so keep the two in sync.
 Worlds:
-  MapBase: ''
+  MapBase: 'maps'
   VoidGenerator: true
   GamePrefix: SP
   Lobby:
