@@ -91,7 +91,7 @@ Worlds:
   Lobby:
     - SP1-hub
   InGame:
-    - Shake_It
+    - Loss
 Sings:
   Format:
     1: '&8[&2Splegg&r-&4OG&8]'
