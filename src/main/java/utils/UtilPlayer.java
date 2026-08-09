@@ -12,7 +12,8 @@ public class UtilPlayer {
     boolean alive;
     Game game;
     InvStore store;
-    Location lastMainSmpLocation;
+    // Where the player stood before joining, in any non-splegg world.
+    Location preJoinLocation;
 
     public UtilPlayer(Player player) {
 
@@ -21,7 +22,7 @@ public class UtilPlayer {
         this.name = player.getName();
         this.alive = false;
         this.store = new InvStore(player);
-        this.lastMainSmpLocation = null;
+        this.preJoinLocation = null;
 
     }
 
@@ -67,15 +68,15 @@ public class UtilPlayer {
 
     }
 
-    public Location getLastMainSmpLocation() {
+    public Location getPreJoinLocation() {
 
-        return this.lastMainSmpLocation != null ? this.lastMainSmpLocation.clone() : null;
+        return this.preJoinLocation != null ? this.preJoinLocation.clone() : null;
 
     }
 
-    public void setLastMainSmpLocation(Location location) {
+    public void setPreJoinLocation(Location location) {
 
-        this.lastMainSmpLocation = location != null ? location.clone() : null;
+        this.preJoinLocation = location != null ? location.clone() : null;
 
     }
 

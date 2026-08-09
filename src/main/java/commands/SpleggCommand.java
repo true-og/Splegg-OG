@@ -532,10 +532,10 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
                                 } else {
 
                                     map.addFloor(
-                                            new Location(player.getWorld(), sel.getMinimumPoint().x(),
-                                                    sel.getMinimumPoint().y(), sel.getMinimumPoint().z()),
-                                            new Location(player.getWorld(), sel.getMaximumPoint().x(),
-                                                    sel.getMaximumPoint().y(), sel.getMaximumPoint().z()));
+                                            new Location(player.getWorld(), sel.getMinimumPoint().getX(),
+                                                    sel.getMinimumPoint().getY(), sel.getMinimumPoint().getZ()),
+                                            new Location(player.getWorld(), sel.getMaximumPoint().getX(),
+                                                    sel.getMaximumPoint().getY(), sel.getMaximumPoint().getZ()));
 
                                     Utils.spleggOGMessage(player, "&aFloor &6" + map.getFloors() + " &aadded to map: &e"
                                             + map.getName() + "&a.");

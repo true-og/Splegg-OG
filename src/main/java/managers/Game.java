@@ -610,8 +610,16 @@ public class Game {
         for (SpleggPlayer spleggPlayer : this.players.values()) {
 
             final Player player = spleggPlayer.getPlayer();
-            teleportToQueueLobby(player);
-            preparePlayerForLobby(player);
+            if (teleportToQueueLobby(player)) {
+
+                preparePlayerForLobby(player);
+
+            } else {
+
+                // Old world cleanup below evicts them to the main world spawn.
+                Utils.spleggOGMessage(player, "&cUnable to move you to the voted map.");
+
+            }
 
         }
 
@@ -653,9 +661,14 @@ public class Game {
     public void joinGame(UtilPlayer playerWhoIsJoining) {
 
         final Player player = playerWhoIsJoining.getPlayer();
-        if (splegg.isMainWorld(player.getWorld())) {
+        final World joinWorld = player.getWorld();
+        // Any world outside splegg territory is a valid return spot, not just the
+        // vanilla overworld set -- leaveGame sends the player back here.
+        if (joinWorld != null && !splegg.isSpleggWorld(joinWorld)
+                && !splegg.getGameWorldManager().isGameCopyName(joinWorld.getName()))
+        {
 
-            playerWhoIsJoining.setLastMainSmpLocation(player.getLocation());
+            playerWhoIsJoining.setPreJoinLocation(player.getLocation());
 
         }
 
@@ -682,13 +695,21 @@ public class Game {
             final SpleggPlayer sp;
             if (max == 1) {
 
+                // Stats are captured before the teleport so MyWorlds' own per-bundle
+                // exp/health swap cannot pollute the snapshot.
+                playerWhoIsJoining.getStore().save();
+                if (!teleportToQueueLobby(player)) {
+
+                    Utils.spleggOGMessage(player, "&cUnable to teleport you to the game lobby.");
+                    return;
+
+                }
+
                 sp = new SpleggPlayer(playerWhoIsJoining);
                 playerWhoIsJoining.setAlive(true);
-                playerWhoIsJoining.getStore().save();
                 Listeners.launchEggs.add(player.getUniqueId());
                 this.players.put(player.getUniqueId(), sp);
                 playerWhoIsJoining.setGame(this);
-                teleportToQueueLobby(player);
 
                 preparePlayerForLobby(player);
                 registerVotingPlayer(player);
@@ -718,14 +739,22 @@ public class Game {
 
                 }
 
+                // Stats are captured before the teleport so MyWorlds' own per-bundle
+                // exp/health swap cannot pollute the snapshot.
+                playerWhoIsJoining.getStore().save();
+                if (!teleportToQueueLobby(player)) {
+
+                    Utils.spleggOGMessage(player, "&cUnable to teleport you to the game lobby.");
+                    return;
+
+                }
+
                 sp = new SpleggPlayer(playerWhoIsJoining);
                 playerWhoIsJoining.setAlive(true);
-                playerWhoIsJoining.getStore().save();
                 Listeners.launchEggs.add(player.getUniqueId());
 
                 players.put(player.getUniqueId(), sp);
                 playerWhoIsJoining.setGame(this);
-                teleportToQueueLobby(player);
 
                 preparePlayerForLobby(player);
                 registerVotingPlayer(player);
@@ -819,14 +848,19 @@ public class Game {
 
     }
 
-    private void teleportToQueueLobby(Player player) {
+    // Returns false when no queue lobby resolves or the teleport is cancelled;
+    // callers must not touch the player's inventory in that case, or they would
+    // clear the main-world inventory the player is still standing in.
+    private boolean teleportToQueueLobby(Player player) {
 
         final Location queueLobby = getQueueLobbyLocation();
-        if (queueLobby != null && queueLobby.getWorld() != null) {
+        if (queueLobby == null || queueLobby.getWorld() == null) {
 
-            player.teleport(queueLobby);
+            return false;
 
         }
+
+        return player.teleport(queueLobby);
 
     }
 
@@ -932,7 +966,7 @@ public class Game {
             LobbyScoreboard.detach(player);
             LobbyScoreboard.refreshGame(game);
 
-            final Location returnLocation = u.getLastMainSmpLocation();
+            final Location returnLocation = u.getPreJoinLocation();
             if (returnLocation != null && returnLocation.getWorld() != null) {
 
                 player.teleport(returnLocation);

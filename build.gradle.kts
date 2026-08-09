@@ -54,7 +54,9 @@ repositories {
 dependencies {
     compileOnly("org.purpurmc.purpur:purpur-api:1.19.4-R0.1-SNAPSHOT") // Declare Purpur API version to be packaged.
     compileOnly("io.github.miniplaceholders:miniplaceholders-api:2.2.3") // Import MiniPlaceholders API.
-    compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.0-SNAPSHOT") // Import WorldEdit API.
+    compileOnly(
+        "com.sk89q.worldedit:worldedit-bukkit:7.2.15"
+    ) // Import WorldEdit API (7.2.15 matches the server's WorldEdit build).
     compileOnly("net.essentialsx:EssentialsX:2.21.0") // Import EssentialsX API.
     compileOnly(files("libs/MyWorlds/MyWorlds-1.19.4-v1.jar")) // Import MyWorlds API (local build).
     compileOnly(
