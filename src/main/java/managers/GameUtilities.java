@@ -160,6 +160,51 @@ public class GameUtilities {
 
     }
 
+    // Lobby ids are <Worlds.GamePrefix><gameId>, the same shape as the per-game
+    // world names, so SP1 names the lobby whose world is SP1-<map>.
+    public String getLobbyId(Game game) {
+
+        if (game == null)
+            return null;
+        return SpleggOG.getPlugin().getGameWorldPrefix() + game.getGameId();
+
+    }
+
+    // Accepts SP1, sp1 or a bare 1. Map names are deliberately not resolvable.
+    public Game resolveLobby(String input) {
+
+        if (input == null)
+            return null;
+
+        String query = input.trim();
+        if (query.isEmpty())
+            return null;
+
+        final String prefix = SpleggOG.getPlugin().getGameWorldPrefix();
+        if (!prefix.isEmpty() && query.regionMatches(true, 0, prefix, 0, prefix.length()))
+            query = query.substring(prefix.length());
+
+        if (query.isEmpty() || !query.chars().allMatch(Character::isDigit))
+            return null;
+
+        for (Game g : GAMES.values())
+            if (query.equals(g.getGameId()))
+                return g;
+
+        return null;
+
+    }
+
+    public List<String> getLobbyIds() {
+
+        final List<String> ids = new ArrayList<>();
+        for (Game g : GAMES.values())
+            ids.add(getLobbyId(g));
+        Collections.sort(ids);
+        return ids;
+
+    }
+
     public int howManyOpenGames() {
 
         int n = 0;

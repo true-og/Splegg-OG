@@ -482,10 +482,34 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
                             firstUserCommandArgument = args[1];
                             if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
 
-                                SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument)
-                                        .setLobby(player.getLocation());
-                                Utils.spleggOGMessage(player, "&aThe lobby for map: &e" + firstUserCommandArgument
-                                        + "&a has been set to: &2" + player.getLocation() + "&a.");
+                                final Map targetMap = SpleggOG.getPlugin().maps.getMap(firstUserCommandArgument);
+                                final String terrainWorld = targetMap.getTerrainWorldName();
+
+                                // The match lobby is rebased into every per-game copy of the
+                                // map's world, so surveying it anywhere else stores coordinates
+                                // that mean nothing once they land in the copy.
+                                if (terrainWorld == null) {
+
+                                    Utils.spleggOGMessage(player, "&cERROR: Map &e" + firstUserCommandArgument
+                                            + " &chas no spawns yet, so its world is unknown. &6Run &e/splegg setspawn "
+                                            + firstUserCommandArgument + " &6first.");
+
+                                } else if (!terrainWorld.equalsIgnoreCase(player.getWorld().getName())) {
+
+                                    Utils.spleggOGMessage(player,
+                                            "&cERROR: The match lobby for &e" + firstUserCommandArgument
+                                                    + " &cmust be inside that map's world (&e" + terrainWorld
+                                                    + "&c). &6You are in &e" + player.getWorld().getName()
+                                                    + "&6. Use &e/splegg setlobby &6with no map name to set the "
+                                                    + "global queue lobby instead.");
+
+                                } else {
+
+                                    targetMap.setLobby(player.getLocation());
+                                    Utils.spleggOGMessage(player, "&aThe lobby for map: &e" + firstUserCommandArgument
+                                            + "&a has been set to: &2" + player.getLocation() + "&a.");
+
+                                }
 
                             } else {
 
@@ -772,8 +796,21 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
                 + (map.getWorldName() != null ? map.getWorldName() : "&cunset (set a spawn first)"));
         Utils.spleggOGMessage(player, "&6Spawn points: &f" + map.getSpawnCount());
         Utils.spleggOGMessage(player, "&6Floor regions: &f" + map.getFloors());
-        Utils.spleggOGMessage(player,
-                "&6Match lobby: " + (map.lobbySet() ? "&aset" : "&cunset (falls back to global lobby)"));
+        if (!map.lobbySet()) {
+
+            Utils.spleggOGMessage(player, "&6Match lobby: &cunset (falls back to global lobby)");
+
+        } else if (map.isLobbyInMapWorld()) {
+
+            Utils.spleggOGMessage(player, "&6Match lobby: &aset");
+
+        } else {
+
+            Utils.spleggOGMessage(player, "&6Match lobby: &cignored -- saved in a different world. &6Re-run &e/splegg "
+                    + "setlobby " + map.getName() + " &6inside &e" + map.getTerrainWorldName() + "&6.");
+
+        }
+
         Utils.spleggOGMessage(player, "&6Active games: &f" + games.size());
 
         final boolean playable = map.isUsable(map);

@@ -149,8 +149,8 @@ public class PlayerListener implements Listener {
 
     private boolean isAllowedGameCommand(String message) {
 
-        return isCommand(message, "/splegg") || isCommand(message, "/sp") || isCommand(message, "/hub")
-                || isCommand(message, "/vote") || isCommand(message, "/v");
+        return isCommand(message, "/splegg") || isCommand(message, "/sp") || isCommand(message, "/spjoin")
+                || isCommand(message, "/hub") || isCommand(message, "/vote") || isCommand(message, "/v");
 
     }
 

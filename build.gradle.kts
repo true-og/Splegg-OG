@@ -62,6 +62,7 @@ dependencies {
     compileOnly(
         files("libs/BKCommonLib/BKCommonLib-1.19.4-v2.jar")
     ) // Import BKCommonLib API (local build, required by MyWorlds at compile time).
+    compileOnly(files("libs/Chat-OG/Chat-OG.jar")) // Import Chat-OG API for world chat formatting.
     implementation(project(":libs:GxUI-OG")) // Import TrueOG Network GxUI-OG Java API (from source).
     compileOnlyApi(project(":libs:Utilities-OG")) // Import TrueOG Network Utilities-OG Java API (from source).
     compileOnlyApi(project(":libs:DiamondBank-OG")) {

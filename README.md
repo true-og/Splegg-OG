@@ -4,13 +4,13 @@
 
 **Splegg-OG** is a Splegg plugin originally made by MrLuangamer, updated for Worldedit 7.2 and Spigot 1.16.4 by Hraponssi, then updated for Purpur 1.19.4 for use at [TrueOG Network](https://true-og.net/) by [NotAlexNoyle](https://github.com/NotAlexNoyle/).
 
-Runtime dependencies: WorldEdit, DiamondBank-OG, Essentials-OG, and MyWorlds.
+Runtime dependencies: WorldEdit, DiamondBank-OG, Essentials-OG, and MyWorlds. Chat-OG is optional and integrated when present.
 
 Current feature state:
 
-- Matches run in per-game MyWorlds copies of the configured template world, so multiple games can use the same map without sharing arena blocks, scoreboards, or player state.
+- Matches run in per-game MyWorlds copies of the configured template world, so multiple games can use the same map without sharing arena blocks, scoreboards, or player state. The template copied is the world the map's **terrain** is in, taken from its spawns and then its floors; a match lobby saved in some other world never decides it.
 - Splegg creates isolated MyWorlds inventory groups for configured lobby and in-game worlds. It does not manage the vanilla main-world inventory group.
-- Players can join by command, random queue, or registered lobby signs, then vote for the map while waiting in the lobby.
+- Players can join by lobby id with `/spjoin`, by map with `/splegg join`, by random queue, or through registered lobby signs, then vote for the map while waiting in the lobby.
 - Players can leave with `/splegg leave`, `/hub`, or the lobby slimeball.
 - Players who reconnect inside a Splegg world are returned to a protected main-world spawn instead of remaining in an abandoned match world.
 
@@ -51,7 +51,7 @@ Teleport to your in-game world (`/mw tp <world_name>`) and run:
 ### 4. Define the Arena
 While standing in the map:
 1. **Set Spawns:** Run `/splegg setspawn <map-name>` at every player starting position. You need at least two. Use `next` or a number to modify them.
-2. **Set Lobby:** Run `/splegg setlobby <map-name>` where players should wait before the game starts.
+2. **Set Lobby:** Run `/splegg setlobby <map-name>` where players should wait before the game starts. You must be standing **inside the map's own world** -- the match lobby is rebased into every per-game copy, so coordinates surveyed anywhere else land in unrelated terrain. Splegg refuses the command from another world and tells you which one it wants. For a waiting area outside the map, use the global `/splegg setlobby` with no map name instead.
 3. **Define Floors:** 
    - Use the WorldEdit wand (`//wand`) to select two parallel corners of a floor.
    - Run `/splegg addfloor <map-name>`. Repeat for as many floors as needed.
@@ -64,20 +64,22 @@ Run `/splegg join <map-name>` to ensure everything is working correctly.
 ### Management & Setup
 - `/splegg create <map>` - Initialize a new map.
 - `/splegg setspawn <map> [next|#]` - Define/modify player start points.
-- `/splegg setlobby <map>` - Set map-specific warm-up area.
-- `/splegg setlobby` - Set the global fallback lobby.
+- `/splegg setlobby <map>` - Set map-specific warm-up area. Must be run inside that map's world.
+- `/splegg setlobby` - Set the global fallback lobby. Any world.
 - `/splegg addfloor <map>` - Add selected WorldEdit region as a floor.
 - `/splegg info <map>` - Check setup status (spawns, floors, etc.).
 
 ### Gameplay
+- `/spjoin [lobby]` - Join a lobby by id (`SP1`, or just `1`). With no argument, joins the best open lobby.
 - `/splegg join <map>` - Join a specific map.
 - `/splegg random` - Join a random available map.
-- `/vote [#]` - View or cast votes for the current lobby's maps.
+- `/vote [#]` or `/v [#]` - View or cast votes for the current lobby's maps.
 - `/splegg leave` - Exit a lobby or match.
 - `/hub` - Return to the main world spawn.
 
 ### Administration
-- `/splegg start [map]` - Force start a match.
+- `/spforcestart [time]` - Start the match ignoring `Options.AutoStartPlayers`.
+- `/splegg start [map]` - Start a match that already has enough players.
 - `/splegg stop [map]` - End a match immediately.
 - `/splegg list` - List all maps, their status, and player counts.
 - `/splegg help` - Full command reference.
@@ -89,6 +91,24 @@ Run `/splegg join <map-name>` to ensure everything is working correctly.
 When a player joins a Splegg lobby, the lobby picks up to `Options.VotingMaps` playable maps. The joined map is kept as one of the choices and the remaining slots are filled randomly. Players get the same chat voting flow as TheHerobrine-OG: `/v #`, clickable vote lines, one active vote per player, vote changes that move the count, and reminder messages every `Options.VotingReminder` seconds.
 
 When the start countdown reaches `Options.EndVotingAt`, voting ends and the highest-voted map wins. If the winning map is different from the joined map, Splegg prepares a new per-game world copy for the winner, moves lobby players to that map's queue lobby, updates signs and scoreboards, and starts the match on the winning map.
+
+`/v` and `/vote` are claimed inside Splegg territory before any other plugin sees them, so VotingPlugin cannot take the `/vote` label away from map voting. The claim covers a player who is in a Splegg game, and anyone standing in a configured lobby or in-game world or a per-match copy. Everywhere else `/vote` behaves normally.
+
+**Force Starting:**
+
+`/spforcestart [time]` restarts the lobby countdown ignoring `Options.AutoStartPlayers`, so a match can begin below the configured minimum. The countdown floor is `Options.EndVotingAt` so map voting still resolves before the match starts, and `[time]` raises it. Requires `splegg.admin`.
+
+**Chat:**
+
+When Chat-OG is installed, Splegg registers a chat formatter for its `Worlds.GamePrefix` key (`SP` by default), which covers both the configured lobby worlds and every per-match copy. Lobby chat shows the player count, in-game chat shows blocks broken, and eliminated players are greyed out. Chat-OG's `discord.games` must contain a matching `SP` key for Splegg worlds to get their own chat; without it they stay in global chat and the formatter never runs.
+
+Chat-OG only routes worlds named `<letters><number>-<name>`, so a lobby world named anything else stays in global chat while Splegg still treats it as its own. Splegg warns at startup naming any such lobby world. `Worlds.InGame` entries are deliberately not checked: they are match templates, nobody queues or plays in one, and each per-game copy is named `<prefix><gameId>-<template>` and routes whatever the template is called.
+
+**Match Lobbies:**
+
+A map's match lobby is stored as bare coordinates and rebased into whichever per-game world copy the match runs in, so it only means anything when it was surveyed inside the map's own world. One saved elsewhere is ignored at runtime -- the queue falls through to the global lobby, then to spawn 1 -- and `/splegg info <map>` reports it as `ignored` with the command to re-run. Splegg logs this once per map on load rather than on every sign refresh.
+
+If you are upgrading and a map's lobby was saved in a shared hub world, that map was previously copying the *hub* as its arena. Re-run `/splegg setlobby <map>` inside the map, or clear the entry and rely on the global lobby.
 
 **Lobby Signs:**
 

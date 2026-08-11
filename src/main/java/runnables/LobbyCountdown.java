@@ -14,11 +14,20 @@ public class LobbyCountdown implements Runnable {
 
     int lobbycount;
     Game game;
+    // Set by /spforcestart so the countdown ignores Options.AutoStartPlayers.
+    boolean ignorePlayerCount;
 
     public LobbyCountdown(SpleggOG splegg, Game game, int lobbycount) {
 
+        this(splegg, game, lobbycount, false);
+
+    }
+
+    public LobbyCountdown(SpleggOG splegg, Game game, int lobbycount, boolean ignorePlayerCount) {
+
         this.game = game;
         this.lobbycount = lobbycount;
+        this.ignorePlayerCount = ignorePlayerCount;
 
     }
 
@@ -77,7 +86,7 @@ public class LobbyCountdown implements Runnable {
 
             }
 
-        } else if ((this.game.getPlayers().size()) >= 2) {
+        } else if ((this.game.getPlayers().size()) >= (this.ignorePlayerCount ? 1 : 2)) {
 
             Bukkit.getScheduler().cancelTask(this.game.getCounterID());
             SpleggOG.getPlugin().game.startGame(this.game);

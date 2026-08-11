@@ -4,7 +4,7 @@ version: '${version}'
 authors: [Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle]
 api-version: '${apiVersion}'
 depend: [DiamondBank-OG, Essentials-OG, WorldEdit, MyWorlds]
-softdepend: [My_Worlds]
+softdepend: [My_Worlds, Chat-OG]
 
 commands:
   splegg:
@@ -16,7 +16,15 @@ commands:
     description: Vote for a Splegg map.
     usage: /<command> <map number>
     aliases: [v]
-    
+  spjoin:
+    description: Join a Splegg lobby by its id.
+    usage: /<command> [lobby]
+  spforcestart:
+    description: Start the Splegg game even if the player minimum is not met.
+    permission: splegg.admin
+    usage: /<command> [time]
+
+
 permissions:
   splegg.use:
     description: Permission to run Splegg-OG commands.

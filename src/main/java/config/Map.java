@@ -20,6 +20,11 @@ public class Map {
     int spawncount;
     int floorcount;
     boolean usable;
+    // isUsable runs on every sign refresh and every voting-map pick, so the lobby
+    // world warning below is latched instead of logged per call.
+    // isUsable runs on every sign refresh and every voting-map pick, so the lobby
+    // world warning is latched rather than logged each time. Cleared by load().
+    private boolean warnedLobbyWorldMismatch;
 
     // Enable the conversion of text from config.yml to objects.
     public FileConfiguration config = SpleggOG.getPlugin().getConfig();
@@ -36,6 +41,7 @@ public class Map {
     public void load() {
 
         SpleggOG.getPlugin().getLogger().info("Loading map " + this.name + "...");
+        this.warnedLobbyWorldMismatch = false;
 
         this.file = new File(SpleggOG.getPlugin().getDataFolder(), this.name + ".yml");
         try {
@@ -119,6 +125,21 @@ public class Map {
             if (!isWorldEligible(lobbyWorld, "match lobby")) {
 
                 return false;
+
+            }
+
+            // Not fatal: getQueueLobbyLocation ignores a lobby stored against the
+            // wrong world and falls back, so the map still plays. Say so once, since
+            // the operator's intended waiting area is silently not being used.
+            if (!this.isLobbyInMapWorld() && !this.warnedLobbyWorldMismatch) {
+
+                this.warnedLobbyWorldMismatch = true;
+
+                Bukkit.getLogger()
+                        .warning("[Splegg-OG] Map '" + this.getName() + "' has its match lobby saved in world '"
+                                + lobbyWorld + "' but its terrain is in '" + this.getTerrainWorldName()
+                                + "'. The match lobby is ignored. Re-run /splegg setlobby " + this.getName()
+                                + " while standing in the map, or use /splegg setlobby for a global queue lobby.");
 
             }
 
@@ -360,13 +381,11 @@ public class Map {
 
     }
 
-    public String getWorldName() {
-
-        if (this.lobbySet()) {
-
-            return this.config.getString("Spawns.lobby.world");
-
-        }
+    // The world the map's terrain lives in, and therefore the template
+    // GameWorldManager copies per match. Spawns and floors define it; the match
+    // lobby never does. Reading the lobby first made a lobby set in another world
+    // (a shared hub) the thing that got copied as the arena.
+    public String getTerrainWorldName() {
 
         if (this.config.isString("Spawns.1.world")) {
 
@@ -381,6 +400,37 @@ public class Map {
         }
 
         return null;
+
+    }
+
+    public String getWorldName() {
+
+        final String terrain = this.getTerrainWorldName();
+        if (terrain != null) {
+
+            return terrain;
+
+        }
+
+        // Nothing but a lobby is configured. Such a map has no spawns, so it is
+        // already unusable; returning the lobby keeps /splegg info informative.
+        return this.lobbySet() ? this.config.getString("Spawns.lobby.world") : null;
+
+    }
+
+    // The match lobby is rebased into each per-game world copy, so its coordinates
+    // are only meaningful when they were surveyed in the map's own world. A lobby
+    // stored against any other world is a misconfiguration, not a shared hub.
+    public boolean isLobbyInMapWorld() {
+
+        if (!this.lobbySet()) {
+
+            return true;
+
+        }
+
+        final String terrain = this.getTerrainWorldName();
+        return terrain != null && terrain.equalsIgnoreCase(this.config.getString("Spawns.lobby.world"));
 
     }
 

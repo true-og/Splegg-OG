@@ -23,9 +23,15 @@ import com.bergerkiller.bukkit.mw.WorldInventory;
 import com.earth2me.essentials.Essentials;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 
+import nl.skbotnl.chatog.api.ChatOGAPI;
+
+import chat.SpleggChatFormatter;
+import commands.ForceStartCommand;
 import commands.HubCommand;
+import commands.JoinLobbyCommand;
 import commands.SpleggCommand;
 import commands.VoteCommand;
+import commands.VoteCommandListener;
 import commands.VoteCompleter;
 import config.MapUtilities;
 import events.Listeners;
@@ -169,9 +175,16 @@ public class SpleggOG extends JavaPlugin {
             this.getCommand("splegg").setExecutor(spleggCommand);
             this.getCommand("splegg").setTabCompleter(spleggCommand);
             this.getCommand("hub").setExecutor(new HubCommand());
+            this.getCommand("spforcestart").setExecutor(new ForceStartCommand());
+            final JoinLobbyCommand joinLobbyCommand = new JoinLobbyCommand();
+            this.getCommand("spjoin").setExecutor(joinLobbyCommand);
+            this.getCommand("spjoin").setTabCompleter(joinLobbyCommand);
             final VoteCommand voteCommand = new VoteCommand();
             this.getCommand("vote").setExecutor(voteCommand);
             this.getCommand("vote").setTabCompleter(new VoteCompleter());
+            // Claims /v and /vote inside Splegg territory before VotingPlugin sees them.
+            this.getServer().getPluginManager().registerEvents(new VoteCommandListener(voteCommand), this);
+            this.registerChatFormatter();
 
         }
 
@@ -338,6 +351,116 @@ public class SpleggOG extends JavaPlugin {
     public List<String> getMainWorlds() {
 
         return new ArrayList<>(PROTECTED_MAIN_WORLDS);
+
+    }
+
+    // Chat-OG routes a world to a game by the letter prefix of its name, which is
+    // the
+    // same prefix Splegg builds per-game worlds from, so one registration covers
+    // both
+    // the configured lobby worlds and every match copy.
+    private void registerChatFormatter() {
+
+        if (this.getServer().getPluginManager().getPlugin("Chat-OG") == null) {
+
+            this.getLogger().info("Chat-OG is not installed, so Splegg chat keeps its default formatting.");
+            return;
+
+        }
+
+        final String prefix = this.getGameWorldPrefix();
+        if (prefix == null || prefix.isEmpty()) {
+
+            this.getLogger().warning("Worlds.GamePrefix is empty, so no Splegg chat formatter was registered.");
+            return;
+
+        }
+
+        if (!ChatOGAPI.setFormatter(prefix, new SpleggChatFormatter())) {
+
+            this.getLogger().warning("Chat-OG was not ready, so no chat formatter was registered for " + prefix + ".");
+
+        }
+
+        this.warnAboutUnroutedWorlds(prefix);
+
+    }
+
+    // Chat-OG only routes a world whose name is <letters><digits>-<rest>, so a
+    // lobby
+    // world named anything else silently stays in global chat while Splegg still
+    // treats it as its own territory.
+    //
+    // Only Worlds.Lobby is checked. Worlds.InGame holds match templates that are
+    // copied per game, and prepareWorld names each copy
+    // <prefix><gameId>-<template>,
+    // which routes regardless of what the template is called. Nobody queues or
+    // plays
+    // in a template, so warning about one would be a false alarm -- and renaming it
+    // to satisfy the pattern would only make the copies read SP1-SP1-Loss.
+    private void warnAboutUnroutedWorlds(String prefix) {
+
+        final List<String> unrouted = new ArrayList<>();
+        for (String worldName : this.getLobbyWorlds()) {
+
+            if (!isProtectedMainWorld(worldName) && !isChatOGRoutable(worldName)) {
+
+                unrouted.add(worldName);
+
+            }
+
+        }
+
+        if (unrouted.isEmpty()) {
+
+            return;
+
+        }
+
+        this.getLogger()
+                .warning("These Splegg lobby worlds are not named <" + prefix
+                        + "><number>-<name>, so Chat-OG leaves them in global chat while Splegg still treats them as "
+                        + "its own: " + String.join(", ", unrouted) + ".");
+
+    }
+
+    // Mirrors Chat-OG's own parse: letters, then at least one digit, then '-',
+    // then a non-empty remainder.
+    private static boolean isChatOGRoutable(String worldName) {
+
+        if (worldName == null) {
+
+            return false;
+
+        }
+
+        int index = 0;
+        while (index < worldName.length() && Character.isLetter(worldName.charAt(index))) {
+
+            index++;
+
+        }
+
+        if (index == 0) {
+
+            return false;
+
+        }
+
+        final int digitStart = index;
+        while (index < worldName.length() && Character.isDigit(worldName.charAt(index))) {
+
+            index++;
+
+        }
+
+        if (index == digitStart || index >= worldName.length() || worldName.charAt(index) != '-') {
+
+            return false;
+
+        }
+
+        return index + 1 < worldName.length();
 
     }
 

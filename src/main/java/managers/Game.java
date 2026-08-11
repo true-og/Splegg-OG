@@ -815,7 +815,9 @@ public class Game {
 
     public Location getQueueLobbyLocation() {
 
-        if (this.map.lobbySet()) {
+        // A lobby surveyed in another world would be rebased into this match's world
+        // copy, dropping the player at those coordinates in unrelated terrain.
+        if (this.map.lobbySet() && this.map.isLobbyInMapWorld()) {
 
             final Location mapLobby = this.map.getLobbyIn(this.gameWorld);
             if (mapLobby != null && mapLobby.getWorld() != null) {
@@ -933,6 +935,37 @@ public class Game {
 
         counter = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.splegg,
                 new LobbyCountdown(splegg, this, this.getLobbyCount()), 0L, 20L);
+
+    }
+
+    // Restarts the lobby countdown ignoring Options.AutoStartPlayers. The floor is
+    // EndVotingAt so map voting still resolves before the game starts.
+    // Returns the countdown actually used, or -1 when the game is not in a lobby.
+    public int forceStartCountdown(int seconds) {
+
+        if (this.status != Status.LOBBY) {
+
+            return -1;
+
+        }
+
+        Bukkit.getScheduler().cancelTask(counter);
+
+        this.lobbycount = Math.max(seconds, getEndVotingAt());
+        this.setStarting(true);
+
+        final Iterator<?> playersInGame = this.players.values().iterator();
+        while (playersInGame.hasNext()) {
+
+            final SpleggPlayer sp = (SpleggPlayer) playersInGame.next();
+            sp.getPlayer().setLevel(this.getLobbyCount());
+
+        }
+
+        counter = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.splegg,
+                new LobbyCountdown(splegg, this, this.getLobbyCount(), true), 0L, 20L);
+
+        return this.lobbycount;
 
     }
 
