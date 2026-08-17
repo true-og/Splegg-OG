@@ -49,7 +49,7 @@ public class LobbyCountdown implements Runnable {
 
             }
 
-            this.game.getSign().update(this.game.getMap(), false);
+            this.game.getSign().update(this.game.getMap());
             LobbyScoreboard.refreshGame(this.game);
 
             if (this.lobbycount % 25 == 0) {
@@ -100,7 +100,7 @@ public class LobbyCountdown implements Runnable {
             this.game.setStarting(false);
             this.game.setLobbyCount(SpleggOG.getPlugin().getConfig().getInt("Options.Timer"));
             this.game.resetVoting();
-            this.game.getSign().update(this.game.getMap(), false);
+            this.game.getSign().update(this.game.getMap());
             LobbyScoreboard.refreshGame(this.game);
 
         }

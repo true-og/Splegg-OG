@@ -92,21 +92,20 @@ Worlds:
     - SP1-hub
   InGame:
     - Loss
+# Join signs render like TheHerobrine-OG's: title, map, bold status, then
+# black-on-sign player counts. A repeating task redraws every sign each second.
 Sings:
   Format:
-    1: '&8[&2Splegg&r-&4OG&8]'
-    2: '%status%'
-    3: '%map%'
-    4: '&5%count%/%maxcount%'
-  Restarting:
-    1: '###########################'
-    2: '&8[&6Restarting &2Splegg&4OG&8]'
-    3: '%map%'
-    4: '###########################'
+    1: '&4Splegg'
+    2: '&6%map%'
+    3: '%status%'
+    4: '&0%count%&8/&0%maxcount%'
   Status:
-    Join: '&a[Join]'
-    Starting: '&6Starting...'
-    Started: '&2Started'
+    Join: '&2&lJOIN'
+    Starting: '&5&lSTARTING'
+    Started: '&3&lLIVE'
+    Full: '&4&lFULL'
+    Ending: '&8&lENDING'
     Disabled: '&cDISABLED'
 Shovels:
   Wood:

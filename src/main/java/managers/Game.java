@@ -88,7 +88,7 @@ public class Game {
             @Override
             public void run() {
 
-                Game.this.getSign().update(map, true);
+                Game.this.getSign().update(map);
 
             }
 
@@ -631,11 +631,11 @@ public class Game {
 
         if (previousMap != null) {
 
-            new LobbySign(previousMap, this.splegg).update(previousMap, false);
+            new LobbySign(previousMap, this.splegg).update(previousMap);
 
         }
 
-        this.getSign().update(this.map, false);
+        this.getSign().update(this.map);
         LobbyScoreboard.refreshGame(this);
         return true;
 
@@ -775,7 +775,7 @@ public class Game {
 
             }
 
-            getSign().update(this.map, false);
+            getSign().update(this.map);
             LobbyScoreboard.refreshGame(this);
 
         } else if (this.status == Status.DISABLED) {
@@ -1084,7 +1084,7 @@ public class Game {
 
         if (!this.splegg.disabling) {
 
-            this.getSign().update(this.map, false);
+            this.getSign().update(this.map);
 
         }
 

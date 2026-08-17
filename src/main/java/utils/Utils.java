@@ -217,7 +217,7 @@ public class Utils {
 
             if (subject.charAt(i) == '&') {
 
-                if (isUpperBukkitCode(subject.charAt(i + 1))) {
+                if (i + 1 < subject.length() && isUpperBukkitCode(subject.charAt(i + 1))) {
 
                     subject = replaceCharAtIndex(subject, (i + 1), Character.toLowerCase(subject.charAt(i + 1)));
 

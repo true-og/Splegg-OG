@@ -1,13 +1,11 @@
 package signs;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 
 import config.Map;
@@ -20,10 +18,15 @@ import utils.Utils;
 /**
  * Renders the join-sign for a given map. With multi-game support, signs no
  * longer mirror a single {@link Game}'s status -- they aggregate across every
- * live game for the bound map. Idle (zero games) state advertises "click to
- * join" so a fresh game spawns on demand.
+ * live game for the bound map. Idle (zero games) state advertises JOIN so a
+ * fresh game spawns on demand. A {@link JoinSignUpdater} redraws every sign
+ * once a second, so event-driven update calls only shorten the latency.
  */
 public class LobbySign {
+
+    // Sign lines hold 15 visible characters; longer map names would clip
+    // mid-color-code, so they are truncated before rendering.
+    private static final int MAX_LINE_LENGTH = 15;
 
     SpleggOG splegg;
     Map map;
@@ -32,28 +35,6 @@ public class LobbySign {
 
         this.splegg = s;
         this.map = map;
-
-    }
-
-    private static Collection<Material> signMaterials = new ArrayList<>();
-    static {
-
-        signMaterials.add(Material.ACACIA_SIGN);
-        signMaterials.add(Material.DARK_OAK_SIGN);
-        signMaterials.add(Material.OAK_SIGN);
-        signMaterials.add(Material.BIRCH_SIGN);
-        signMaterials.add(Material.SPRUCE_SIGN);
-        signMaterials.add(Material.JUNGLE_SIGN);
-        signMaterials.add(Material.CRIMSON_SIGN);
-        signMaterials.add(Material.WARPED_SIGN);
-        signMaterials.add(Material.ACACIA_WALL_SIGN);
-        signMaterials.add(Material.DARK_OAK_WALL_SIGN);
-        signMaterials.add(Material.OAK_WALL_SIGN);
-        signMaterials.add(Material.BIRCH_WALL_SIGN);
-        signMaterials.add(Material.SPRUCE_WALL_SIGN);
-        signMaterials.add(Material.JUNGLE_WALL_SIGN);
-        signMaterials.add(Material.CRIMSON_WALL_SIGN);
-        signMaterials.add(Material.WARPED_WALL_SIGN);
 
     }
 
@@ -72,7 +53,7 @@ public class LobbySign {
 
             public void run() {
 
-                LobbySign.this.update(map, true);
+                LobbySign.this.update(map);
 
             }
 
@@ -90,37 +71,35 @@ public class LobbySign {
 
     }
 
-    public void update(Map map, boolean force) {
+    public void update(Map map) {
 
-        Iterator<?> var4 = this.splegg.maps.c.maps.getStringList("Signs." + map.getName() + ".lobby").iterator();
-        while (var4.hasNext()) {
+        final String[] lines = renderLines(map);
 
-            String loc = (String) var4.next();
-            Location location = LobbySignUtils.get().stringToLocation(loc);
-            if (!signMaterials.contains(location.getBlock().getType())) {
+        for (String loc : this.splegg.maps.c.maps.getStringList("Signs." + map.getName() + ".lobby")) {
 
-                location.getBlock().setType(Material.OAK_WALL_SIGN);
+            final Location location = LobbySignUtils.get().stringToLocation(loc);
+            final World world = location.getWorld();
+            if (world == null) {
+
+                continue;
+
+            }
+
+            // Never force a chunk load just to redraw a sign.
+            if (!world.isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4)) {
+
+                continue;
 
             }
 
-            Sign s = (Sign) location.getBlock().getState();
+            final BlockState state = location.getBlock().getState();
+            if (!(state instanceof Sign)) {
 
-            String[] sign = renderLines(map);
-
-            if (force) {
-
-                String[] flashing = new String[] { splegg.getConfig().getString("Sings.Restarting.1"),
-                        splegg.getConfig().getString("Sings.Restarting.2"),
-                        splegg.getConfig().getString("Sings.Restarting.3").replaceAll("%map%", map.getName()),
-                        splegg.getConfig().getString("Sings.Restarting.4") };
-                this.setSign(flashing, s);
-                Bukkit.getScheduler().scheduleSyncDelayedTask(this.splegg, new SignDelay(sign, s), 40L);
-
-            } else {
-
-                this.setSign(sign, s);
+                continue;
 
             }
+
+            this.setSign(lines, (Sign) state);
 
         }
 
@@ -128,79 +107,132 @@ public class LobbySign {
 
     private String[] renderLines(Map map) {
 
-        String status = getFancyStatus(map);
-        String players = getPlayers(map);
+        final String status = getFancyStatus(map);
+        final String count = String.valueOf(countPlayers(map));
+        final String maxCount = String.valueOf(countSlots(map));
 
-        return new String[] {
-                splegg.getConfig().getString("Sings.Format.1").replaceAll("%status%", status)
-                        .replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", players),
-                splegg.getConfig().getString("Sings.Format.2").replaceAll("%status%", status)
-                        .replaceAll("%map%", map.getName()).replaceAll("%count%/%maxcount%", players),
-                splegg.getConfig().getString("Sings.Format.3").replaceAll("%map%", map.getName())
-                        .replaceAll("%status%", status).replaceAll("%count%/%maxcount%", players),
-                splegg.getConfig().getString("Sings.Format.4").replaceAll("%count%/%maxcount%", players)
-                        .replaceAll("%status%", status).replaceAll("%map%", map.getName()) };
+        final String[] lines = new String[4];
+        final String[] defaults = { "&4Splegg", "&6%map%", "%status%", "&0%count%&8/&0%maxcount%" };
+        for (int i = 0; i < 4; i++) {
+
+            final String raw = this.splegg.getConfig().getString("Sings.Format." + (i + 1), defaults[i]);
+            lines[i] = raw.replace("%status%", status).replace("%map%", truncate(map.getName()))
+                    .replace("%count%", count).replace("%maxcount%", maxCount);
+
+        }
+
+        return lines;
 
     }
 
-    private String getPlayers(Map map) {
+    private static String truncate(String subject) {
 
-        if (!map.isUsable(map))
-            return "";
+        return subject.length() > MAX_LINE_LENGTH ? subject.substring(0, MAX_LINE_LENGTH) : subject;
 
-        List<Game> games = splegg.games.gamesForMap(map.getName());
+    }
+
+    private int countPlayers(Map map) {
+
         int totalPlayers = 0;
-        for (Game g : games)
+        for (Game g : this.splegg.games.gamesForMap(map.getName())) {
+
             totalPlayers += g.getPlayers().size();
 
-        int slotsPerGame = map.getSpawnCount();
-        if (slotsPerGame <= 1)
-            return "&0Players: &0" + totalPlayers;
-        return "&0" + totalPlayers + "&8/&0" + slotsPerGame;
+        }
+
+        return totalPlayers;
 
     }
 
+    private int countSlots(Map map) {
+
+        final List<Game> games = this.splegg.games.gamesForMap(map.getName());
+        return map.getSpawnCount() * Math.max(1, games.size());
+
+    }
+
+    // Mirrors TheHerobrine-OG's join-sign status table: STARTING and JOIN win
+    // over LIVE, an all-live map reads LIVE, a map stuck ending reads ENDING,
+    // and anything else that cannot be joined reads FULL.
     private String getFancyStatus(Map map) {
 
-        if (!map.isUsable(map))
-            return splegg.getConfig().getString("Sings.Status.Disabled");
+        if (!map.isUsable(map)) {
 
-        List<Game> games = splegg.games.gamesForMap(map.getName());
+            return this.splegg.getConfig().getString("Sings.Status.Disabled", "&cDISABLED");
 
-        // Idle: no live game. Treat as "click to join" so new game spawns on
-        // demand. Falls back to the Join string from config.
-        if (games.isEmpty())
-            return splegg.getConfig().getString("Sings.Status.Join");
+        }
+
+        final List<Game> games = this.splegg.games.gamesForMap(map.getName());
+
+        // Idle: no live game. A click spawns one on demand, so the sign
+        // advertises JOIN.
+        if (games.isEmpty()) {
+
+            return this.splegg.getConfig().getString("Sings.Status.Join", "&2&lJOIN");
+
+        }
 
         boolean anyJoinable = false;
         boolean anyStarting = false;
-        boolean anyInGame = false;
+        int liveCount = 0;
+        int endingCount = 0;
         for (Game g : games) {
 
-            Status st = g.getStatus();
+            final Status st = g.getStatus();
             if (st == Status.LOBBY) {
 
-                if (g.isStarting())
+                if (g.isStarting()) {
+
                     anyStarting = true;
-                else if (g.getPlayers().size() < map.getSpawnCount())
+                    if (g.getPlayers().size() < map.getSpawnCount()) {
+
+                        anyJoinable = true;
+
+                    }
+
+                } else if (g.getPlayers().size() < map.getSpawnCount()) {
+
                     anyJoinable = true;
+
+                }
 
             } else if (st == Status.INGAME) {
 
-                anyInGame = true;
+                liveCount++;
+
+            } else if (st == Status.ENDING) {
+
+                endingCount++;
 
             }
 
         }
 
-        if (anyJoinable)
-            return splegg.getConfig().getString("Sings.Status.Join");
-        if (anyStarting)
-            return splegg.getConfig().getString("Sings.Status.Starting", "&e[Starting]");
-        if (anyInGame)
-            return splegg.getConfig().getString("Sings.Status.Started");
+        if (anyJoinable && anyStarting) {
 
-        return splegg.getConfig().getString("Sings.Status.Join");
+            return this.splegg.getConfig().getString("Sings.Status.Starting", "&5&lSTARTING");
+
+        }
+
+        if (anyJoinable) {
+
+            return this.splegg.getConfig().getString("Sings.Status.Join", "&2&lJOIN");
+
+        }
+
+        if (liveCount == games.size()) {
+
+            return this.splegg.getConfig().getString("Sings.Status.Started", "&3&lLIVE");
+
+        }
+
+        if (endingCount == games.size()) {
+
+            return this.splegg.getConfig().getString("Sings.Status.Ending", "&8&lENDING");
+
+        }
+
+        return this.splegg.getConfig().getString("Sings.Status.Full", "&4&lFULL");
 
     }
 
@@ -213,7 +245,7 @@ public class LobbySign {
 
         }
 
-        s.update();
+        s.update(false, false);
 
     }
 

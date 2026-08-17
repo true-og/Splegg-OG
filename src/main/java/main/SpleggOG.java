@@ -46,6 +46,7 @@ import managers.GameWorldManager;
 import managers.Status;
 import managers.VoidChunkGenerator;
 import net.trueog.diamondbankog.api.DiamondBankAPIJava;
+import signs.JoinSignUpdater;
 import utils.UtilPlayer;
 import utils.Utils;
 
@@ -185,6 +186,10 @@ public class SpleggOG extends JavaPlugin {
             // Claims /v and /vote inside Splegg territory before VotingPlugin sees them.
             this.getServer().getPluginManager().registerEvents(new VoteCommandListener(voteCommand), this);
             this.registerChatFormatter();
+
+            // Redraw join signs once a second, TheHerobrine-OG style. First run
+            // waits a second so world provisioning has kicked off.
+            new JoinSignUpdater(this).runTaskTimer(this, 20L, 20L);
 
         }
 

@@ -60,7 +60,9 @@ public class InvStore {
 
         }
 
-        this.player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+        // Main scoreboard, not an empty one: an empty board would keep
+        // Scoreboard-OG from re-showing its sidebar after the player leaves.
+        this.player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
         this.player.updateInventory();
 
     }

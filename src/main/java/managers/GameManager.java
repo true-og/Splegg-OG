@@ -64,7 +64,7 @@ public class GameManager {
 
         }
 
-        game.getSign().update(map, false);
+        game.getSign().update(map);
 
         splegg.chat.bc(splegg.getConfig().getString("Messages.InstructionsGame"), game);
 
@@ -99,7 +99,7 @@ public class GameManager {
 
         if (!splegg.disabling) {
 
-            game.getSign().update(game.map, true);
+            game.getSign().update(game.map);
 
         }
 

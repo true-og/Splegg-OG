@@ -1,3 +1,15 @@
+**0.9.5:**
+
+- Join signs now look and behave like TheHerobrine-OG's: a `&4Splegg` title, the map name, a bold aggregate status (`JOIN`, `STARTING`, `LIVE`, `FULL`, `ENDING`, `DISABLED`), and black-on-sign player counts, redrawn once a second by a repeating task that never force-loads chunks. The flashing "Restarting" sign state was removed along with the `Sings.Restarting` config section.
+
+- Sign clicks are now recognized by registered location instead of by the sign's rendered header, so reformatting a sign (or changing `Sings.Format.1`) can no longer orphan it, and all sign types are matched through block tags.
+
+- Leaving a Splegg lobby or game now hands the player back to the server's main scoreboard instead of a fresh empty one, so Scoreboard-OG can restore its sidebar after the return teleport.
+
+- Splegg chat now renders the standard TrueOG name segment (union bracket tag, display name, LuckPerms suffix) like TheHerobrine-OG, with a caret colored by the sender's Chat-OG message color, while keeping the lobby queue count and in-game broken-block counters.
+
+- Fixed a crash in the legacy color serializer when a string ends with a trailing `&`.
+
 **0.9.4:**
 
 - Splegg now loads its configured lobby and in-game worlds itself instead of asking an admin to run `/mw load` first, and per-match world copies fall back to loading their template on demand.

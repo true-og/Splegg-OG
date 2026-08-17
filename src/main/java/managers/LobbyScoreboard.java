@@ -51,10 +51,13 @@ public class LobbyScoreboard {
 
     public static void detach(Player player) {
 
+        // Hand the player back to the server's main scoreboard rather than a
+        // fresh empty one: Scoreboard-OG's world-change hook only reclaims its
+        // sidebar when the player's Bukkit board is the main scoreboard.
         final ScoreboardManager manager = Bukkit.getScoreboardManager();
         if (manager != null) {
 
-            player.setScoreboard(manager.getNewScoreboard());
+            player.setScoreboard(manager.getMainScoreboard());
 
         }
 
