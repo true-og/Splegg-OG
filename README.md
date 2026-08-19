@@ -59,6 +59,19 @@ While standing in the map:
 ### 5. Test Your Map
 Run `/splegg join <map-name>` to ensure everything is working correctly.
 
+## Join Signs
+
+Admins can place physical signs that players right-click to join a map. A repeating task redraws every sign each second with the map name, live status, and player counts, using the `Sings.Format` and `Sings.Status` templates in `config.yml`.
+
+To set one up:
+
+1. Make sure the map already exists (`/splegg create <map-name>`, see the setup guide above).
+2. Place a sign in a persistent world such as the server hub — never inside a per-match world copy, which is deleted after each game.
+3. Write `[Splegg]` on the first line and the map name on the second line. Requires the `splegg.admin` permission.
+4. The sign reformats itself immediately; right-clicking it joins that map, creating a game if none is running.
+
+Signs are registered by location, not by their text, so reformatting cannot orphan them. Breaking a registered sign requires `splegg.admin` and unregisters it; everyone else is blocked from breaking it.
+
 ## 🛠 Command Reference
 
 ### Management & Setup
