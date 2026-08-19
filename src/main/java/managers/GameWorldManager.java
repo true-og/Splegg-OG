@@ -434,11 +434,18 @@ public class GameWorldManager {
         // Per-game world joins the in-game inventory bundle so players keep the
         // splegg in-game inventory across template -> per-game world teleports.
         // Detach first to clear any stray bundle membership, then merge with
-        // the template.
+        // the template. The merge must carry the template's existing bundle
+        // members: WorldInventory.merge builds a fresh bundle from exactly the
+        // listed worlds, so passing only template+copy would silently strip the
+        // copies of other games running concurrently on the same map.
         try {
 
             WorldInventory.detach(Collections.singletonList(copyName));
-            WorldInventory.merge(java.util.Arrays.asList(templateName, copyName));
+            final java.util.LinkedHashSet<String> bundle = new java.util.LinkedHashSet<>();
+            bundle.add(templateName);
+            bundle.addAll(WorldConfig.get(templateName).inventory.getWorlds());
+            bundle.add(copyName);
+            WorldInventory.merge(new ArrayList<>(bundle));
 
         } catch (Throwable t) {
 
