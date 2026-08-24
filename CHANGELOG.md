@@ -1,3 +1,11 @@
+**0.9.6:**
+
+- Added persistent per-player points and the Hive Java Splegg rank ladder (Farmer through Oliver, with The Eggspert reserved for the top scorer once they also hold Oliver). Points are awarded per block an egg destroys and to the match winner, tunable under the new `Points` config section, and stored in `plugins/Splegg-OG/stats.yml`.
+
+- Registered `<sp_score>` and `<sp_rank>` MiniPlaceholders through Utilities-OG. Both read the live in-memory totals, so they update the moment a block breaks or a match is won.
+
+- Declared `Utilities-OG` as a hard dependency; the plugin already needed it at runtime for chat and message formatting.
+
 **0.9.5:**
 
 - Join signs now look and behave like TheHerobrine-OG's: a `&4Splegg` title, the map name, a bold aggregate status (`JOIN`, `STARTING`, `LIVE`, `FULL`, `ENDING`, `DISABLED`), and black-on-sign player counts, redrawn once a second by a repeating task that never force-loads chunks. The flashing "Restarting" sign state was removed along with the `Sings.Restarting` config section.

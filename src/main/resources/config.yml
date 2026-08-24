@@ -51,6 +51,11 @@ Money:
   KillPlayer: 0
   # Diamonds awarded to the match winner.
   FinishGame: 1
+Points:
+  # Points awarded per block an egg destroys.
+  BlockBroken: 1
+  # Points awarded to the match winner.
+  Win: 50
 Options:
   Timer: 120
   AutoStartPlayers: 4

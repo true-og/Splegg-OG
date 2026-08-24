@@ -23,6 +23,7 @@ import org.bukkit.util.BlockIterator;
 import main.SpleggOG;
 import managers.Game;
 import managers.Status;
+import stats.SpleggStats;
 import utils.SpleggPlayer;
 import utils.UtilPlayer;
 import utils.Utils;
@@ -120,6 +121,7 @@ public class SpleggEvents implements Listener {
                             if (spleggPlayer != null) {
 
                                 spleggPlayer.addBrokenBlock();
+                                SpleggStats.get().addPoints(player, SpleggStats.blockPoints());
 
                             }
 

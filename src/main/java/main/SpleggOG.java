@@ -24,6 +24,8 @@ import com.earth2me.essentials.Essentials;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 
 import nl.skbotnl.chatog.api.ChatOGAPI;
+import stats.SpleggPlaceholders;
+import stats.SpleggStats;
 
 import chat.SpleggChatFormatter;
 import commands.ForceStartCommand;
@@ -73,6 +75,7 @@ public class SpleggOG extends JavaPlugin {
     public Utils pm;
     public Utils utils;
     public Utils config;
+    public SpleggStats stats;
     public boolean updateOut = false;
     public String newVer = "";
     public boolean disabling = false;
@@ -162,6 +165,13 @@ public class SpleggOG extends JavaPlugin {
             this.getConfig().options().copyDefaults(true);
             this.saveConfig();
 
+            // Points persist across restarts and feed the sp_score and sp_rank
+            // placeholders.
+            this.stats = new SpleggStats(this);
+            this.stats.load();
+            this.stats.startAutosave();
+            SpleggPlaceholders.register();
+
             // World provisioning runs on the first tick rather than here: loading a
             // world pumps the chunk system, and the resulting ChunkLoadEvent reaches
             // plugins that have not finished their own startup yet.
@@ -219,6 +229,13 @@ public class SpleggOG extends JavaPlugin {
         }
 
         Listeners.clearAll();
+
+        if (this.stats != null) {
+
+            this.stats.shutdown();
+            this.stats = null;
+
+        }
 
         this.getLogger().info("Splegg-OG Shut Down with " + gameCounter + " games running.");
 

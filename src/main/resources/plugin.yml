@@ -3,7 +3,7 @@ main: main.SpleggOG
 version: '${version}'
 authors: [Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle]
 api-version: '${apiVersion}'
-depend: [DiamondBank-OG, Essentials-OG, WorldEdit, MyWorlds]
+depend: [DiamondBank-OG, Essentials-OG, WorldEdit, MyWorlds, Utilities-OG]
 softdepend: [My_Worlds, Chat-OG]
 
 commands:

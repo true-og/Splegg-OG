@@ -14,6 +14,7 @@ import main.SpleggOG;
 import net.kyori.adventure.title.Title;
 import net.trueog.diamondbankog.DiamondBankException.EconomyDisabledException;
 import net.trueog.utilitiesog.UtilitiesOG;
+import stats.SpleggStats;
 import utils.SpleggPlayer;
 import utils.UtilPlayer;
 import utils.Utils;
@@ -136,6 +137,7 @@ public class GameManager {
                 Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(3), Duration.ofMillis(600))));
         Utils.spleggOGMessage(player, youWonMessage.replaceAll("%map%", mapName));
         rewardWinner(player);
+        SpleggStats.get().addPoints(player, SpleggStats.winPoints());
 
         stopGame(game, 1);
 

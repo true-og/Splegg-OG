@@ -72,6 +72,38 @@ To set one up:
 
 Signs are registered by location, not by their text, so reformatting cannot orphan them. Breaking a registered sign requires `splegg.admin` and unregisters it; everyone else is blocked from breaking it.
 
+## Points, Ranks & Placeholders
+
+Every block an egg destroys and every match win awards points (`Points.BlockBroken`
+and `Points.Win` in `config.yml`). Totals persist in `plugins/Splegg-OG/stats.yml`
+and map onto the Hive Java Splegg rank ladder:
+
+| Rank | Points |
+|------|--------|
+| Farmer | 0 |
+| Cook | 5,000 |
+| Chef | 10,000 |
+| Master | 100,000 |
+| Humpty Dumpty | 250,000 |
+| Ramsay | 500,000 |
+| Hot'n'Spicy | 1,000,000 |
+| Splegg Head | 1,200,000 |
+| Bacon | 1,500,000 |
+| Sunnyside | 2,000,000 |
+| Delicious | 3,000,000 |
+| Easter Bunny | 4,000,000 |
+| Scrambled | 5,000,000 |
+| Oliver | 7,500,000 |
+| The Eggspert | Top player, once they also reach Oliver |
+
+Registered through Utilities-OG as MiniPlaceholders, resolved for the viewing
+player, and updated the moment the underlying value changes:
+
+| Placeholder | Value |
+|-------------|-------|
+| `<sp_score>` | Total points |
+| `<sp_rank>` | Colored rank name for that score |
+
 ## 🛠 Command Reference
 
 ### Management & Setup
