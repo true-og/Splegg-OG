@@ -2,6 +2,7 @@ package managers;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,38 +10,103 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.entity.Player;
 
 import main.SpleggOG;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import utils.SpleggPlayer;
+import utils.Utils;
 
-/**
- * Registry of all live {@link Game} sessions. Splegg supports N concurrent
- * games per map; each {@link Game} is identified by its {@code gameId}.
- *
- * Backward compatibility: {@link #GAMES} is preserved as a view over gameId
- * -&gt; Game, but legacy callers that looked up by map name should use
- * {@link #getGame(String)} (returns the first/preferred game for that map) or
- * the explicit multi-game helpers below.
- */
+// Registry of every Splegg lobby, keyed by lobby number. Lobbies are created
+// once per configured hub world (SP1-hub is lobby SP1) and live for the whole
+// server session; a finished match resets its lobby instead of removing it.
 public class GameUtilities {
 
     public java.util.Map<String, Game> GAMES = new ConcurrentHashMap<>();
 
-    public Game getGame(String mapNameOrGameId) {
+    // Lobby ids are <Worlds.GamePrefix><number>, the same shape as the hub
+    // world name without its -hub suffix. Returns the number, or null when the
+    // world name is not <prefix><digits>-<name>.
+    public static String lobbyNumberFromWorldName(String worldName) {
 
-        if (mapNameOrGameId == null)
+        if (worldName == null) {
+
             return null;
-        Game direct = GAMES.get(mapNameOrGameId);
-        if (direct != null)
-            return direct;
-        for (Game g : GAMES.values())
-            if (g.getMap() != null && mapNameOrGameId.equals(g.getMap().getName()))
-                return g;
-        return null;
+
+        }
+
+        final String prefix = SpleggOG.getPlugin().getGameWorldPrefix();
+        if (prefix == null || prefix.isEmpty() || !worldName.regionMatches(true, 0, prefix, 0, prefix.length())) {
+
+            return null;
+
+        }
+
+        int index = prefix.length();
+        final int digitStart = index;
+        while (index < worldName.length() && Character.isDigit(worldName.charAt(index))) {
+
+            index++;
+
+        }
+
+        if (index == digitStart || index >= worldName.length() || worldName.charAt(index) != '-'
+                || index + 1 >= worldName.length())
+        {
+
+            return null;
+
+        }
+
+        return String.valueOf(Integer.parseInt(worldName.substring(digitStart, index)));
 
     }
 
-    public void addGame(String key, Game game) {
+    // Brings a lobby online for a loaded hub world, or returns the one that
+    // already owns that number.
+    public Game createLobby(String hubWorldName) {
 
-        GAMES.put(key, game);
+        final String number = lobbyNumberFromWorldName(hubWorldName);
+        if (number == null) {
+
+            SpleggOG.getPlugin().getLogger()
+                    .warning("Lobby world '" + hubWorldName + "' is not named <"
+                            + SpleggOG.getPlugin().getGameWorldPrefix()
+                            + "><number>-<name> (for example SP1-hub), so no lobby was created for it.");
+            return null;
+
+        }
+
+        final Game existing = GAMES.get(number);
+        if (existing != null) {
+
+            if (!existing.getHubWorldName().equalsIgnoreCase(hubWorldName)) {
+
+                SpleggOG.getPlugin().getLogger().warning("Lobby world '" + hubWorldName + "' clashes with '"
+                        + existing.getHubWorldName() + "': both claim lobby " + existing.getLobbyId() + ".");
+
+            }
+
+            return existing;
+
+        }
+
+        final Game game = new Game(SpleggOG.getPlugin(), number, hubWorldName);
+        GAMES.put(number, game);
+        SpleggOG.getPlugin().getLogger()
+                .info("Lobby " + game.getLobbyId() + " is ready in hub world '" + hubWorldName + "'.");
+        return game;
+
+    }
+
+    public void clear() {
+
+        GAMES.clear();
+
+    }
+
+    public Game getGame(String lobbyIdOrNumber) {
+
+        return resolveLobby(lobbyIdOrNumber);
 
     }
 
@@ -59,6 +125,7 @@ public class GameUtilities {
 
     }
 
+    // Lobbies whose chosen or running map is the given one.
     public List<Game> gamesForMap(String mapName) {
 
         List<Game> out = new ArrayList<>();
@@ -71,63 +138,169 @@ public class GameUtilities {
 
     }
 
-    public Game findJoinableForMap(String mapName) {
+    // Accepts SP1, sp1 or a bare 1. Map names are deliberately not resolvable.
+    public Game resolveLobby(String input) {
 
-        Game best = null;
-        int bestFill = -1;
-        for (Game g : gamesForMap(mapName)) {
+        if (input == null)
+            return null;
 
-            if (g.getStatus() != Status.LOBBY)
-                continue;
-            if (g.getMap() == null || !g.getMap().isUsable(g.getMap()))
-                continue;
-            int max = g.getMap().getSpawnCount();
-            int fill = g.getPlayers().size();
-            if (fill >= max)
-                continue;
-            if (fill > bestFill) {
+        String query = input.trim();
+        if (query.isEmpty())
+            return null;
 
-                bestFill = fill;
-                best = g;
+        final String prefix = SpleggOG.getPlugin().getGameWorldPrefix();
+        if (!prefix.isEmpty() && query.regionMatches(true, 0, prefix, 0, prefix.length()))
+            query = query.substring(prefix.length());
+
+        if (query.isEmpty() || !query.chars().allMatch(Character::isDigit))
+            return null;
+
+        final String number = String.valueOf(Integer.parseInt(query));
+        return GAMES.get(number);
+
+    }
+
+    // The best lobby for a player who did not name one: a starting lobby with
+    // room and the most players, else a waiting lobby with room and the most
+    // players. Live lobbies cannot be joined.
+    public Game findBestLobby(Player player) {
+
+        Game bestStarting = null;
+        Game bestWaiting = null;
+        int bestStartingFill = -1;
+        int bestWaitingFill = -1;
+
+        for (Game g : all()) {
+
+            if (g.getStatus() != Status.LOBBY || g.getHubWorld() == null)
+                continue;
+
+            final int fill = g.getPlayers().size();
+            if (fill >= g.getMaxPlayers() && !player.hasPermission("splegg.joinfull"))
+                continue;
+
+            if (g.isStarting()) {
+
+                if (fill > bestStartingFill) {
+
+                    bestStartingFill = fill;
+                    bestStarting = g;
+
+                }
+
+            } else if (fill > bestWaitingFill) {
+
+                bestWaitingFill = fill;
+                bestWaiting = g;
 
             }
 
         }
 
-        return best;
+        return bestStarting != null ? bestStarting : bestWaiting;
 
     }
 
-    public Game createForMap(config.Map map) {
+    public String getLobbyId(Game game) {
 
-        if (map == null || !map.isUsable(map))
-            return null;
-        Game game = new Game(SpleggOG.getPlugin(), map);
-        org.bukkit.World world = SpleggOG.getPlugin().getGameWorldManager().prepareWorld(game);
-        if (world == null) {
+        return game == null ? null : game.getLobbyId();
 
-            SpleggOG.getPlugin().getLogger()
-                    .warning("Failed to create per-game world for map '" + map.getName() + "'.");
-            return null;
+    }
+
+    public List<String> getLobbyIds() {
+
+        final List<String> ids = new ArrayList<>();
+        for (Game g : all())
+            ids.add(g.getLobbyId());
+        return ids;
+
+    }
+
+    // Every lobby, ordered by number.
+    public List<Game> all() {
+
+        final List<Game> games = new ArrayList<>(GAMES.values());
+        games.sort(Comparator.comparingInt(g -> Integer.parseInt(g.getGameId())));
+        return Collections.unmodifiableList(games);
+
+    }
+
+    // The lobby list players see, TheHerobrine-OG style, with clickable joins.
+    public void sendLobbyMessage(Player player) {
+
+        final List<Game> games = all();
+        if (games.isEmpty()) {
+
+            Utils.spleggOGMessage(player, "&cThere are no Splegg lobbies. Check Worlds.Lobby in config.yml.");
+            return;
 
         }
 
-        game.setGameWorld(world);
-        registerGame(game);
-        SpleggOG.getPlugin().getLogger()
-                .info("Created Splegg game " + game.getGameId() + " for map '" + map.getName() + "'.");
-        return game;
+        Utils.spleggOGMessage(player, "&6Join a lobby with /splegg join <id>.");
+        Utils.spleggOGMessage(player, "&6Lobbies available to join:");
+
+        final boolean overfill = player.hasPermission("splegg.joinfull");
+        for (Game game : games) {
+
+            final String id = game.getLobbyId();
+            final int fill = game.getPlayers().size();
+            final int max = game.getMaxPlayers();
+            final String line;
+            final boolean joinable;
+            switch (game.getStatus()) {
+
+                case LOBBY -> {
+
+                    final String state = game.isStarting() ? "&d&lSTARTING " : "&e&lWAITING ";
+                    joinable = fill < max || overfill;
+                    line = "&b" + id + ": &e" + fill + "/" + max + "&7 - &r" + state + "&r"
+                            + (fill < max ? "&a(JOIN)" : "&c&lFULL &r" + (overfill ? "&a(JOIN)" : ""));
+
+                }
+                case INGAME -> {
+
+                    joinable = false;
+                    line = "&b" + id + ": &e" + fill + " remaining&8 - &b&lLIVE &r&7(" + game.getMapDisplayName() + ")";
+
+                }
+                case ENDING -> {
+
+                    joinable = false;
+                    line = "&b" + id + ": &8&lENDING";
+
+                }
+                default -> {
+
+                    joinable = false;
+                    line = "&b" + id + ": &c&lDISABLED";
+
+                }
+
+            }
+
+            TextComponent component = Utils.legacySerializerAnyCase(Utils.prefix + line);
+            if (joinable) {
+
+                component = component
+                        .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                Utils.legacySerializerAnyCase("&6Click here to join &b" + id)))
+                        .clickEvent(ClickEvent.runCommand("/splegg join " + id));
+
+            }
+
+            player.sendMessage(component);
+
+        }
 
     }
 
-    public Game findOrCreateForMap(config.Map map) {
+    public int howManyOpenGames() {
 
-        if (map == null)
-            return null;
-        Game joinable = findJoinableForMap(map.getName());
-        if (joinable != null)
-            return joinable;
-        return createForMap(map);
+        int n = 0;
+        for (Game g : GAMES.values())
+            if (g.getStatus() == Status.LOBBY)
+                n++;
+        return n;
 
     }
 
@@ -157,61 +330,6 @@ public class GameUtilities {
             if (g.players.containsKey(playerId))
                 return g;
         return null;
-
-    }
-
-    // Lobby ids are <Worlds.GamePrefix><gameId>, the same shape as the per-game
-    // world names, so SP1 names the lobby whose world is SP1-<map>.
-    public String getLobbyId(Game game) {
-
-        if (game == null)
-            return null;
-        return SpleggOG.getPlugin().getGameWorldPrefix() + game.getGameId();
-
-    }
-
-    // Accepts SP1, sp1 or a bare 1. Map names are deliberately not resolvable.
-    public Game resolveLobby(String input) {
-
-        if (input == null)
-            return null;
-
-        String query = input.trim();
-        if (query.isEmpty())
-            return null;
-
-        final String prefix = SpleggOG.getPlugin().getGameWorldPrefix();
-        if (!prefix.isEmpty() && query.regionMatches(true, 0, prefix, 0, prefix.length()))
-            query = query.substring(prefix.length());
-
-        if (query.isEmpty() || !query.chars().allMatch(Character::isDigit))
-            return null;
-
-        for (Game g : GAMES.values())
-            if (query.equals(g.getGameId()))
-                return g;
-
-        return null;
-
-    }
-
-    public List<String> getLobbyIds() {
-
-        final List<String> ids = new ArrayList<>();
-        for (Game g : GAMES.values())
-            ids.add(getLobbyId(g));
-        Collections.sort(ids);
-        return ids;
-
-    }
-
-    public int howManyOpenGames() {
-
-        int n = 0;
-        for (Game g : GAMES.values())
-            if (g.getStatus() == Status.LOBBY)
-                n++;
-        return n;
 
     }
 
@@ -259,12 +377,6 @@ public class GameUtilities {
         }
 
         return false;
-
-    }
-
-    public List<Game> all() {
-
-        return Collections.unmodifiableList(new ArrayList<>(GAMES.values()));
 
     }
 

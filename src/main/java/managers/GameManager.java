@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
@@ -29,13 +28,36 @@ public class GameManager {
 
     }
 
-    public void startGame(Game game) {
+    // Moves the lobby into its arena. Returns false, with the lobby left waiting,
+    // when no map could be loaded.
+    public boolean startGame(Game game) {
+
+        if (game.getStatus() != Status.LOBBY) {
+
+            return false;
+
+        }
+
+        if (!game.prepareArena()) {
+
+            splegg.chat.bc("&cNo playable map could be loaded, so the match cannot start.", game);
+            return false;
+
+        }
 
         final Map map = game.getMap();
-        SpleggOG.getPlugin().getLogger().info("New game commencing in map: " + map);
-        game.startGameTimer();
-        Bukkit.getScheduler().cancelTask(game.counter);
+        SpleggOG.getPlugin().getLogger()
+                .info("Lobby " + game.getLobbyId() + " is starting a match on map " + map.getName() + ".");
+        if (game.counter != -1) {
+
+            org.bukkit.Bukkit.getScheduler().cancelTask(game.counter);
+            game.counter = -1;
+
+        }
+
+        game.stopVoting();
         game.status = Status.INGAME;
+        game.startGameTimer();
         game.time = 901;
         game.setLobbyCount(31);
         int c = 1;
@@ -65,21 +87,24 @@ public class GameManager {
 
         }
 
-        game.getSign().update(map);
+        game.updateSigns();
+        LobbyScoreboard.refreshGame(game);
 
         splegg.chat.bc(splegg.getConfig().getString("Messages.InstructionsGame"), game);
+        return true;
 
     }
 
+    // Ends whatever the lobby is doing, sends everyone home, deletes the arena
+    // copy and puts the lobby back to waiting in its hub.
     public void stopGame(Game game, int r) {
 
-        SpleggOG.getPlugin().getLogger()
-                .info("Commencing shutdown of game " + game.getGameId() + " on map " + game.getMap().getName() + ".");
+        SpleggOG.getPlugin().getLogger().info("Lobby " + game.getLobbyId() + " is ending"
+                + (game.getMap() != null ? " its match on map " + game.getMap().getName() : "") + ".");
 
         game.status = Status.ENDING;
         game.stopVoting();
         game.stopGameTimer();
-        game.time = 601;
         game.setStarting(false);
 
         final Iterator<?> playersInGame = new ArrayList<>(game.players.values()).iterator();
@@ -93,19 +118,18 @@ public class GameManager {
 
         game.players.clear();
 
-        // Delete the per-game world copy and remove this game from the
-        // registry. New games for this map will be created on demand.
+        // Delete the per-game world copy. The lobby itself stays registered and
+        // waits in its hub for the next match.
         SpleggOG.getPlugin().getGameWorldManager().cleanupWorld(game);
-        SpleggOG.getPlugin().games.removeGame(game);
+        game.resetToLobby();
 
         if (!splegg.disabling) {
 
-            game.getSign().update(game.map);
+            game.updateSigns();
 
         }
 
-        SpleggOG.getPlugin().getLogger()
-                .info("Game " + game.getGameId() + " on map '" + game.map.getName() + "' shut down.");
+        SpleggOG.getPlugin().getLogger().info("Lobby " + game.getLobbyId() + " is back to waiting.");
 
     }
 
@@ -119,7 +143,7 @@ public class GameManager {
         }
 
         final Player player = winner.getPlayer();
-        final String mapName = game.getMap().getName();
+        final String mapName = game.getMapDisplayName();
         final String winnerBroadcast = splegg.getConfig().getString("Messages.WinnerGame",
                 "&a%player% won Splegg on map &e%map%&a!");
         final String winnerTitle = splegg.getConfig().getString("Messages.WinnerTitle", "&a&lVICTORY!");

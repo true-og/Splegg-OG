@@ -1,3 +1,25 @@
+**0.9.8:**
+
+- Lobbies now work like TheHerobrine-OG's. Every hub world under `Worlds.Lobby` is one persistent lobby whose id is the world name up to the dash (`SP1-hub` is `SP1`). Players join with `/splegg join SP1`, `/splegg join 1`, `/sp join 1` or `/spjoin 1`, wait and vote in the hub, and the match runs in a fresh `SP1-<map>` copy that is deleted afterwards. `/splegg join` with no argument picks the best open lobby. Joining by map name and `/splegg random` are gone.
+
+- Map voting no longer keeps the joined map as a fixed choice; the lobby draws `Options.VotingMaps` playable maps at random. The arena is copied when the vote closes while players stay in the hub, a countdown abandoned for lack of players discards it and reopens the vote, and a template that fails to load falls through to the next map instead of blocking the start.
+
+- Per-map match lobbies (`/splegg setlobby <map>`) were removed; `/splegg setlobby` now sets the waiting spot used in every hub and must be run inside a hub world. Any `Spawns.lobby` entry in a map file is ignored.
+
+- Added `Options.MaxPlayers` (default 10) as the lobby size, since the map is unknown while the vote is open. Spawn points beyond it go unused and a map with fewer spawns cycles them.
+
+- `/sp` is claimed in the server command map once every plugin has enabled, so it reaches Splegg even when another plugin (WorldGuard) registered `/sp` first. That plugin's command stays reachable through its own namespace.
+
+- Join signs bind to a lobby id (`SP1`) or, with a blank second line, to whichever lobby is best to join. Existing signs that name a map keep working as any-lobby signs. Sign formats gained a `%lobby%` placeholder, and `%map%` shows the lobby id until a map is voted.
+
+- `/splegg join` and `/spjoin` with no lobby list every lobby with a clickable join line, like `/hbjoin`. Join signs with a blank second line still pick the best open lobby.
+
+- `/hub`, `/lobby` and `/spawn` are claimed inside Splegg territory before any other plugin sees them. Splegg-OG, TheHerobrine-OG and BuildBattle-OG all register `/hub`, and Bukkit hands the bare label to whichever loads first, so a Splegg player's `/hub` could run another minigame's command and teleport them out while Splegg still counted them as playing; Spawn-OG's `/spawn` did the same. `/lobby` is also an alias of `/hub` outside Splegg territory.
+
+- `/splegg list` lists lobbies with clickable join lines; `/splegg maps` lists maps. `/splegg start` and `/splegg stop` take a lobby id instead of a map name.
+
+- The lobby scoreboard shows `Voting...` until a map is chosen, and `Messages.IndividualLeaveGame` gained a `%lobby%` placeholder.
+
 **0.9.7:**
 
 - Added an in-game scoreboard: map, players alive, own blocks broken and time left, with new `Scoreboard.Map`, `Scoreboard.Alive` and `Scoreboard.TimeLeft` labels in config.yml. With Scoreboard-OG 1.2.0 or newer installed, both the queue and match sidebars are drawn through Scoreboard-OG's sidebar API, so the network board returns by itself on leave and `/togglescoreboard` is honoured; without it a plain Bukkit sidebar is used as before.

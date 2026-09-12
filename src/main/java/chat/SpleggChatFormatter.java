@@ -66,7 +66,7 @@ public class SpleggChatFormatter implements WorldChatFormatter {
 
         if (game.getStatus() == Status.LOBBY) {
 
-            final int max = game.getMap() == null ? 0 : game.getMap().getSpawnCount();
+            final int max = game.getMaxPlayers();
             return "&e" + game.getPlayers().size() + "&7/&e" + max + "&8 ▏ " + NAME_SEGMENT;
 
         }

@@ -11,11 +11,16 @@ softdepend: [My_Worlds, Chat-OG, Scoreboard-OG]
 commands:
   splegg:
     description: The command prefix for all Splegg-OG commands.
+    usage: /<command> join [lobby]
+    # /sp is also claimed at startup in the command map, so it wins over any other plugin's /sp.
     aliases: [sp]
+  # Inside Splegg territory HubCommandListener claims /hub, /lobby and /spawn before any
+  # other plugin sees them; this registration only matters outside it.
   hub:
     description: Leave the Splegg lobby or game and return to the main world.
+    aliases: [lobby]
   spjoin:
-    description: Join a Splegg lobby by its id.
+    description: Join a Splegg lobby by its id (SP1 or 1); lists the lobbies with no argument.
     usage: /<command> [lobby]
   spforcestart:
     description: Start the Splegg game even if the player minimum is not met.

@@ -2,7 +2,6 @@ package signs;
 
 import org.bukkit.scheduler.BukkitRunnable;
 
-import config.Map;
 import main.SpleggOG;
 
 /**
@@ -21,20 +20,17 @@ public class JoinSignUpdater extends BukkitRunnable {
 
     }
 
+    // Immediate redraw, used once the lobbies come online.
+    public static void redrawNow(SpleggOG splegg) {
+
+        LobbySign.updateAll(splegg);
+
+    }
+
     @Override
     public void run() {
 
-        if (this.splegg.maps == null || this.splegg.maps.c == null) {
-
-            return;
-
-        }
-
-        for (Map map : this.splegg.maps.getMaps()) {
-
-            new LobbySign(map, this.splegg).update(map);
-
-        }
+        LobbySign.updateAll(this.splegg);
 
     }
 

@@ -2,9 +2,11 @@ package config;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -51,9 +53,8 @@ public class MapConfig {
             String maps = (String) enabledMapIterator.next();
             SpleggOG.getPlugin().maps.addMap(maps);
 
-            // No per-map Game is created at boot. Games are now spawned on
-            // demand when a player joins via sign/command, and each owns its
-            // own ephemeral world copy via GameWorldManager.
+            // Maps are only templates now: a lobby copies one per match after the
+            // vote, so no Game is tied to a map at boot.
             Map map = SpleggOG.getPlugin().maps.getMap(maps);
             map.isUsable(map); // populates the usable flag for status displays
 
@@ -87,22 +88,43 @@ public class MapConfig {
 
     }
 
-    public void addSign(String map, String loc) {
+    // Every key signs are stored under: lobby ids, "any", and map names left by
+    // older versions (which now behave as "any").
+    public List<String> getSignKeys() {
 
-        List<String> signs = this.maps.getStringList("Signs." + map + ".lobby");
+        final ConfigurationSection section = this.maps.getConfigurationSection("Signs");
+        return section == null ? new ArrayList<>() : new ArrayList<>(section.getKeys(false));
+
+    }
+
+    public List<String> getSigns(String key) {
+
+        return this.maps.getStringList("Signs." + key + ".lobby");
+
+    }
+
+    public void addSign(String key, String loc) {
+
+        List<String> signs = this.maps.getStringList("Signs." + key + ".lobby");
         signs.add(loc);
 
-        this.maps.set("Signs." + map + ".lobby", signs);
+        this.maps.set("Signs." + key + ".lobby", signs);
         this.saveMaps();
 
     }
 
-    public void delSign(String map, String loc) {
+    public void delSign(String key, String loc) {
 
-        List<String> signs = this.maps.getStringList("Signs." + map + ".lobby");
+        List<String> signs = this.maps.getStringList("Signs." + key + ".lobby");
         signs.remove(loc);
 
-        this.maps.set("Signs." + map + ".lobby", signs);
+        this.maps.set("Signs." + key + ".lobby", signs.isEmpty() ? null : signs);
+        if (signs.isEmpty()) {
+
+            this.maps.set("Signs." + key, null);
+
+        }
+
         this.saveMaps();
 
     }

@@ -207,7 +207,7 @@ public class SpleggEvents implements Listener {
             Utils.spleggOGMessage(player,
                     SpleggOG.getPlugin().getConfig()
                             .getString("Messages.LoseGame", "&cYou were eliminated from the match on &e%map%&c.")
-                            .replaceAll("%map%", game.getMap().getName()));
+                            .replaceAll("%map%", game.getMapDisplayName()));
 
             player.setFallDistance(0.0F);
             game.leaveGame(u);

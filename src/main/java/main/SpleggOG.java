@@ -13,6 +13,8 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
@@ -30,6 +32,7 @@ import stats.SpleggStats;
 import chat.SpleggChatFormatter;
 import commands.ForceStartCommand;
 import commands.HubCommand;
+import commands.HubCommandListener;
 import commands.JoinLobbyCommand;
 import commands.SpleggCommand;
 import commands.VoteCommand;
@@ -182,6 +185,9 @@ public class SpleggOG extends JavaPlugin {
             // /vote and /v are claimed inside Splegg territory only, so VotingPlugin keeps
             // the labels everywhere else; nothing is registered in plugin.yml for them.
             this.getServer().getPluginManager().registerEvents(new VoteCommandListener(new VoteCommand()), this);
+            // /hub, /lobby and /spawn are claimed inside Splegg territory the same way, so
+            // another minigame's /hub can never pull a Splegg player out of a match.
+            this.getServer().getPluginManager().registerEvents(new HubCommandListener(), this);
             this.registerChatFormatter();
 
             // Redraw join signs once a second, TheHerobrine-OG style. First run
@@ -206,12 +212,14 @@ public class SpleggOG extends JavaPlugin {
 
                 if (game.getStatus() == Status.DISABLED)
                     continue;
-                if (game.getPlayers().isEmpty() && game.getStatus() != Status.INGAME)
+                if (game.getPlayers().isEmpty() && game.getStatus() != Status.INGAME && game.getGameWorld() == null)
                     continue;
                 gameCounter++;
                 this.game.stopGame(game, 1);
 
             }
+
+            this.games.clear();
 
         }
 
@@ -234,7 +242,7 @@ public class SpleggOG extends JavaPlugin {
 
         }
 
-        this.getLogger().info("Splegg-OG Shut Down with " + gameCounter + " games running.");
+        this.getLogger().info("Splegg-OG shut down; " + gameCounter + " lobbies were active.");
 
     }
 
@@ -265,6 +273,75 @@ public class SpleggOG extends JavaPlugin {
         // bundle is attached to the freshly loaded copies, not stale leftovers.
         refreshTemplatesFromMapBase();
         configureMyWorlds();
+        createLobbies();
+        claimShortAlias();
+        JoinSignUpdater.redrawNow(this);
+
+    }
+
+    // One lobby per configured hub world: SP1-hub becomes lobby SP1. The hub has
+    // to be loaded, so this runs after configureMyWorlds brought the worlds up.
+    private void createLobbies() {
+
+        for (String name : getLobbyWorlds()) {
+
+            if (name == null || name.isBlank() || isProtectedMainWorld(name)) {
+
+                continue;
+
+            }
+
+            final World hub = this.gameWorldManager.ensureWorldLoaded(name);
+            if (hub == null) {
+
+                this.getLogger().warning("No lobby was created for '" + name + "': its hub world is not loaded.");
+                continue;
+
+            }
+
+            this.games.createLobby(hub.getName());
+
+        }
+
+        if (this.games.all().isEmpty()) {
+
+            this.getLogger().warning(
+                    "No Splegg lobbies exist. List hub worlds named <GamePrefix><number>-hub under Worlds.Lobby.");
+
+        }
+
+    }
+
+    // /sp is declared as an alias of /splegg, but another plugin that registers
+    // first (WorldGuard, loaded ahead of us through Utilities-OG) keeps the bare
+    // label and Splegg only gets splegg-og:sp. Once every plugin has enabled, point
+    // the bare label at /splegg so /sp join 1 reaches Splegg.
+    private void claimShortAlias() {
+
+        final PluginCommand splegg = this.getCommand("splegg");
+        if (splegg == null) {
+
+            return;
+
+        }
+
+        final java.util.Map<String, Command> known = Bukkit.getCommandMap().getKnownCommands();
+        final Command current = known.get("sp");
+        if (current == splegg) {
+
+            return;
+
+        }
+
+        known.put("sp", splegg);
+        this.getLogger()
+                .info("Claimed /sp for Splegg" + (current == null ? "."
+                        : " (it was " + current.getName() + " from another plugin; that command stays reachable as /"
+                                + current.getLabel() + " through its own namespace)."));
+
+        // Anyone already online has the old command tree; nobody is online on a
+        // normal boot, this covers /reload.
+        Bukkit.getOnlinePlayers().forEach(Player::updateCommands);
 
     }
 
@@ -655,7 +732,17 @@ public class SpleggOG extends JavaPlugin {
 
         }
 
-        return getLobbyWorlds().contains(worldName);
+        for (String lobbyWorld : getLobbyWorlds()) {
+
+            if (lobbyWorld != null && lobbyWorld.equalsIgnoreCase(worldName)) {
+
+                return true;
+
+            }
+
+        }
+
+        return false;
 
     }
 

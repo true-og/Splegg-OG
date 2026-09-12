@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -18,7 +17,6 @@ import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import config.Map;
 import events.Listeners;
@@ -37,13 +35,16 @@ import utils.SpleggPlayer;
 import utils.UtilPlayer;
 import utils.Utils;
 
+// One persistent Splegg lobby, TheHerobrine-OG style. A lobby is identified by
+// its number (SP1 is lobby 1) and owns the hub world <prefix><n>-hub, where
+// players wait and vote for the map. When the vote resolves, the winning map's
+// template is copied to <prefix><n>-<map> and the match runs there. When the
+// match ends the copy is deleted and the lobby goes back to waiting in its hub.
 public class Game {
 
-    private static final AtomicInteger GAME_ID_SEQUENCE = new AtomicInteger(1);
-
     SpleggOG splegg;
-    String name;
-    String gameId;
+    final String gameId;
+    final String hubWorldName;
     Map map;
     Status status;
     public HashMap<UUID, SpleggPlayer> players;
@@ -53,7 +54,6 @@ public class Game {
     int counter;
     int timer;
     boolean starting;
-    LobbySign sign;
     DiamondBankAPIJava diamondBankAPI;
     private LinkedHashMap<Integer, VotingMap> votingMaps;
     private HashMap<UUID, Integer> playerVotes;
@@ -64,13 +64,13 @@ public class Game {
     // Enable the conversion of text from config.yml to objects.
     public FileConfiguration config = SpleggOG.getPlugin().getConfig();
 
-    public Game(SpleggOG splegg, final Map map) {
+    public Game(SpleggOG splegg, String gameId, String hubWorldName) {
 
         this.splegg = splegg;
-        this.map = map;
+        this.gameId = gameId;
+        this.hubWorldName = hubWorldName;
+        this.map = null;
         this.diamondBankAPI = splegg.getDiamondBankAPI();
-        this.name = map.getName();
-        this.gameId = String.valueOf(GAME_ID_SEQUENCE.getAndIncrement());
         this.status = Status.LOBBY;
         this.players = new HashMap<>();
         this.votingMaps = new LinkedHashMap<>();
@@ -78,29 +78,37 @@ public class Game {
         this.votingRunning = false;
         this.votingClosed = false;
         this.votingReminderTask = -1;
+        this.counter = -1;
+        this.timer = -1;
         this.time = 601;
-        this.lobbycount = 31;
-
-        this.setSign(new LobbySign(map, splegg));
-
-        (new BukkitRunnable() {
-
-            @Override
-            public void run() {
-
-                Game.this.getSign().update(map);
-
-            }
-
-        }).runTaskLater(splegg, 10L);
-
-        this.setStarting(false);
+        this.lobbycount = config.getInt("Options.Timer", 120);
+        this.starting = false;
 
     }
 
+    // The lobby number, which is also the number in every world this lobby owns.
     public String getGameId() {
 
         return this.gameId;
+
+    }
+
+    // SP1, the id players type.
+    public String getLobbyId() {
+
+        return this.splegg.getGameWorldPrefix() + this.gameId;
+
+    }
+
+    public String getHubWorldName() {
+
+        return this.hubWorldName;
+
+    }
+
+    public World getHubWorld() {
+
+        return Bukkit.getWorld(this.hubWorldName);
 
     }
 
@@ -116,52 +124,91 @@ public class Game {
 
     }
 
+    // True for this lobby's hub or arena world only. The dash matters: SP1 must
+    // not claim SP10-hub.
+    public boolean ownsWorld(String worldName) {
+
+        if (worldName == null) {
+
+            return false;
+
+        }
+
+        if (worldName.equalsIgnoreCase(this.hubWorldName)) {
+
+            return true;
+
+        }
+
+        return this.gameWorld != null && worldName.equals(this.gameWorld.getName());
+
+    }
+
+    public int getMaxPlayers() {
+
+        return Math.max(1, this.config.getInt("Options.MaxPlayers", 10));
+
+    }
+
+    // The map name once the vote has picked one, otherwise the lobby id.
+    public String getMapDisplayName() {
+
+        return this.map != null ? this.map.getName() : this.getLobbyId();
+
+    }
+
     public void startGameTimer() {
 
         final int grace = config.getInt("Options.GraceTime");
         this.splegg.chat.bc(config.getString("Messages.GraceTimeStart").replaceAll("%grace%", String.valueOf(grace)),
                 this);
 
-        (new BukkitRunnable() {
+        Bukkit.getScheduler().runTaskLater(this.splegg, () -> {
 
-            @Override
-            public void run() {
+            if (Game.this.status != Status.INGAME) {
 
-                Game.this.splegg.chat.bc(config.getString("Messages.GraceTimeFinish"), Game.this);
-
-                final Iterator<?> PlayersInGame = players.values().iterator();
-                while (PlayersInGame.hasNext()) {
-
-                    final SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
-                    final UUID playerId = sp.getPlayer().getUniqueId();
-                    sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.2F);
-
-                    final Material selectedShovel = Listeners.getSelectedShovelMaterial(playerId);
-                    final String selectedShovelConfigPath = Listeners.getSelectedShovelConfigPath(playerId);
-
-                    sp.getPlayer().getInventory().setItem(0, Utils.getItem(selectedShovel,
-                            Utils.legacySerializerAnyCase(
-                                    splegg.getConfig().getString(selectedShovelConfigPath + ".Name")).content(),
-                            Utils.legacySerializerAnyCase(
-                                    splegg.getConfig().getString(selectedShovelConfigPath + ".Lore")).content()));
-                    sp.getPlayer().updateInventory();
-
-                    Listeners.finalizePreGameShovelState(playerId);
-
-                }
-
-                Game.this.timer = Bukkit.getScheduler().scheduleSyncRepeatingTask(Game.this.splegg,
-                        new GameTime(Game.this.splegg, Game.this), 0L, 20L);
+                return;
 
             }
 
-        }).runTaskLater(this.splegg, (long) (20 * grace));
+            Game.this.splegg.chat.bc(config.getString("Messages.GraceTimeFinish"), Game.this);
+
+            final Iterator<?> PlayersInGame = players.values().iterator();
+            while (PlayersInGame.hasNext()) {
+
+                final SpleggPlayer sp = (SpleggPlayer) PlayersInGame.next();
+                final UUID playerId = sp.getPlayer().getUniqueId();
+                sp.getPlayer().playSound(sp.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.2F);
+
+                final Material selectedShovel = Listeners.getSelectedShovelMaterial(playerId);
+                final String selectedShovelConfigPath = Listeners.getSelectedShovelConfigPath(playerId);
+
+                sp.getPlayer().getInventory().setItem(0, Utils.getItem(selectedShovel,
+                        Utils.legacySerializerAnyCase(splegg.getConfig().getString(selectedShovelConfigPath + ".Name"))
+                                .content(),
+                        Utils.legacySerializerAnyCase(splegg.getConfig().getString(selectedShovelConfigPath + ".Lore"))
+                                .content()));
+                sp.getPlayer().updateInventory();
+
+                Listeners.finalizePreGameShovelState(playerId);
+
+            }
+
+            Game.this.timer = Bukkit.getScheduler().scheduleSyncRepeatingTask(Game.this.splegg,
+                    new GameTime(Game.this.splegg, Game.this), 0L, 20L);
+
+        }, (long) (20 * grace));
 
     }
 
     public void stopGameTimer() {
 
-        Bukkit.getScheduler().cancelTask(this.timer);
+        if (this.timer != -1) {
+
+            Bukkit.getScheduler().cancelTask(this.timer);
+            this.timer = -1;
+
+        }
 
     }
 
@@ -179,16 +226,7 @@ public class Game {
 
     public ArrayList<SpleggPlayer> getSp() {
 
-        final ArrayList<SpleggPlayer> sp = new ArrayList<>();
-        final Iterator<?> var3 = this.players.values().iterator();
-        while (var3.hasNext()) {
-
-            final SpleggPlayer sps = (SpleggPlayer) var3.next();
-            sp.add(sps);
-
-        }
-
-        return sp;
+        return new ArrayList<>(this.players.values());
 
     }
 
@@ -213,11 +251,10 @@ public class Game {
     public void setMap(Map map) {
 
         this.map = map;
-        this.name = map != null ? map.getName() : null;
-        this.setSign(map != null ? new LobbySign(map, this.splegg) : null);
 
     }
 
+    // The map this lobby is playing or has voted for. Null while the vote is open.
     public Map getMap() {
 
         return this.map;
@@ -268,13 +305,7 @@ public class Game {
 
     private void ensureVotingReady() {
 
-        if (this.status != Status.LOBBY) {
-
-            return;
-
-        }
-
-        if (this.votingClosed) {
+        if (this.status != Status.LOBBY || this.votingClosed) {
 
             return;
 
@@ -295,6 +326,7 @@ public class Game {
 
     }
 
+    // Up to Options.VotingMaps playable maps, drawn at random from every map.
     private void pickVotingMaps() {
 
         this.votingMaps.clear();
@@ -302,46 +334,26 @@ public class Game {
         this.votingClosed = false;
 
         final List<Map> candidates = new ArrayList<>();
-        if (this.map != null && this.map.isUsable(this.map)) {
-
-            candidates.add(this.map);
-
-        }
-
-        final List<Map> remaining = new ArrayList<>();
         for (Map candidate : this.splegg.maps.getMaps()) {
 
-            if (candidate == null || !candidate.isUsable(candidate)) {
+            if (candidate != null && candidate.isUsable(candidate)) {
 
-                continue;
-
-            }
-
-            if (this.map != null && candidate.getName().equals(this.map.getName())) {
-
-                continue;
+                candidates.add(candidate);
 
             }
-
-            remaining.add(candidate);
 
         }
 
-        Collections.shuffle(remaining);
-        for (Map candidate : remaining) {
+        Collections.shuffle(candidates);
 
-            if (candidates.size() >= getVotingMapCount()) {
+        int id = 1;
+        for (Map candidate : candidates) {
+
+            if (id > getVotingMapCount()) {
 
                 break;
 
             }
-
-            candidates.add(candidate);
-
-        }
-
-        int id = 1;
-        for (Map candidate : candidates) {
 
             this.votingMaps.put(id, new VotingMap(id, candidate));
             id++;
@@ -377,9 +389,12 @@ public class Game {
 
     }
 
+    // Reopens the vote. Any arena already prepared for the previous winner is
+    // thrown away, since the next vote may pick a different map.
     public void resetVoting() {
 
         stopVoting();
+        discardArena();
         this.votingClosed = false;
         this.votingMaps.clear();
         this.playerVotes.clear();
@@ -524,13 +539,7 @@ public class Game {
 
     }
 
-    public boolean selectMapFromVote() {
-
-        if (!this.votingRunning || this.votingMaps.isEmpty()) {
-
-            return true;
-
-        }
+    private Map highestVotedMap() {
 
         VotingMap highest = null;
         int highestVotes = -1;
@@ -545,24 +554,41 @@ public class Game {
 
         }
 
-        if (highest == null) {
+        return highest == null ? null : highest.getMap();
 
-            this.votingRunning = false;
+    }
+
+    // Closes the vote and prepares the arena for the winner. Players stay in the
+    // hub until the countdown ends.
+    public boolean selectMapFromVote() {
+
+        if (!this.votingRunning || this.votingMaps.isEmpty()) {
+
+            return this.map != null;
+
+        }
+
+        final Map winner = highestVotedMap();
+        this.stopVoting();
+        this.votingClosed = true;
+
+        if (winner == null) {
+
             return false;
 
         }
 
-        this.splegg.chat.bc("&6Voting has ended! The map &b" + highest.getMap().getName() + "&6 has won!", this);
-        this.votingRunning = false;
-        this.votingClosed = true;
-        if (this.votingReminderTask != -1) {
+        this.splegg.chat.bc("&6Voting has ended! The map &b" + winner.getName() + "&6 has won!", this);
+        if (!prepareArena(winner)) {
 
-            Bukkit.getScheduler().cancelTask(this.votingReminderTask);
-            this.votingReminderTask = -1;
+            this.splegg.chat.bc("&cThe voted map could not be loaded. Another map will be picked at the start.", this);
+            return false;
 
         }
 
-        return switchToVotedMap(highest.getMap());
+        updateSigns();
+        LobbyScoreboard.refreshGame(this);
+        return true;
 
     }
 
@@ -576,68 +602,122 @@ public class Game {
 
     }
 
-    private boolean switchToVotedMap(Map selectedMap) {
+    // Makes sure a map is chosen and its arena copy is loaded. The preferred map
+    // is tried first, then the vote winner, then every other playable map, so one
+    // broken template does not stop the lobby from ever starting.
+    public boolean prepareArena(Map preferred) {
 
-        if (selectedMap == null || !selectedMap.isUsable(selectedMap)) {
+        if (this.map != null && this.gameWorld != null) {
 
-            return false;
-
-        }
-
-        if (this.map != null && this.map.getName().equals(selectedMap.getName())) {
-
-            LobbyScoreboard.refreshGame(this);
             return true;
 
         }
 
-        final Map previousMap = this.map;
-        final World previousWorld = this.gameWorld;
-        setMap(selectedMap);
+        final List<Map> candidates = new ArrayList<>();
+        if (preferred != null) {
 
-        final World selectedWorld = this.splegg.getGameWorldManager().prepareWorld(this);
-        if (selectedWorld == null) {
-
-            setMap(previousMap);
-            this.gameWorld = previousWorld;
-            this.splegg.chat.bc("&cVoting winner could not be loaded. Staying on &e" + previousMap.getName() + "&c.",
-                    this);
-            return false;
+            candidates.add(preferred);
 
         }
 
-        this.gameWorld = selectedWorld;
-        for (SpleggPlayer spleggPlayer : this.players.values()) {
+        if (this.map != null) {
 
-            final Player player = spleggPlayer.getPlayer();
-            if (teleportToQueueLobby(player)) {
+            candidates.add(this.map);
 
-                preparePlayerForLobby(player);
+        }
 
-            } else {
+        final Map voted = highestVotedMap();
+        if (voted != null) {
 
-                // Old world cleanup below evicts them to the main world spawn.
-                Utils.spleggOGMessage(player, "&cUnable to move you to the voted map.");
+            candidates.add(voted);
+
+        }
+
+        final List<Map> rest = new ArrayList<>();
+        for (Map candidate : this.splegg.maps.getMaps()) {
+
+            if (candidate != null && candidate.isUsable(candidate)) {
+
+                rest.add(candidate);
 
             }
 
         }
 
-        if (previousWorld != null && !previousWorld.getName().equals(selectedWorld.getName())) {
+        Collections.shuffle(rest);
+        candidates.addAll(rest);
 
-            this.splegg.getGameWorldManager().cleanupWorld(previousWorld);
+        final List<String> tried = new ArrayList<>();
+        for (Map candidate : candidates) {
+
+            if (candidate == null || tried.contains(candidate.getName()) || !candidate.isUsable(candidate)) {
+
+                continue;
+
+            }
+
+            tried.add(candidate.getName());
+            this.map = candidate;
+            final World world = this.splegg.getGameWorldManager().prepareWorld(this);
+            if (world != null) {
+
+                this.gameWorld = world;
+                return true;
+
+            }
 
         }
 
-        if (previousMap != null) {
+        this.map = null;
+        this.gameWorld = null;
+        return false;
 
-            new LobbySign(previousMap, this.splegg).update(previousMap);
+    }
+
+    public boolean prepareArena() {
+
+        return prepareArena(null);
+
+    }
+
+    // Drops a prepared arena that will not be played. The reference is cleared
+    // before the unload so the world-unload listener does not mistake our own
+    // cleanup for the arena vanishing under a live lobby.
+    public void discardArena() {
+
+        final World arena = this.gameWorld;
+        this.gameWorld = null;
+        this.map = null;
+        if (arena != null) {
+
+            this.splegg.getGameWorldManager().cleanupWorld(arena);
 
         }
 
-        this.getSign().update(this.map);
-        LobbyScoreboard.refreshGame(this);
-        return true;
+    }
+
+    // Back to an empty, waiting lobby. The arena copy must already be gone.
+    public void resetToLobby() {
+
+        if (this.counter != -1) {
+
+            Bukkit.getScheduler().cancelTask(this.counter);
+            this.counter = -1;
+
+        }
+
+        stopGameTimer();
+        stopVoting();
+        this.players.clear();
+        this.playerVotes.clear();
+        this.votingMaps.clear();
+        this.votingClosed = false;
+        this.map = null;
+        this.gameWorld = null;
+        this.starting = false;
+        this.time = 601;
+        this.lobbycount = config.getInt("Options.Timer", 120);
+        this.status = Status.LOBBY;
 
     }
 
@@ -647,6 +727,12 @@ public class Game {
         // No mutable state needed -- the per-game world is reset by being
         // deleted between games.
         // Floors live in the per-map file, not in config.yml.
+        if (this.map == null) {
+
+            return -64;
+
+        }
+
         final FileConfiguration mapConfig = this.map.getConfig();
         int small = Integer.MAX_VALUE;
         for (int i = 1; i <= map.getFloors(); i++) {
@@ -670,114 +756,91 @@ public class Game {
         if (playerWhoIsJoining.getGame() != null) {
 
             Utils.spleggOGMessage(player, config.getString("Messages.AlreadyInGame"));
+            return;
 
-        } else if (this.gameWorld == null || splegg.isMainWorld(this.gameWorld)
-                || !splegg.isSpleggWorld(this.gameWorld))
-        {
+        }
 
-            Utils.spleggOGMessage(player, config.getString("Messages.NotInSpleggWorld"));
-
-        } else if (this.players.containsKey(player.getUniqueId())) {
+        if (this.players.containsKey(player.getUniqueId())) {
 
             Utils.spleggOGMessage(player, splegg.getConfig().getString("Messages.AlreadyInLobby"));
+            return;
 
-        } else if (this.status == Status.LOBBY) {
+        }
 
-            final int size = this.players.size();
-            // Makes maximum players in a game the same as the amount of spawn points that
-            // are set for a given map.
-            final int max = this.map.getSpawnCount();
-            final SpleggPlayer sp;
-            if (max == 1) {
+        if (this.status == Status.DISABLED) {
 
-                // Stats are captured before the teleport so MyWorlds' own per-bundle
-                // exp/health swap cannot pollute the snapshot.
-                playerWhoIsJoining.getStore().save();
-                if (!teleportToQueueLobby(player)) {
+            Utils.spleggOGMessage(player, splegg.getConfig().getString("Messages.Mapdisabled"));
+            return;
 
-                    Utils.spleggOGMessage(player, "&cUnable to teleport you to the game lobby.");
-                    return;
+        }
 
-                }
+        if (this.status != Status.LOBBY) {
 
-                sp = new SpleggPlayer(playerWhoIsJoining);
-                playerWhoIsJoining.setAlive(true);
-                Listeners.launchEggs.add(player.getUniqueId());
-                this.players.put(player.getUniqueId(), sp);
-                playerWhoIsJoining.setGame(this);
+            Utils.spleggOGMessage(player, "&cLobby &e" + getLobbyId() + " &cis in a match right now.");
+            return;
 
-                preparePlayerForLobby(player);
-                registerVotingPlayer(player);
-                Listeners.manager.add(player.getUniqueId());
-                Listeners.shopmanager.add(player.getUniqueId());
+        }
 
-                this.splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("%player%", player.getName())
-                        .replaceAll("%count%", String.valueOf(this.players.size()))
-                        .replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
+        if (this.getHubWorld() == null) {
 
-                if (this.players.size() >= config.getInt("Options.AutoStartPlayers") && !this.isStarting()) {
+            Utils.spleggOGMessage(player, "&cLobby &e" + getLobbyId() + " &cis unavailable: its hub world &e"
+                    + hubWorldName + " &cis not loaded.");
+            return;
 
-                    this.startCountdown();
-                    this.setStarting(true);
+        }
 
-                }
+        final int size = this.players.size();
+        final int max = this.getMaxPlayers();
+        if (size >= max) {
 
-            } else if (size >= max && !player.hasPermission("splegg.joinfull")) {
+            if (!player.hasPermission("splegg.joinfull")) {
 
                 Utils.spleggOGMessage(player, splegg.getConfig().getString("Messages.VIPPrivilege"));
-
-            } else {
-
-                if (size >= max) {
-
-                    Utils.spleggOGMessage(player, splegg.getConfig().getString("Messages.VIPJoinGame"));
-
-                }
-
-                // Stats are captured before the teleport so MyWorlds' own per-bundle
-                // exp/health swap cannot pollute the snapshot.
-                playerWhoIsJoining.getStore().save();
-                if (!teleportToQueueLobby(player)) {
-
-                    Utils.spleggOGMessage(player, "&cUnable to teleport you to the game lobby.");
-                    return;
-
-                }
-
-                sp = new SpleggPlayer(playerWhoIsJoining);
-                playerWhoIsJoining.setAlive(true);
-                Listeners.launchEggs.add(player.getUniqueId());
-
-                players.put(player.getUniqueId(), sp);
-                playerWhoIsJoining.setGame(this);
-
-                preparePlayerForLobby(player);
-                registerVotingPlayer(player);
-
-                Listeners.manager.add(player.getUniqueId());
-                Listeners.shopmanager.add(player.getUniqueId());
-
-                splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("%player%", player.getName())
-                        .replaceAll("%count%", String.valueOf(this.players.size()))
-                        .replaceAll("%maxcount%", String.valueOf(max)), playerWhoIsJoining.getGame());
-
-                if (players.size() >= config.getInt("Options.AutoStartPlayers") && !this.isStarting()) {
-
-                    startCountdown();
-                    setStarting(true);
-
-                }
+                return;
 
             }
 
-            getSign().update(this.map);
-            LobbyScoreboard.refreshGame(this);
-
-        } else if (this.status == Status.DISABLED) {
-
-            Utils.spleggOGMessage(player, splegg.getConfig().getString("Messages.Mapdisabled"));
+            Utils.spleggOGMessage(player, splegg.getConfig().getString("Messages.VIPJoinGame"));
 
         }
+
+        // Stats are captured before the teleport so MyWorlds' own per-bundle
+        // exp/health swap cannot pollute the snapshot.
+        playerWhoIsJoining.getStore().save();
+        if (!teleportToQueueLobby(player)) {
+
+            Utils.spleggOGMessage(player, "&cUnable to teleport you to the game lobby.");
+            return;
+
+        }
+
+        final SpleggPlayer sp = new SpleggPlayer(playerWhoIsJoining);
+        playerWhoIsJoining.setAlive(true);
+        Listeners.launchEggs.add(player.getUniqueId());
+
+        players.put(player.getUniqueId(), sp);
+        playerWhoIsJoining.setGame(this);
+
+        preparePlayerForLobby(player);
+        registerVotingPlayer(player);
+
+        Listeners.manager.add(player.getUniqueId());
+        Listeners.shopmanager.add(player.getUniqueId());
+
+        Utils.spleggOGMessage(player, "&aJoined lobby &e" + getLobbyId() + "&a.");
+        splegg.chat.bc(config.getString("Messages.JoinGame").replaceAll("%player%", player.getName())
+                .replaceAll("%count%", String.valueOf(this.players.size()))
+                .replaceAll("%maxcount%", String.valueOf(max)), this);
+
+        if (players.size() >= config.getInt("Options.AutoStartPlayers") && !this.isStarting()) {
+
+            startCountdown();
+            setStarting(true);
+
+        }
+
+        updateSigns();
+        LobbyScoreboard.refreshGame(this);
 
     }
 
@@ -808,40 +871,27 @@ public class Game {
 
     }
 
+    // Where a joining player lands: the global lobby point rebased into this
+    // lobby's hub (every hub is a copy of the same template), else the hub's
+    // own spawn.
     public Location getQueueLobbyLocation() {
 
-        // A lobby surveyed in another world would be rebased into this match's world
-        // copy, dropping the player at those coordinates in unrelated terrain.
-        if (this.map.lobbySet() && this.map.isLobbyInMapWorld()) {
+        final World hub = this.getHubWorld();
+        if (hub == null) {
 
-            final Location mapLobby = this.map.getLobbyIn(this.gameWorld);
-            if (mapLobby != null && mapLobby.getWorld() != null) {
-
-                return mapLobby;
-
-            }
+            return null;
 
         }
 
         final Location globalQueueLobby = this.splegg.config.getLobby(null);
-        if (globalQueueLobby != null && globalQueueLobby.getWorld() != null) {
+        if (globalQueueLobby != null) {
 
-            return globalQueueLobby;
-
-        }
-
-        if (this.map.getSpawnCount() > 0) {
-
-            final Location firstSpawn = this.map.getSpawnIn(this.gameWorld, 1);
-            if (firstSpawn != null && firstSpawn.getWorld() != null) {
-
-                return firstSpawn;
-
-            }
+            return new Location(hub, globalQueueLobby.getX(), globalQueueLobby.getY(), globalQueueLobby.getZ(),
+                    globalQueueLobby.getYaw(), globalQueueLobby.getPitch());
 
         }
 
-        return null;
+        return hub.getSpawnLocation();
 
     }
 
@@ -912,7 +962,13 @@ public class Game {
 
     public void startCountdown() {
 
-        Bukkit.getScheduler().cancelTask(counter);
+        if (this.counter != -1) {
+
+            Bukkit.getScheduler().cancelTask(counter);
+            this.counter = -1;
+
+        }
+
         if (this.status != Status.LOBBY) {
 
             return;
@@ -944,7 +1000,12 @@ public class Game {
 
         }
 
-        Bukkit.getScheduler().cancelTask(counter);
+        if (this.counter != -1) {
+
+            Bukkit.getScheduler().cancelTask(counter);
+            this.counter = -1;
+
+        }
 
         this.lobbycount = Math.max(seconds, getEndVotingAt());
         this.setStarting(true);
@@ -964,6 +1025,28 @@ public class Game {
 
     }
 
+    // Stops the countdown and reopens the vote when everybody has left.
+    private void abandonCountdownIfEmpty() {
+
+        if (!this.players.isEmpty() || this.status != Status.LOBBY) {
+
+            return;
+
+        }
+
+        if (this.counter != -1) {
+
+            Bukkit.getScheduler().cancelTask(this.counter);
+            this.counter = -1;
+
+        }
+
+        this.setStarting(false);
+        this.lobbycount = config.getInt("Options.Timer", 120);
+        this.resetVoting();
+
+    }
+
     public void leaveGame(UtilPlayer u) {
 
         final Player player = u.getPlayer();
@@ -974,8 +1057,10 @@ public class Game {
         if (game != null) {
 
             // Tell player that left about their current state.
-            Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.IndividualLeaveGame")
-                    .replaceAll("%map%", u.getGame().getMap().getName()));
+            Utils.spleggOGMessage(player,
+                    SpleggOG.getPlugin().getConfig()
+                            .getString("Messages.IndividualLeaveGame", "&6You have left lobby &a%lobby%&6.")
+                            .replaceAll("%map%", getMapDisplayName()).replaceAll("%lobby%", getLobbyId()));
             Utils.spleggOGMessage(player,
                     config.getString("Messages.Youbrokeblocks").replaceAll("%broke%", String.valueOf(brokenBlocks)));
 
@@ -997,7 +1082,7 @@ public class Game {
             if (!this.splegg.returnPlayer(player, true)) {
 
                 SpleggOG.getPlugin().getLogger()
-                        .warning("Could not return " + player.getName() + " out of game " + game.getGameId() + ".");
+                        .warning("Could not return " + player.getName() + " out of lobby " + getLobbyId() + ".");
 
             }
 
@@ -1006,9 +1091,7 @@ public class Game {
 
         }
 
-        String playerWhoOnlyNeedsIndividualLeaveGameMessage = "";
-
-        playerWhoOnlyNeedsIndividualLeaveGameMessage = player.getName();
+        final String playerWhoOnlyNeedsIndividualLeaveGameMessage = player.getName();
         u.getStore().load();
         u.getStore().reset();
 
@@ -1023,7 +1106,7 @@ public class Game {
                     Utils.spleggOGMessage(remaining,
                             config.getString("Messages.LeaveGame").replaceAll("%player%", player.getName())
                                     .replaceAll("%count%", String.valueOf(this.players.size()))
-                                    .replaceAll("%maxcount%", String.valueOf(this.map.getSpawnCount())));
+                                    .replaceAll("%maxcount%", String.valueOf(this.getMaxPlayers())));
 
                 }
 
@@ -1061,11 +1144,13 @@ public class Game {
 
             }
 
+            abandonCountdownIfEmpty();
+
         }
 
         if (!this.splegg.disabling) {
 
-            this.getSign().update(this.map);
+            updateSigns();
 
         }
 
@@ -1102,7 +1187,7 @@ public class Game {
      */
     public boolean loadFloors() {
 
-        return this.map.getFloors() > 0;
+        return this.map != null && this.map.getFloors() > 0;
 
     }
 
@@ -1114,7 +1199,7 @@ public class Game {
      */
     public boolean isInsideFloor(Location target) {
 
-        if (target == null)
+        if (target == null || this.map == null)
             return false;
         if (this.gameWorld == null)
             return false;
@@ -1167,15 +1252,10 @@ public class Game {
 
     }
 
-    public LobbySign getSign() {
+    // Every join sign shows lobby state, so redraw them all.
+    public void updateSigns() {
 
-        return this.sign;
-
-    }
-
-    public void setSign(LobbySign sign) {
-
-        this.sign = sign;
+        LobbySign.updateAll(this.splegg);
 
     }
 

@@ -107,7 +107,10 @@ public class PlayerListener implements Listener {
 
     }
 
-    @EventHandler
+    // ignoreCancelled: HubCommandListener and VoteCommandListener claim their
+    // commands at LOWEST, and a claimed command must not also be reported as
+    // blocked.
+    @EventHandler(ignoreCancelled = true)
     public void onCommand(PlayerCommandPreprocessEvent event) {
 
         final Player player = event.getPlayer();
@@ -135,7 +138,8 @@ public class PlayerListener implements Listener {
     private boolean isAllowedGameCommand(String message) {
 
         return isCommand(message, "/splegg") || isCommand(message, "/sp") || isCommand(message, "/spjoin")
-                || isCommand(message, "/hub") || isCommand(message, "/vote") || isCommand(message, "/v");
+                || isCommand(message, "/hub") || isCommand(message, "/lobby") || isCommand(message, "/spawn")
+                || isCommand(message, "/vote") || isCommand(message, "/v");
 
     }
 

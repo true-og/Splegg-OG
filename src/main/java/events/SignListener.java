@@ -13,6 +13,7 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import main.SpleggOG;
+import managers.Game;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import signs.LobbySign;
@@ -28,16 +29,16 @@ public class SignListener implements Listener {
 
     }
 
-    // Resolves the map a registered join sign belongs to, or null when the
-    // location is not a registered sign. Signs are recognized by location, not
-    // by their rendered text, so reformatting a sign cannot orphan it.
-    private static String owningMap(Location location) {
+    // Resolves the stored key a registered join sign was saved under, or null when
+    // the location is not a registered sign. Signs are recognized by location,
+    // not by their rendered text, so reformatting a sign cannot orphan it.
+    private static String storedKey(Location location) {
 
-        for (config.Map candidate : SpleggOG.getPlugin().maps.getMaps()) {
+        for (String key : SpleggOG.getPlugin().maps.c.getSignKeys()) {
 
-            if (LobbySignUtils.get().isLobbySign(location, candidate.getName())) {
+            if (LobbySignUtils.get().isLobbySign(location, key)) {
 
-                return candidate.getName();
+                return key;
 
             }
 
@@ -64,35 +65,39 @@ public class SignListener implements Listener {
 
         }
 
-        final String map = PlainTextComponentSerializer.plainText().serialize(event.line(1)).trim();
-        if (map.isEmpty()) {
+        final String target = PlainTextComponentSerializer.plainText().serialize(event.line(1)).trim();
+        final String key;
+        if (target.isEmpty() || target.equalsIgnoreCase(LobbySign.ANY) || target.equalsIgnoreCase("join")) {
 
-            Utils.spleggOGMessage(player, "&cLine 2 must be the map name.");
-            event.setCancelled(true);
-            return;
+            key = LobbySign.ANY;
+
+        } else {
+
+            final Game game = SpleggOG.getPlugin().games.resolveLobby(target);
+            if (game == null) {
+
+                Utils.spleggOGMessage(player, "&cLobby '" + target
+                        + "' does not exist. Use a lobby id such as SP1, or leave line 2 blank for any lobby.");
+                event.setCancelled(true);
+                return;
+
+            }
+
+            key = game.getLobbyId();
 
         }
 
-        if (!SpleggOG.getPlugin().maps.mapExists(map)) {
-
-            Utils.spleggOGMessage(player, "&cMap '" + map + "' does not exist.");
-            event.setCancelled(true);
-            return;
-
-        }
-
-        LobbySign ls = new LobbySign(SpleggOG.getPlugin().maps.getMap(map), SpleggOG.getPlugin());
-        ls.create(event.getBlock().getLocation(), SpleggOG.getPlugin().maps.getMap(map));
+        new LobbySign(key, SpleggOG.getPlugin()).create(event.getBlock().getLocation());
 
         // Provisional lines; the sign updater redraws with live data within a
         // second.
         event.line(0, Component.text("§4Splegg"));
-        event.line(1, Component.text("§6" + map));
+        event.line(1, Component.text("§6" + (LobbySign.ANY.equals(key) ? "Any" : key)));
         event.line(2, Component.text("§7Loading..."));
         event.line(3, Component.text(""));
 
         Utils.spleggOGMessage(player,
-                SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("%map%", map));
+                SpleggOG.getPlugin().getConfig().getString("Messages.CreateSign").replaceAll("%map%", key));
 
     }
 
@@ -105,8 +110,8 @@ public class SignListener implements Listener {
 
         }
 
-        final String map = owningMap(e.getClickedBlock().getLocation());
-        if (map == null) {
+        final String key = storedKey(e.getClickedBlock().getLocation());
+        if (key == null) {
 
             return;
 
@@ -115,6 +120,13 @@ public class SignListener implements Listener {
         e.setCancelled(true);
 
         final Player player = e.getPlayer();
+        if (!player.hasPermission("splegg.join")) {
+
+            Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoPermission"));
+            return;
+
+        }
+
         final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
         if (u == null) {
 
@@ -129,26 +141,15 @@ public class SignListener implements Listener {
 
         }
 
-        config.Map targetMap = SpleggOG.getPlugin().maps.getMap(map);
-        if (targetMap == null || !targetMap.isUsable(targetMap)) {
+        final Game game = new LobbySign(key, SpleggOG.getPlugin()).resolveTarget(player);
+        if (game == null) {
 
-            Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.Mapnotexist"));
+            Utils.spleggOGMessage(player, "&cNo Splegg lobby is open to join right now.");
             return;
 
         }
 
-        managers.Game game = SpleggOG.getPlugin().games.findOrCreateForMap(targetMap);
-        if (game != null) {
-
-            game.joinGame(u);
-
-        } else {
-
-            Utils.spleggOGMessage(player,
-                    "&cERROR: Failed to start a game for map &e" + map + "&c. Check the server console.");
-
-        }
-
+        game.joinGame(u);
         player.updateInventory();
 
     }
@@ -162,8 +163,8 @@ public class SignListener implements Listener {
 
         }
 
-        final String owningMap = owningMap(e.getBlock().getLocation());
-        if (owningMap == null) {
+        final String key = storedKey(e.getBlock().getLocation());
+        if (key == null) {
 
             return;
 
@@ -172,11 +173,10 @@ public class SignListener implements Listener {
         final Player player = e.getPlayer();
         if (player.hasPermission("splegg.admin")) {
 
-            final LobbySign sign = new LobbySign(SpleggOG.getPlugin().maps.getMap(owningMap), SpleggOG.getPlugin());
-            sign.delete(e.getBlock().getLocation());
+            new LobbySign(key, SpleggOG.getPlugin()).delete(key, e.getBlock().getLocation());
 
             Utils.spleggOGMessage(player,
-                    SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign").replaceAll("%map%", owningMap));
+                    SpleggOG.getPlugin().getConfig().getString("Messages.RemovedSign").replaceAll("%map%", key));
 
         } else {
 

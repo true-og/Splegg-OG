@@ -377,17 +377,12 @@ public class Listeners implements Listener {
         final java.util.List<Game> affected = new java.util.ArrayList<>();
         for (Game g : SpleggOG.getPlugin().games.GAMES.values()) {
 
-            if (g.getMap() == null)
-                continue;
-            // Skip games already shutting down -- our own cleanup is what
+            // Skip lobbies already shutting down -- our own cleanup is what
             // triggered this unload.
             if (g.getStatus() == managers.Status.ENDING)
                 continue;
-            final String mapWorld = g.getMap().getWorldName();
-            org.bukkit.World gameWorld = g.getGameWorld();
-            String gameWorldName = gameWorld == null ? null : gameWorld.getName();
-            if ((mapWorld != null && mapWorld.equals(worldName))
-                    || (gameWorldName != null && gameWorldName.equals(worldName)))
+            final String mapWorld = g.getMap() == null ? null : g.getMap().getWorldName();
+            if ((mapWorld != null && mapWorld.equals(worldName)) || g.ownsWorld(worldName))
                 affected.add(g);
 
         }

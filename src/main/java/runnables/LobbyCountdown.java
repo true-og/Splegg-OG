@@ -49,7 +49,7 @@ public class LobbyCountdown implements Runnable {
 
             }
 
-            this.game.getSign().update(this.game.getMap());
+            this.game.updateSigns();
             LobbyScoreboard.refreshGame(this.game);
 
             if (this.lobbycount % 25 == 0) {
@@ -75,35 +75,34 @@ public class LobbyCountdown implements Runnable {
 
             }
 
-            if (this.lobbycount <= 0) {
+            return;
 
-                playersInGameIterator = this.game.getPlayers().values().iterator();
-                while (playersInGameIterator.hasNext()) {
+        }
 
-                    sp = (SpleggPlayer) playersInGameIterator.next();
+        Bukkit.getScheduler().cancelTask(this.game.getCounterID());
 
-                }
+        if ((this.game.getPlayers().size()) >= (this.ignorePlayerCount ? 1 : 2)
+                && SpleggOG.getPlugin().game.startGame(this.game))
+        {
 
-            }
+            return;
 
-        } else if ((this.game.getPlayers().size()) >= (this.ignorePlayerCount ? 1 : 2)) {
+        }
 
-            Bukkit.getScheduler().cancelTask(this.game.getCounterID());
-            SpleggOG.getPlugin().game.startGame(this.game);
-
-        } else {
+        if (this.game.getPlayers().size() < (this.ignorePlayerCount ? 1 : 2)) {
 
             SpleggOG.getPlugin().chat.bc(SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughPlayers"),
                     this.game);
-            Bukkit.getScheduler().cancelTask(this.game.getCounterID());
-
-            this.game.setStarting(false);
-            this.game.setLobbyCount(SpleggOG.getPlugin().getConfig().getInt("Options.Timer"));
-            this.game.resetVoting();
-            this.game.getSign().update(this.game.getMap());
-            LobbyScoreboard.refreshGame(this.game);
 
         }
+
+        // Not enough players, or no map could be loaded: back to waiting with a
+        // fresh vote.
+        this.game.setStarting(false);
+        this.game.setLobbyCount(SpleggOG.getPlugin().getConfig().getInt("Options.Timer"));
+        this.game.resetVoting();
+        this.game.updateSigns();
+        LobbyScoreboard.refreshGame(this.game);
 
     }
 

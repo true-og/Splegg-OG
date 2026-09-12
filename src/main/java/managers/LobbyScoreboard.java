@@ -137,7 +137,7 @@ public class LobbyScoreboard {
 
         final List<Component> out = new ArrayList<>();
         final Game game = GAMES.get(player.getUniqueId());
-        if (game == null || game.getMap() == null) {
+        if (game == null) {
 
             return out;
 
@@ -160,7 +160,7 @@ public class LobbyScoreboard {
         final List<String> lines = new ArrayList<>();
         lines.add("&7&m                ");
         lines.add(configLine("Scoreboard.Map", "&eMap:"));
-        lines.add("&f" + game.getMap().getName());
+        lines.add("&f" + (game.getMap() != null ? game.getMap().getName() : "&7Voting..."));
         lines.add("");
 
         if (game.getStatus() == Status.INGAME) {
@@ -178,7 +178,7 @@ public class LobbyScoreboard {
 
         } else {
 
-            final int maxPlayers = game.getMap().getSpawnCount();
+            final int maxPlayers = game.getMaxPlayers();
             final int currentPlayers = game.getPlayers().size();
             lines.add(configLine("Scoreboard.Queue", "&6Players Waiting:"));
             lines.add("&f" + currentPlayers + "&7/&f" + maxPlayers);

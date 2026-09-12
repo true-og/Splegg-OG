@@ -10,6 +10,10 @@ import managers.Game;
 import utils.UtilPlayer;
 import utils.Utils;
 
+// /hub and /lobby. Leaves the Splegg lobby or match the player is in and sends
+// them back where they came from, or to main spawn. HubCommandListener routes
+// /hub, /lobby and /spawn here for anyone inside Splegg territory, whichever
+// plugin owns the bare label.
 public class HubCommand implements CommandExecutor {
 
     @Override
@@ -22,15 +26,22 @@ public class HubCommand implements CommandExecutor {
 
         }
 
+        handle(player);
+        return true;
+
+    }
+
+    public static void handle(Player player) {
+
         final SpleggOG plugin = SpleggOG.getPlugin();
         final UtilPlayer trackedPlayer = plugin.pm.track(player);
 
         // leaveGame already returns the player to their pre-join spot.
         final Game game = trackedPlayer.getGame();
-        if (game != null && trackedPlayer.isAlive()) {
+        if (game != null) {
 
             game.leaveGame(trackedPlayer);
-            return true;
+            return;
 
         }
 
@@ -39,31 +50,32 @@ public class HubCommand implements CommandExecutor {
             if (!plugin.returnPlayer(player, false)) {
 
                 Utils.spleggOGMessage(player, "&cUnable to return you to your previous location.");
-                return true;
+                return;
 
             }
 
             Utils.spleggOGMessage(player, "&aReturned to your previous location.");
-            return true;
+            return;
 
         }
 
         if (plugin.findMainWorld() == null) {
 
             Utils.spleggOGMessage(player, "&cNo main world is available.");
-            return true;
+            return;
 
         }
 
+        // MyWorlds' main world spawn is what Spawn-OG's /setspawn writes, so this
+        // lands on the server spawn.
         if (!plugin.returnPlayer(player, true)) {
 
             Utils.spleggOGMessage(player, "&cUnable to return you to the hub.");
-            return true;
+            return;
 
         }
 
         Utils.spleggOGMessage(player, "&aReturned to the hub.");
-        return true;
 
     }
 

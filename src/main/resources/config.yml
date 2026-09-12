@@ -6,7 +6,7 @@ Messages:
     or end. Move to a Splegg lobby or in-game world first.'
   JoinGame: '&6%player% has joined the game. &7[&e%count%/%maxcount%&7]'
   LeaveGame: '&6%player% has left the game. &7[&e%count%/%maxcount%&7]'
-  IndividualLeaveGame: '&6You have left the lobby for map &a%map%&6.'
+  IndividualLeaveGame: '&6You have left lobby &a%lobby%&6.'
   LobbyTimer: '&6Match starting &f%timer% &6seconds.'
   InstructionsGame: '&3Use your shovel to throw eggs and make the other players fall!'
   GraceTimeStart: '&aGrace Period (&6%grace% &aseconds)'
@@ -62,7 +62,11 @@ Points:
   Win: 50
 Options:
   Timer: 120
+  # Players needed in a lobby before its countdown starts.
   AutoStartPlayers: 4
+  # Players a lobby holds. Extra spawn points on a map go unused; a map with
+  # fewer spawns than this cycles them.
+  MaxPlayers: 10
   GraceTime: 10
   VotingMaps: 2
   EndVotingAt: 10
@@ -92,8 +96,13 @@ Options:
 # loads or copies. A copied world folder carries no MyWorlds generator setting,
 # so without this chunks outside the built arena generate vanilla terrain.
 #
-# GamePrefix: per-game worlds are named <GamePrefix><gameId>-<map>, for example SP1-Shake_It.
-# Lobby worlds use the matching <GamePrefix><number>-hub shape, for example SP1-hub.
+# GamePrefix: lobby ids and world names share it. Every world listed under
+# Worlds.Lobby must be named <GamePrefix><number>-<name>, for example SP1-hub:
+# that world is the hub of lobby SP1, which players join with /splegg join SP1 or
+# /splegg join 1. Players wait and vote for the map in the hub; when the vote
+# ends the winning template from Worlds.InGame is copied to
+# <GamePrefix><number>-<map> (SP1-Shake_It) and the match runs there. Add a
+# second hub (SP2-hub) for a second concurrent lobby.
 # Chat-OG keys its per-game Discord channel off this prefix, so keep the two in sync.
 Worlds:
   MapBase: 'maps'
@@ -103,8 +112,10 @@ Worlds:
     - SP1-hub
   InGame:
     - Loss
-# Join signs render like TheHerobrine-OG's: title, map, bold status, then
-# black-on-sign player counts. A repeating task redraws every sign each second.
+# Join signs render like TheHerobrine-OG's: title, lobby or map, bold status,
+# then black-on-sign player counts. A repeating task redraws every sign each
+# second. Placeholders: %lobby% (SP1), %map% (the voted map, or the lobby id
+# while the vote is open), %status%, %count%, %maxcount%.
 Sings:
   Format:
     1: '&4Splegg'
