@@ -3,19 +3,17 @@ main: main.SpleggOG
 version: '${version}'
 authors: [Hraponssi, MrLuangamer, Theluangamer9416, NotAlexNoyle]
 api-version: '${apiVersion}'
-depend: [DiamondBank-OG, Essentials-OG, WorldEdit, MyWorlds, Utilities-OG]
-softdepend: [My_Worlds, Chat-OG]
+depend: [DiamondBank-OG, WorldEdit, MyWorlds, Utilities-OG]
+softdepend: [My_Worlds, Chat-OG, Scoreboard-OG]
 
+# /vote and /v are not declared here on purpose: VoteCommandListener claims them inside Splegg
+# territory only, so VotingPlugin keeps the labels everywhere else.
 commands:
   splegg:
     description: The command prefix for all Splegg-OG commands.
     aliases: [sp]
   hub:
     description: Leave the Splegg lobby or game and return to the main world.
-  vote:
-    description: Vote for a Splegg map.
-    usage: /<command> <map number>
-    aliases: [v]
   spjoin:
     description: Join a Splegg lobby by its id.
     usage: /<command> [lobby]

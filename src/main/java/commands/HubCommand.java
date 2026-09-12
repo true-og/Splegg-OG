@@ -1,8 +1,5 @@
 package commands;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -25,14 +22,10 @@ public class HubCommand implements CommandExecutor {
 
         }
 
-        UtilPlayer trackedPlayer = SpleggOG.getPlugin().pm.getPlayer(player);
-        if (trackedPlayer == null) {
+        final SpleggOG plugin = SpleggOG.getPlugin();
+        final UtilPlayer trackedPlayer = plugin.pm.track(player);
 
-            trackedPlayer = new UtilPlayer(player);
-            SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), trackedPlayer);
-
-        }
-
+        // leaveGame already returns the player to their pre-join spot.
         final Game game = trackedPlayer.getGame();
         if (game != null && trackedPlayer.isAlive()) {
 
@@ -41,16 +34,28 @@ public class HubCommand implements CommandExecutor {
 
         }
 
-        final World mainWorld = findMainWorld();
-        if (mainWorld == null) {
+        if (plugin.hasPreJoinLocation(player.getUniqueId())) {
+
+            if (!plugin.returnPlayer(player, false)) {
+
+                Utils.spleggOGMessage(player, "&cUnable to return you to your previous location.");
+                return true;
+
+            }
+
+            Utils.spleggOGMessage(player, "&aReturned to your previous location.");
+            return true;
+
+        }
+
+        if (plugin.findMainWorld() == null) {
 
             Utils.spleggOGMessage(player, "&cNo main world is available.");
             return true;
 
         }
 
-        final Location destination = mainWorld.getSpawnLocation();
-        if (!player.teleport(destination)) {
+        if (!plugin.returnPlayer(player, true)) {
 
             Utils.spleggOGMessage(player, "&cUnable to return you to the hub.");
             return true;
@@ -59,23 +64,6 @@ public class HubCommand implements CommandExecutor {
 
         Utils.spleggOGMessage(player, "&aReturned to the hub.");
         return true;
-
-    }
-
-    private World findMainWorld() {
-
-        for (String worldName : SpleggOG.getPlugin().getMainWorlds()) {
-
-            final World world = Bukkit.getWorld(worldName);
-            if (world != null) {
-
-                return world;
-
-            }
-
-        }
-
-        return Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0);
 
     }
 

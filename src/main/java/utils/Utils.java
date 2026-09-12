@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -33,7 +34,8 @@ public class Utils {
 
     // Enable the conversion of text from config.yml to objects.
     public FileConfiguration config = SpleggOG.getPlugin().getConfig();
-    public HashMap<String, UtilPlayer> PLAYERS = new HashMap<>();
+    // Keyed by UUID so a name change or relog never resolves to a stale wrapper.
+    public HashMap<UUID, UtilPlayer> PLAYERS = new HashMap<>();
     private File f;
     public static String prefix = "&7[&eSplegg&f-&4OG&7] ";
 
@@ -168,15 +170,23 @@ public class Utils {
 
     }
 
-    public UtilPlayer getPlayer(String name) {
+    public UtilPlayer getPlayer(Player player) {
 
-        return (UtilPlayer) this.PLAYERS.get(name);
+        return this.PLAYERS.get(player.getUniqueId());
 
     }
 
-    public UtilPlayer getPlayer(Player player) {
+    // Returns the tracked wrapper, creating one for a player who joined before the
+    // plugin enabled.
+    public UtilPlayer track(Player player) {
 
-        return (UtilPlayer) this.PLAYERS.get(player.getName());
+        return this.PLAYERS.computeIfAbsent(player.getUniqueId(), id -> new UtilPlayer(player));
+
+    }
+
+    public void untrack(Player player) {
+
+        this.PLAYERS.remove(player.getUniqueId());
 
     }
 

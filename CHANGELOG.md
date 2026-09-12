@@ -1,3 +1,25 @@
+**0.9.7:**
+
+- Added an in-game scoreboard: map, players alive, own blocks broken and time left, with new `Scoreboard.Map`, `Scoreboard.Alive` and `Scoreboard.TimeLeft` labels in config.yml. With Scoreboard-OG 1.2.0 or newer installed, both the queue and match sidebars are drawn through Scoreboard-OG's sidebar API, so the network board returns by itself on leave and `/togglescoreboard` is honoured; without it a plain Bukkit sidebar is used as before.
+
+- Fixed floor detection: floor cuboids and the knockout height were read from config.yml instead of the map's own file, so eggs never vaporised blocks. Present since 0.9.2.
+
+- Stopped logging "ready" once per map per second; the line now prints only when a map becomes playable.
+
+- Removed `vote` and `v` from plugin.yml. The preprocess listener still claims `/vote` and `/v` inside Splegg territory, and VotingPlugin keeps both labels everywhere else.
+
+- Return locations are now kept on disk in `prejoin-locations.yaml` with an `Options.PreJoinLocationExpiryDays` expiry, matching TheHerobrine-OG and BuildBattle-OG. A relog or a restart still returns the player to where they came from, and any route into a Splegg world records the spot.
+
+- Dropped the Essentials-OG dependency; nothing used it.
+
+- The shop resolves balances off the main thread before it opens and no longer pre-checks funds on click, so DiamondBank calls stop stalling the server.
+
+- The startup purge only removes per-match copies of known templates, so an `SP2-...` world that is not in config yet survives a restart.
+
+- Player tracking is keyed by UUID and pruned on quit.
+
+- `/splegg` subcommands no longer print a stray usage line, map names are limited to one path segment, and sign locations parse world names that contain dots.
+
 **0.9.6:**
 
 - Added persistent per-player points and the Hive Java Splegg rank ladder (Farmer through Oliver, with The Eggspert reserved for the top scorer once they also hold Oliver). Points are awarded per block an egg destroys and to the match winner, tunable under the new `Points` config section, and stored in `plugins/Splegg-OG/stats.yml`.

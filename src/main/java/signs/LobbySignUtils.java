@@ -39,15 +39,22 @@ public class LobbySignUtils {
 
     }
 
+    // Parsed from the right so a world name containing dots still resolves.
     public Location stringToLocation(String s) {
 
         String[] str = s.split("\\.");
+        if (str.length < 4) {
 
-        World w = Bukkit.getServer().getWorld(str[0]);
+            return new Location(null, 0, 0, 0);
 
-        int x = Integer.parseInt(str[1]);
-        int y = Integer.parseInt(str[2]);
-        int z = Integer.parseInt(str[3]);
+        }
+
+        int z = Integer.parseInt(str[str.length - 1]);
+        int y = Integer.parseInt(str[str.length - 2]);
+        int x = Integer.parseInt(str[str.length - 3]);
+        String worldName = String.join(".", java.util.Arrays.copyOf(str, str.length - 3));
+
+        World w = Bukkit.getServer().getWorld(worldName);
 
         return new Location(w, (double) x, (double) y, (double) z);
 

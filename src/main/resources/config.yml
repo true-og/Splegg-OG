@@ -44,9 +44,13 @@ Messages:
   FinishReward: '&BYou received %reward% &BDiamonds for winning!'
 Scoreboard:
   Title: '&2Splegg&r-&4OG'
+  Map: '&eMap:'
   Queue: '&6Players Waiting:'
   Starting: '&6Starting in:'
+  # Match card lines, shown while a game is live.
+  Alive: '&aPlayers Alive:'
   BrokenBlocks: '&eBlocks Broken:'
+  TimeLeft: '&6Time Left:'
 Money:
   KillPlayer: 0
   # Diamonds awarded to the match winner.
@@ -63,6 +67,8 @@ Options:
   VotingMaps: 2
   EndVotingAt: 10
   VotingReminder: 30
+  # Days a stored pre-game return location survives restarts. 0 keeps them forever.
+  PreJoinLocationExpiryDays: 30
 # Splegg only manages dedicated lobby and in-game worlds. The vanilla overworld
 # (world, world_nether, world_the_end) is hard-blacklisted in code and cannot
 # be added here -- splegg will refuse to put a map, inventory group, or any

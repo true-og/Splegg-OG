@@ -27,7 +27,7 @@ kotlin { jvmToolchain(17) }
 /* ----------------------------- Metadata ------------------------------ */
 group = "net.trueog.splegg-og" // Declare bundle identifier.
 
-version = "0.9.6" // Declare plugin version (will be in .jar).
+version = "0.9.7" // Declare plugin version (will be in .jar).
 
 val apiVersion = "1.19" // Declare minecraft server target version.
 
@@ -46,7 +46,6 @@ repositories {
     maven { url = uri("https://repo.purpurmc.org/snapshots") } // Import the PurpurMC Maven Repository.
     maven { url = uri("https://jitpack.io") } // Import the Jitpack Maven Repository.
     maven { url = uri("https://papermc.io/repo/repository/maven-public/") } // Import the Paper Maven Repository.
-    maven { url = uri("https://repo.essentialsx.net/releases/") } // Import the EssentialsX Maven Repository.
     maven { url = uri("https://maven.enginehub.org/repo") } // Import the WorldEdit Maven Repository.
 }
 
@@ -57,12 +56,12 @@ dependencies {
     compileOnly(
         "com.sk89q.worldedit:worldedit-bukkit:7.2.15"
     ) // Import WorldEdit API (7.2.15 matches the server's WorldEdit build).
-    compileOnly("net.essentialsx:EssentialsX:2.21.0") // Import EssentialsX API.
     compileOnly(files("libs/MyWorlds/MyWorlds-1.19.4-v1.jar")) // Import MyWorlds API (local build).
     compileOnly(
         files("libs/BKCommonLib/BKCommonLib-1.19.4-v2.jar")
     ) // Import BKCommonLib API (local build, required by MyWorlds at compile time).
     compileOnly(files("libs/Chat-OG/Chat-OG.jar")) // Import Chat-OG API for world chat formatting.
+    compileOnly(files("libs/Scoreboard-OG/Scoreboard-OG.jar")) // Import Scoreboard-OG sidebar API.
     implementation(project(":libs:GxUI-OG")) // Import TrueOG Network GxUI-OG Java API (from source).
     compileOnlyApi(project(":libs:Utilities-OG")) // Import TrueOG Network Utilities-OG Java API (from source).
     compileOnlyApi(project(":libs:DiamondBank-OG")) {

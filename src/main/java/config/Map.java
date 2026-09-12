@@ -72,16 +72,15 @@ public class Map {
     public void usableDecider(Map map) {
 
         final boolean valid = this.spawncount >= 2 && this.floorcount > 0 && hasValidConfiguredWorlds();
-        if (valid) {
+        // Logged once per transition: the sign updater re-evaluates every map every
+        // second.
+        if (valid && !this.usable) {
 
-            SpleggOG.getPlugin().getLogger().info("Floor and spawn point(s) detected. The map is ready to go!");
-            this.usable = true;
-
-        } else {
-
-            this.usable = false;
+            SpleggOG.getPlugin().getLogger().info("Map " + this.name + " has floors and spawn points and is ready.");
 
         }
+
+        this.usable = valid;
 
     }
 

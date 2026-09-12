@@ -1,7 +1,10 @@
 package managers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -12,13 +15,18 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 
 import main.SpleggOG;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import utils.ScoreboardOGBridge;
 import utils.SpleggPlayer;
 import utils.Utils;
 
+// The sidebar a Splegg player sees while queued and while playing. With Scoreboard-OG
+// present it renders through that plugin's sidebar; otherwise a Bukkit board is used.
 public class LobbyScoreboard {
 
-    private static final HashMap<String, Scoreboard> BOARDS = new HashMap<>();
+    private static final HashMap<UUID, Scoreboard> BOARDS = new HashMap<>();
+    private static final HashMap<UUID, Game> GAMES = new HashMap<>();
 
     private LobbyScoreboard() {
 
@@ -28,6 +36,15 @@ public class LobbyScoreboard {
 
     public static void attach(Player player, Game game) {
 
+        GAMES.put(player.getUniqueId(), game);
+
+        if (ScoreboardOGBridge.isAvailable()) {
+
+            ScoreboardOGBridge.claim(player, LobbyScoreboard::title, LobbyScoreboard::lines);
+            return;
+
+        }
+
         final ScoreboardManager manager = Bukkit.getScoreboardManager();
         if (manager == null) {
 
@@ -36,13 +53,10 @@ public class LobbyScoreboard {
         }
 
         final Scoreboard board = manager.getNewScoreboard();
-        final String rawTitle = SpleggOG.getPlugin().getConfig().getString("Scoreboard.Title");
-        final TextComponent title = Utils.legacySerializerAnyCase(rawTitle != null ? rawTitle : "&2Splegg&r-&4OG");
-
-        final Objective objective = board.registerNewObjective("splegg_lobby", Criteria.DUMMY, title);
+        final Objective objective = board.registerNewObjective("splegg_lobby", Criteria.DUMMY, title(player));
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-        BOARDS.put(player.getName(), board);
+        BOARDS.put(player.getUniqueId(), board);
         player.setScoreboard(board);
 
         render(player, game);
@@ -50,6 +64,15 @@ public class LobbyScoreboard {
     }
 
     public static void detach(Player player) {
+
+        GAMES.remove(player.getUniqueId());
+
+        if (ScoreboardOGBridge.isAvailable()) {
+
+            ScoreboardOGBridge.release(player);
+            return;
+
+        }
 
         // Hand the player back to the server's main scoreboard rather than a
         // fresh empty one: Scoreboard-OG's world-change hook only reclaims its
@@ -61,13 +84,33 @@ public class LobbyScoreboard {
 
         }
 
-        BOARDS.remove(player.getName());
+        BOARDS.remove(player.getUniqueId());
 
     }
 
+    public static void detachAll() {
+
+        for (UUID playerId : new ArrayList<>(GAMES.keySet())) {
+
+            final Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+
+                detach(player);
+
+            }
+
+        }
+
+        GAMES.clear();
+        BOARDS.clear();
+
+    }
+
+    // Scoreboard-OG polls the provider itself; only the Bukkit boards need
+    // redrawing.
     public static void refreshGame(Game game) {
 
-        if (game == null) {
+        if (game == null || ScoreboardOGBridge.isAvailable()) {
 
             return;
 
@@ -83,9 +126,86 @@ public class LobbyScoreboard {
 
     }
 
+    private static TextComponent title(Player player) {
+
+        final String rawTitle = SpleggOG.getPlugin().getConfig().getString("Scoreboard.Title");
+        return Utils.legacySerializerAnyCase(rawTitle != null ? rawTitle : "&2Splegg&r-&4OG");
+
+    }
+
+    private static List<Component> lines(Player player) {
+
+        final List<Component> out = new ArrayList<>();
+        final Game game = GAMES.get(player.getUniqueId());
+        if (game == null || game.getMap() == null) {
+
+            return out;
+
+        }
+
+        for (String line : rawLines(player, game)) {
+
+            out.add(Utils.legacySerializerAnyCase(line));
+
+        }
+
+        return out;
+
+    }
+
+    // Top to bottom. The queue card shows the countdown; the match card shows the
+    // survivors, the player's own block count and the time left.
+    private static List<String> rawLines(Player player, Game game) {
+
+        final List<String> lines = new ArrayList<>();
+        lines.add("&7&m                ");
+        lines.add(configLine("Scoreboard.Map", "&eMap:"));
+        lines.add("&f" + game.getMap().getName());
+        lines.add("");
+
+        if (game.getStatus() == Status.INGAME) {
+
+            final SpleggPlayer self = game.getPlayers().get(player.getUniqueId());
+            final int broken = self == null ? 0 : self.getBroken();
+            lines.add(configLine("Scoreboard.Alive", "&aPlayers Alive:"));
+            lines.add("&f" + game.getPlayers().size());
+            lines.add(" ");
+            lines.add(configLine("Scoreboard.BrokenBlocks", "&eBlocks Broken:"));
+            lines.add("&f" + broken);
+            lines.add("  ");
+            lines.add(configLine("Scoreboard.TimeLeft", "&6Time Left:"));
+            lines.add("&f" + SpleggOG.getPlugin().game.getDigitTime(Math.max(0, game.getCount())));
+
+        } else {
+
+            final int maxPlayers = game.getMap().getSpawnCount();
+            final int currentPlayers = game.getPlayers().size();
+            lines.add(configLine("Scoreboard.Queue", "&6Players Waiting:"));
+            lines.add("&f" + currentPlayers + "&7/&f" + maxPlayers);
+            lines.add(" ");
+            lines.add(configLine("Scoreboard.Starting", "&6Starting in:"));
+            if (game.isStarting()) {
+
+                lines.add("&f" + game.getLobbyCount() + "s");
+
+            } else {
+
+                final int required = Math.max(2, SpleggOG.getPlugin().getConfig().getInt("Options.AutoStartPlayers"));
+                final int needed = Math.max(0, required - currentPlayers);
+                lines.add(needed == 0 ? "&aReady" : "&f" + needed + " &7more");
+
+            }
+
+        }
+
+        lines.add("&7&m               ");
+        return lines;
+
+    }
+
     private static void render(Player player, Game game) {
 
-        final Scoreboard board = BOARDS.get(player.getName());
+        final Scoreboard board = BOARDS.get(player.getUniqueId());
         if (board == null) {
 
             return;
@@ -105,44 +225,14 @@ public class LobbyScoreboard {
 
         }
 
-        final String queueLabel = configLine("Scoreboard.Queue", "&6Players Waiting:");
-        final String startingLabel = configLine("Scoreboard.Starting", "&6Starting in:");
-        final String mapLabel = "&eMap:";
+        // Bukkit boards score from the bottom, so the top line gets the highest score.
+        final List<String> lines = rawLines(player, game);
+        int score = lines.size();
+        for (String line : lines) {
 
-        final int maxPlayers = game.getMap().getSpawnCount();
-        final int currentPlayers = game.getPlayers().size();
-
-        final String mapValue = "&f" + game.getMap().getName();
-        final String queueValue = "&f" + currentPlayers + "&7/&f" + maxPlayers;
-        final String startingValue;
-        if (game.isStarting()) {
-
-            startingValue = "&f" + game.getLobbyCount() + "s";
-
-        } else {
-
-            final int required = Math.max(2, SpleggOG.getPlugin().getConfig().getInt("Options.AutoStartPlayers"));
-            final int needed = Math.max(0, required - currentPlayers);
-            startingValue = needed == 0 ? "&aReady" : "&f" + needed + " &7more";
+            objective.getScore(Utils.legacySectionize(line.isEmpty() ? " " : line)).setScore(score--);
 
         }
-
-        // Higher score = higher on sidebar.
-        setLine(objective, 7, "&7&m                ");
-        setLine(objective, 6, mapLabel);
-        setLine(objective, 5, mapValue);
-        setLine(objective, 4, queueLabel);
-        setLine(objective, 3, queueValue);
-        setLine(objective, 2, startingLabel);
-        setLine(objective, 1, startingValue);
-        setLine(objective, 0, "&7&m               ");
-
-    }
-
-    private static void setLine(Objective objective, int score, String rawLine) {
-
-        final String text = Utils.legacySectionize(rawLine);
-        objective.getScore(text).setScore(score);
 
     }
 

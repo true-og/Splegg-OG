@@ -646,11 +646,13 @@ public class Game {
         // The lowest Y the floor extends to. Computed once from the map config.
         // No mutable state needed -- the per-game world is reset by being
         // deleted between games.
+        // Floors live in the per-map file, not in config.yml.
+        final FileConfiguration mapConfig = this.map.getConfig();
         int small = Integer.MAX_VALUE;
         for (int i = 1; i <= map.getFloors(); i++) {
 
-            small = Math.min(small, Math.min(config.getInt("Floors." + i + ".p1.y", small),
-                    config.getInt("Floors." + i + ".p2.y", small)));
+            small = Math.min(small, Math.min(mapConfig.getInt("Floors." + i + ".p1.y", small),
+                    mapConfig.getInt("Floors." + i + ".p2.y", small)));
 
         }
 
@@ -661,16 +663,9 @@ public class Game {
     public void joinGame(UtilPlayer playerWhoIsJoining) {
 
         final Player player = playerWhoIsJoining.getPlayer();
-        final World joinWorld = player.getWorld();
-        // Any world outside splegg territory is a valid return spot, not just the
-        // vanilla overworld set -- leaveGame sends the player back here.
-        if (joinWorld != null && !splegg.isSpleggWorld(joinWorld)
-                && !splegg.getGameWorldManager().isGameCopyName(joinWorld.getName()))
-        {
-
-            playerWhoIsJoining.setPreJoinLocation(player.getLocation());
-
-        }
+        // Any world outside Splegg territory is a valid return spot; the store refuses
+        // the rest.
+        splegg.savePreJoinLocation(player.getUniqueId(), player.getLocation());
 
         if (playerWhoIsJoining.getGame() != null) {
 
@@ -999,24 +994,10 @@ public class Game {
             LobbyScoreboard.detach(player);
             LobbyScoreboard.refreshGame(game);
 
-            final Location returnLocation = u.getPreJoinLocation();
-            if (returnLocation != null && returnLocation.getWorld() != null) {
+            if (!this.splegg.returnPlayer(player, true)) {
 
-                player.teleport(returnLocation);
-
-            } else {
-
-                final List<String> mainWorlds = this.splegg.getMainWorlds();
-                if (!mainWorlds.isEmpty()) {
-
-                    final org.bukkit.World mainWorld = Bukkit.getWorld(mainWorlds.get(0));
-                    if (mainWorld != null) {
-
-                        player.teleport(mainWorld.getSpawnLocation());
-
-                    }
-
-                }
+                SpleggOG.getPlugin().getLogger()
+                        .warning("Could not return " + player.getName() + " out of game " + game.getGameId() + ".");
 
             }
 
@@ -1142,14 +1123,16 @@ public class Game {
         int tx = target.getBlockX();
         int ty = target.getBlockY();
         int tz = target.getBlockZ();
+        // Floors live in the per-map file, not in config.yml.
+        final FileConfiguration mapConfig = this.map.getConfig();
         for (int i = 1; i <= map.getFloors(); i++) {
 
-            int p1x = config.getInt("Floors." + i + ".p1.x");
-            int p1y = config.getInt("Floors." + i + ".p1.y");
-            int p1z = config.getInt("Floors." + i + ".p1.z");
-            int p2x = config.getInt("Floors." + i + ".p2.x");
-            int p2y = config.getInt("Floors." + i + ".p2.y");
-            int p2z = config.getInt("Floors." + i + ".p2.z");
+            int p1x = mapConfig.getInt("Floors." + i + ".p1.x");
+            int p1y = mapConfig.getInt("Floors." + i + ".p1.y");
+            int p1z = mapConfig.getInt("Floors." + i + ".p1.z");
+            int p2x = mapConfig.getInt("Floors." + i + ".p2.x");
+            int p2y = mapConfig.getInt("Floors." + i + ".p2.y");
+            int p2z = mapConfig.getInt("Floors." + i + ".p2.z");
             int minX = Math.min(p1x, p2x), maxX = Math.max(p1x, p2x);
             int minY = Math.min(p1y, p2y), maxY = Math.max(p1y, p2y);
             int minZ = Math.min(p1z, p2z), maxZ = Math.max(p1z, p2z);

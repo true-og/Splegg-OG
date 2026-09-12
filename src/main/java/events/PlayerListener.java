@@ -1,8 +1,6 @@
 package events;
 
 import org.apache.commons.lang3.StringUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,15 +20,7 @@ public class PlayerListener implements Listener {
 
     private UtilPlayer getTrackedPlayer(Player player) {
 
-        UtilPlayer trackedPlayer = SpleggOG.getPlugin().pm.getPlayer(player);
-        if (trackedPlayer == null) {
-
-            trackedPlayer = new UtilPlayer(player);
-            SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), trackedPlayer);
-
-        }
-
-        return trackedPlayer;
+        return SpleggOG.getPlugin().pm.track(player);
 
     }
 
@@ -87,18 +77,13 @@ public class PlayerListener implements Listener {
 
     }
 
+    // A fresh wrapper per login; the reconnect teleport lives in
+    // PreJoinLocationListener.
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
 
-        final Player player = event.getPlayer();
-        final UtilPlayer u = new UtilPlayer(player);
-
-        SpleggOG.getPlugin().pm.PLAYERS.put(player.getName(), u);
-        if (isSpleggReconnectWorld(player.getWorld())) {
-
-            Bukkit.getScheduler().runTask(SpleggOG.getPlugin(), () -> returnToMainWorld(player));
-
-        }
+        SpleggOG.getPlugin().pm.untrack(event.getPlayer());
+        SpleggOG.getPlugin().pm.track(event.getPlayer());
 
     }
 
@@ -158,61 +143,6 @@ public class PlayerListener implements Listener {
 
         return StringUtils.equalsIgnoreCase(message, command)
                 || StringUtils.startsWithIgnoreCase(message, command + " ");
-
-    }
-
-    private boolean isSpleggReconnectWorld(World world) {
-
-        if (world == null) {
-
-            return false;
-
-        }
-
-        String worldName = world.getName();
-        return SpleggOG.getPlugin().isSpleggWorld(worldName)
-                || SpleggOG.getPlugin().getGameWorldManager().isGameCopyName(worldName);
-
-    }
-
-    private void returnToMainWorld(Player player) {
-
-        if (!player.isOnline()) {
-
-            return;
-
-        }
-
-        World mainWorld = null;
-        for (String worldName : SpleggOG.getPlugin().getMainWorlds()) {
-
-            mainWorld = Bukkit.getWorld(worldName);
-            if (mainWorld != null) {
-
-                break;
-
-            }
-
-        }
-
-        if (mainWorld == null && !Bukkit.getWorlds().isEmpty()) {
-
-            mainWorld = Bukkit.getWorlds().get(0);
-
-        }
-
-        if (mainWorld == null) {
-
-            Utils.spleggOGMessage(player, "&cNo main world is available.");
-            return;
-
-        }
-
-        if (!player.teleport(mainWorld.getSpawnLocation())) {
-
-            Utils.spleggOGMessage(player, "&cUnable to return you to the hub.");
-
-        }
 
     }
 

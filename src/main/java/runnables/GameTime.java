@@ -2,6 +2,7 @@ package runnables;
 
 import main.SpleggOG;
 import managers.Game;
+import managers.LobbyScoreboard;
 import managers.Status;
 
 public class GameTime implements Runnable {
@@ -32,6 +33,7 @@ public class GameTime implements Runnable {
         }
 
         final int remaining = game.tickTime();
+        LobbyScoreboard.refreshGame(game);
         if (remaining <= 0) {
 
             splegg.chat.bc(splegg.getConfig().getString("Messages.Timelimitreached"), game);

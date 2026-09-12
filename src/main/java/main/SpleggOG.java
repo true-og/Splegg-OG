@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -20,7 +21,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.bergerkiller.bukkit.mw.MyWorlds;
 import com.bergerkiller.bukkit.mw.WorldInventory;
-import com.earth2me.essentials.Essentials;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 
 import nl.skbotnl.chatog.api.ChatOGAPI;
@@ -34,22 +34,24 @@ import commands.JoinLobbyCommand;
 import commands.SpleggCommand;
 import commands.VoteCommand;
 import commands.VoteCommandListener;
-import commands.VoteCompleter;
 import config.MapUtilities;
 import events.Listeners;
 import events.MapListener;
 import events.PlayerListener;
+import events.PreJoinLocationListener;
 import events.SignListener;
 import events.SpleggEvents;
 import managers.Game;
 import managers.GameManager;
 import managers.GameUtilities;
 import managers.GameWorldManager;
+import managers.LobbyScoreboard;
 import managers.Status;
 import managers.VoidChunkGenerator;
 import net.trueog.diamondbankog.api.DiamondBankAPIJava;
 import signs.JoinSignUpdater;
-import utils.UtilPlayer;
+import utils.PreJoinLocationStore;
+import utils.ScoreboardOGBridge;
 import utils.Utils;
 
 public class SpleggOG extends JavaPlugin {
@@ -81,9 +83,9 @@ public class SpleggOG extends JavaPlugin {
     public boolean disabling = false;
     boolean economy = true;
     private DiamondBankAPIJava diamondBankAPI;
-    private static Essentials essentials;
     private static MyWorlds myWorlds;
     private GameWorldManager gameWorldManager;
+    private PreJoinLocationStore preJoinLocations;
 
     // TODO: If a shovel in the Splegg shop is too expensive, close the inventory
     // and tell the user about it.
@@ -99,15 +101,6 @@ public class SpleggOG extends JavaPlugin {
 
             this.getLogger().severe(noWorldEditError);
             this.getLogger().info(noWorldEditError);
-
-            Bukkit.getPluginManager().disablePlugin(this);
-
-        } else if (this.getServer().getPluginManager().getPlugin("Essentials-OG") == null) {
-
-            final String noEssentialsOGError = "\"ERROR: Essentials-OG not found! Splegg-OG requires Essentials-OG for inventory handling and will now disable.\"";
-
-            this.getLogger().severe(noEssentialsOGError);
-            this.getLogger().info(noEssentialsOGError);
 
             Bukkit.getPluginManager().disablePlugin(this);
 
@@ -139,28 +132,23 @@ public class SpleggOG extends JavaPlugin {
             }
 
             // Initialize TrueOG APIs.
-            essentials = (Essentials) this.getServer().getPluginManager().getPlugin("Essentials-OG");
             myWorlds = findMyWorldsPlugin();
 
             this.maps = new MapUtilities();
             this.games = new GameUtilities();
             this.game = new GameManager();
             this.gameWorldManager = new GameWorldManager(this);
-            this.gameWorldManager.purgeStaleCopies();
             this.pm = new Utils();
             this.utils = new Utils();
             this.config = new Utils();
 
-            Bukkit.getOnlinePlayers().forEach((Player p) -> {
-
-                final UtilPlayer u = new UtilPlayer(p);
-
-                this.pm.PLAYERS.put(p.getName(), u);
-
-            });
+            Bukkit.getOnlinePlayers().forEach(this.pm::track);
 
             this.maps.c.setup();
             this.config.setup();
+            // Maps are known now, so the purge only touches copies of real templates.
+            this.gameWorldManager.purgeStaleCopies();
+            this.preJoinLocations = new PreJoinLocationStore(this);
 
             this.getConfig().options().copyDefaults(true);
             this.saveConfig();
@@ -179,6 +167,7 @@ public class SpleggOG extends JavaPlugin {
 
             this.getServer().getPluginManager().registerEvents(new MapListener(), this);
             this.getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+            this.getServer().getPluginManager().registerEvents(new PreJoinLocationListener(this), this);
             this.getServer().getPluginManager().registerEvents(new SpleggEvents(), this);
             this.getServer().getPluginManager().registerEvents(new SignListener(), this);
             getServer().getPluginManager().registerEvents(new Listeners(diamondBankAPI), this);
@@ -190,11 +179,9 @@ public class SpleggOG extends JavaPlugin {
             final JoinLobbyCommand joinLobbyCommand = new JoinLobbyCommand();
             this.getCommand("spjoin").setExecutor(joinLobbyCommand);
             this.getCommand("spjoin").setTabCompleter(joinLobbyCommand);
-            final VoteCommand voteCommand = new VoteCommand();
-            this.getCommand("vote").setExecutor(voteCommand);
-            this.getCommand("vote").setTabCompleter(new VoteCompleter());
-            // Claims /v and /vote inside Splegg territory before VotingPlugin sees them.
-            this.getServer().getPluginManager().registerEvents(new VoteCommandListener(voteCommand), this);
+            // /vote and /v are claimed inside Splegg territory only, so VotingPlugin keeps
+            // the labels everywhere else; nothing is registered in plugin.yml for them.
+            this.getServer().getPluginManager().registerEvents(new VoteCommandListener(new VoteCommand()), this);
             this.registerChatFormatter();
 
             // Redraw join signs once a second, TheHerobrine-OG style. First run
@@ -229,11 +216,21 @@ public class SpleggOG extends JavaPlugin {
         }
 
         Listeners.clearAll();
+        LobbyScoreboard.detachAll();
+        ScoreboardOGBridge.releaseAll();
 
         if (this.stats != null) {
 
             this.stats.shutdown();
             this.stats = null;
+
+        }
+
+        // Last write wins: anyone the teardown could not move keeps their spot on
+        // disk so the next boot can still return them.
+        if (this.preJoinLocations != null) {
+
+            this.preJoinLocations.shutdown();
 
         }
 
@@ -686,10 +683,101 @@ public class SpleggOG extends JavaPlugin {
 
     }
 
-    // Getter for Essentials-OG API.
-    public static Essentials getEssentials() {
+    // Every world Splegg owns: configured lobby and template worlds plus per-match
+    // copies.
+    public boolean isSpleggTerritory(String worldName) {
 
-        return essentials;
+        if (worldName == null || isProtectedMainWorld(worldName))
+            return false;
+
+        if (isSpleggWorld(worldName))
+            return true;
+
+        return this.gameWorldManager != null && this.gameWorldManager.isGameCopyName(worldName);
+
+    }
+
+    // Records the spot a player came from. Only a world outside Splegg territory
+    // is stored, so hops between Splegg worlds keep it.
+    public void savePreJoinLocation(UUID playerId, Location location) {
+
+        if (this.preJoinLocations == null || location == null || location.getWorld() == null)
+            return;
+        if (isSpleggTerritory(location.getWorld().getName()))
+            return;
+        this.preJoinLocations.put(playerId, location);
+
+    }
+
+    public boolean hasPreJoinLocation(UUID playerId) {
+
+        return this.preJoinLocations != null && this.preJoinLocations.has(playerId)
+                && !isSpleggTerritory(this.preJoinLocations.getWorldName(playerId));
+
+    }
+
+    // Resolves the stored spot, loading its world through MyWorlds if needed.
+    public Location resolvePreJoinLocation(UUID playerId) {
+
+        if (!hasPreJoinLocation(playerId))
+            return null;
+        return this.preJoinLocations.getOrLoadWorld(playerId);
+
+    }
+
+    public void removePreJoinLocation(UUID playerId) {
+
+        if (this.preJoinLocations != null)
+            this.preJoinLocations.remove(playerId);
+
+    }
+
+    // Returns a player to their pre-join spot, or main spawn when fallbackToSpawn
+    // is set and nothing is recorded. The spot is dropped once a teleport lands.
+    public boolean returnPlayer(Player player, boolean fallbackToSpawn) {
+
+        if (player == null || !player.isOnline())
+            return false;
+
+        if (player.isDead())
+            player.spigot().respawn();
+
+        final Location saved = resolvePreJoinLocation(player.getUniqueId());
+        if (saved != null) {
+
+            if (!player.teleport(saved))
+                return false;
+
+            removePreJoinLocation(player.getUniqueId());
+            return true;
+
+        }
+
+        if (!fallbackToSpawn)
+            return false;
+
+        final World mainWorld = findMainWorld();
+        return mainWorld != null && player.teleport(mainWorld.getSpawnLocation());
+
+    }
+
+    // MyWorlds' main world first, then the protected list, then whatever Bukkit
+    // loaded first.
+    public World findMainWorld() {
+
+        World mainWorld = MyWorlds.getMainWorld();
+        if (mainWorld != null)
+            return mainWorld;
+
+        for (String worldName : getMainWorlds()) {
+
+            mainWorld = Bukkit.getWorld(worldName);
+            if (mainWorld != null)
+                return mainWorld;
+
+        }
+
+        return Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0);
 
     }
 

@@ -1,10 +1,10 @@
-# Splegg-OG 0.9.2 BETA
+# Splegg-OG 0.9.7
 
 ![Icon](https://raw.githubusercontent.com/true-og/Splegg-OG/master/assets/splegg-logo.png)
 
 **Splegg-OG** is a Splegg plugin originally made by MrLuangamer, updated for Worldedit 7.2 and Spigot 1.16.4 by Hraponssi, then updated for Purpur 1.19.4 for use at [TrueOG Network](https://true-og.net/) by [NotAlexNoyle](https://github.com/NotAlexNoyle/).
 
-Runtime dependencies: WorldEdit, DiamondBank-OG, Essentials-OG, and MyWorlds. Chat-OG is optional and integrated when present.
+Runtime dependencies: WorldEdit, DiamondBank-OG, Utilities-OG, and MyWorlds. Chat-OG and Scoreboard-OG are optional and integrated when present.
 
 Current feature state:
 
@@ -12,7 +12,7 @@ Current feature state:
 - Splegg creates isolated MyWorlds inventory groups for configured lobby and in-game worlds. It does not manage the vanilla main-world inventory group.
 - Players can join by lobby id with `/spjoin`, by map with `/splegg join`, by random queue, or through registered lobby signs, then vote for the map while waiting in the lobby.
 - Players can leave with `/splegg leave`, `/hub`, or the lobby slimeball.
-- Players who reconnect inside a Splegg world are returned to a protected main-world spawn instead of remaining in an abandoned match world.
+- Players who leave, relog, or reconnect inside a Splegg world are returned to where they were before they entered it. Return locations are kept on disk in `plugins/Splegg-OG/prejoin-locations.yaml` and expire after `Options.PreJoinLocationExpiryDays` days; the protected main-world spawn is the fallback.
 
 **Protected vanilla worlds:** Splegg will *never* read, write, or configure the vanilla overworld dimensions (`world`, `world_nether`, `world_the_end`). This guard is hard-coded -- listing those names under `Worlds.Lobby` or `Worlds.InGame` in `config.yml` is rejected with startup warnings, and `/splegg create`, `/splegg setspawn`, `/splegg setlobby`, and `/splegg addfloor` all refuse to run while you are standing in one of them. Run Splegg only inside dedicated worlds that you create yourself.
 
@@ -137,7 +137,7 @@ When a player joins a Splegg lobby, the lobby picks up to `Options.VotingMaps` p
 
 When the start countdown reaches `Options.EndVotingAt`, voting ends and the highest-voted map wins. If the winning map is different from the joined map, Splegg prepares a new per-game world copy for the winner, moves lobby players to that map's queue lobby, updates signs and scoreboards, and starts the match on the winning map.
 
-`/v` and `/vote` are claimed inside Splegg territory before any other plugin sees them, so VotingPlugin cannot take the `/vote` label away from map voting. The claim covers a player who is in a Splegg game, and anyone standing in a configured lobby or in-game world or a per-match copy. Everywhere else `/vote` behaves normally.
+`/v` and `/vote` are claimed inside Splegg territory before any other plugin sees them, so VotingPlugin cannot take the `/vote` label away from map voting. The claim covers a player who is in a Splegg game, and anyone standing in a configured lobby or in-game world or a per-match copy. Everywhere else `/vote` behaves normally: neither label is declared in plugin.yml, so Splegg never competes for them.
 
 **Force Starting:**
 
@@ -148,6 +148,10 @@ When the start countdown reaches `Options.EndVotingAt`, voting ends and the high
 When Chat-OG is installed, Splegg registers a chat formatter for its `Worlds.GamePrefix` key (`SP` by default), which covers both the configured lobby worlds and every per-match copy. Lobby chat shows the player count, in-game chat shows blocks broken, and eliminated players are greyed out. Chat-OG's `discord.games` must contain a matching `SP` key for Splegg worlds to get their own chat; without it they stay in global chat and the formatter never runs.
 
 Chat-OG only routes worlds named `<letters><number>-<name>`, so a lobby world named anything else stays in global chat while Splegg still treats it as its own. Splegg warns at startup naming any such lobby world. `Worlds.InGame` entries are deliberately not checked: they are match templates, nobody queues or plays in one, and each per-game copy is named `<prefix><gameId>-<template>` and routes whatever the template is called.
+
+**Scoreboard:**
+
+Queued players see a sidebar with the map, the players waiting and the countdown; during the match it shows the map, the players still alive, the player's own blocks broken and the time left. The labels are the `Scoreboard.*` keys in `config.yml`. With Scoreboard-OG `1.2.0` or newer installed, the sidebar is drawn through Scoreboard-OG's sidebar API, so the network board returns on its own when the player leaves and `/togglescoreboard` is honoured. Without it, a plain Bukkit sidebar is used and the main scoreboard is restored on leave.
 
 **Match Lobbies:**
 
@@ -203,7 +207,5 @@ The resulting .jar file will be in build/libs/
 - Leaderboards.
 
 - PlaceholderAPI support.
-
-- In-Game scoreboard.
 
 **Licensed under the GPLv3.**

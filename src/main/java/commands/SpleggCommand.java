@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -31,6 +32,9 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
             "start", "stop", "info");
     private static final List<String> MAP_ARG_SUBS = Arrays.asList("join", "create", "delete", "setspawn", "setlobby",
             "addfloor", "start", "stop", "info");
+    // Map names become file names under the data folder, so they stay on one path
+    // segment.
+    private static final Pattern MAP_NAME = Pattern.compile("[A-Za-z0-9_-]{1,48}");
 
     private boolean ensureSpleggWorld(Player player) {
 
@@ -58,7 +62,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
         if (sender instanceof Player) {
 
             Player player = (Player) sender;
-            UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
+            UtilPlayer u = SpleggOG.getPlugin().pm.track(player);
 
             if (args.length == 0) {
 
@@ -215,7 +219,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
                         if (!ensureSpleggWorld(player)) {
 
-                            return false;
+                            return true;
 
                         }
 
@@ -249,7 +253,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
                             if (!ensureSpleggWorld(player)) {
 
-                                return false;
+                                return true;
 
                             }
 
@@ -328,12 +332,17 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
                             if (!ensureSpleggWorld(player)) {
 
-                                return false;
+                                return true;
 
                             }
 
                             firstUserCommandArgument = args[1];
-                            if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
+                            if (!MAP_NAME.matcher(firstUserCommandArgument).matches()) {
+
+                                Utils.spleggOGMessage(player,
+                                        "&cERROR: Map names may only contain letters, digits, '-' and '_'.");
+
+                            } else if (SpleggOG.getPlugin().maps.mapExists(firstUserCommandArgument)) {
 
                                 Utils.spleggOGMessage(player,
                                         "&cERROR: The map: &e" + firstUserCommandArgument + " &calready exists.");
@@ -475,7 +484,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
                             if (!ensureSpleggWorld(player)) {
 
-                                return false;
+                                return true;
 
                             }
 
@@ -529,7 +538,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
                             if (!ensureSpleggWorld(player)) {
 
-                                return false;
+                                return true;
 
                             }
 
@@ -632,7 +641,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
                         if (!player.hasPermission("splegg.admin")) {
 
                             permissionMessage(player);
-                            return false;
+                            return true;
 
                         }
 
@@ -667,7 +676,7 @@ public class SpleggCommand implements CommandExecutor, TabCompleter {
 
         }
 
-        return false;
+        return true;
 
     }
 

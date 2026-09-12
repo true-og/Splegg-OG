@@ -63,6 +63,34 @@ public class GameWorldManager {
 
     }
 
+    // Only copies of known templates are purged, so an admin's SP2-something
+    // world that is not in config yet survives a restart.
+    private boolean isKnownTemplateCopy(String name) {
+
+        int dash = name.indexOf('-');
+        if (dash < 0 || dash + 1 >= name.length())
+            return false;
+
+        String suffix = name.substring(dash + 1);
+        for (String template : plugin.getInGameWorlds())
+            if (template != null && template.equalsIgnoreCase(suffix))
+                return true;
+
+        if (plugin.maps == null)
+            return false;
+
+        for (Map map : plugin.maps.getMaps()) {
+
+            String world = map.getWorldName();
+            if (world != null && world.equalsIgnoreCase(suffix))
+                return true;
+
+        }
+
+        return false;
+
+    }
+
     private boolean isConfiguredWorld(String name) {
 
         for (String configured : plugin.getLobbyWorlds())
@@ -91,7 +119,7 @@ public class GameWorldManager {
         for (File child : children) {
 
             String name = child.getName();
-            if (!isGameCopyName(name))
+            if (!isGameCopyName(name) || !isKnownTemplateCopy(name))
                 continue;
 
             if (SpleggOG.isProtectedMainWorld(name)) {

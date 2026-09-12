@@ -2,6 +2,7 @@ package gui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,10 +20,17 @@ import net.trueog.utilitiesog.UtilitiesOG;
 
 public class SpleggShopGUI extends GUIBase {
 
-    public SpleggShopGUI(Player player) {
+    public static final List<String> SHOVEL_CONFIG_PATHS = List.of("GUI.Shop.WoodShovel", "GUI.Shop.StoneShovel",
+            "GUI.Shop.IronShovel", "GUI.Shop.GoldShovel", "GUI.Shop.DiamondShovel", "GUI.Shop.NetheriteShovel");
+
+    // Affordability is resolved off the main thread before the GUI is built.
+    private final Map<String, Boolean> affordable;
+
+    public SpleggShopGUI(Player player, Map<String, Boolean> affordable) {
 
         super(SpleggOG.getPlugin(), player, SpleggOG.getPlugin().getConfig().getString("GUI.Shop.Title"),
                 normalizeSize(SpleggOG.getPlugin().getConfig().getInt("GUI.Shop.Size")), true);
+        this.affordable = affordable;
 
     }
 
@@ -59,7 +67,7 @@ public class SpleggShopGUI extends GUIBase {
     {
 
         final Player player = getPlayer();
-        final boolean affordable = Listeners.isShovelAffordable(player, configPath);
+        final boolean affordable = this.affordable.getOrDefault(configPath, false);
 
         final GUIItem item = new GUIItem(material, 1, SpleggOG.getPlugin().getConfig().getString(configPath + ".Name"));
         item.lore(buildLore(player, configPath, affordable));

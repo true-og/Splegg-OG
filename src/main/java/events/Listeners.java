@@ -1,9 +1,12 @@
 package events;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -67,7 +70,12 @@ public class Listeners implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
 
-        final Player player = (Player) event.getWhoClicked();
+        if (!(event.getWhoClicked() instanceof Player player)) {
+
+            return;
+
+        }
+
         if (!SpleggOG.getPlugin().isSpleggWorld(player.getWorld())) {
 
             return;
@@ -75,7 +83,7 @@ public class Listeners implements Listener {
         }
 
         final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-        if (u.getGame() != null && u.isAlive()) {
+        if (u != null && u.getGame() != null && u.isAlive()) {
 
             event.setCancelled(true);
 
@@ -107,14 +115,8 @@ public class Listeners implements Listener {
 
         }
 
-        if (!isShovelAffordable(player, configPath)) {
-
-            Utils.spleggOGMessage(player, SpleggOG.getPlugin().getConfig().getString("Messages.NoEnoughMoney"));
-
-            return false;
-
-        }
-
+        // No pre-check: consumeFromPlayer refuses an unaffordable purchase itself,
+        // and every DiamondBank call blocks the main thread.
         final DiamondBankAPIJava diamondBankAPI = SpleggOG.getPlugin().getDiamondBankAPI();
         if (diamondBankAPI == null) {
 
@@ -207,9 +209,33 @@ public class Listeners implements Listener {
 
     }
 
+    // Balance lookups block, so they run off the main thread and the GUI opens once
+    // they are in.
     public static void openShop(Player player) {
 
-        new SpleggShopGUI(player).open(true);
+        Bukkit.getScheduler().runTaskAsynchronously(SpleggOG.getPlugin(), () -> {
+
+            final Map<String, Boolean> affordable = new HashMap<>();
+            for (String configPath : SpleggShopGUI.SHOVEL_CONFIG_PATHS) {
+
+                affordable.put(configPath, isShovelAffordable(player, configPath));
+
+            }
+
+            Bukkit.getScheduler().runTask(SpleggOG.getPlugin(), () -> {
+
+                final UtilPlayer tracked = SpleggOG.getPlugin().pm.getPlayer(player);
+                if (!player.isOnline() || tracked == null || tracked.getGame() == null) {
+
+                    return;
+
+                }
+
+                new SpleggShopGUI(player, affordable).open(true);
+
+            });
+
+        });
 
     }
 
@@ -376,11 +402,12 @@ public class Listeners implements Listener {
         if (player == null)
             return;
         final UtilPlayer u = SpleggOG.getPlugin().pm.getPlayer(player);
-        if (u == null)
-            return;
-        final Game game = u.getGame();
-        if (game != null)
-            game.leaveGame(u);
+        if (u != null && u.getGame() != null)
+            u.getGame().leaveGame(u);
+
+        // The wrapper holds a dead Player reference from here on; a relog creates a
+        // fresh one.
+        SpleggOG.getPlugin().pm.untrack(player);
 
     }
 
