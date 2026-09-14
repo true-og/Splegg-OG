@@ -19,6 +19,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import utils.ScoreboardOGBridge;
 import utils.SpleggPlayer;
+import utils.TrueOGBoard;
 import utils.Utils;
 
 // The sidebar a Splegg player sees while queued and while playing. With Scoreboard-OG
@@ -128,8 +129,7 @@ public class LobbyScoreboard {
 
     private static TextComponent title(Player player) {
 
-        final String rawTitle = SpleggOG.getPlugin().getConfig().getString("Scoreboard.Title");
-        return Utils.legacySerializerAnyCase(rawTitle != null ? rawTitle : "&2Splegg&r-&4OG");
+        return Utils.legacySerializerAnyCase(TrueOGBoard.TITLE);
 
     }
 
@@ -153,52 +153,50 @@ public class LobbyScoreboard {
 
     }
 
-    // Top to bottom. The queue card shows the countdown; the match card shows the
-    // survivors, the player's own block count and the time left.
+    // Top to bottom in the network board's layout: a blank, labelled blocks split
+    // by blanks, then the site footer. Queue card counts down; match card scores.
     private static List<String> rawLines(Player player, Game game) {
 
         final List<String> lines = new ArrayList<>();
-        lines.add("&7&m                ");
-        lines.add(configLine("Scoreboard.Map", "&eMap:"));
-        lines.add("&f" + (game.getMap() != null ? game.getMap().getName() : "&7Voting..."));
+        lines.add("");
+        lines.add("&eMap:");
+        lines.add(game.getMap() != null ? "&f" + TrueOGBoard.fit(game.getMap().getName(), TrueOGBoard.VALUE_WIDTH)
+                : "&7Voting...");
         lines.add("");
 
         if (game.getStatus() == Status.INGAME) {
 
             final SpleggPlayer self = game.getPlayers().get(player.getUniqueId());
             final int broken = self == null ? 0 : self.getBroken();
-            lines.add(configLine("Scoreboard.Alive", "&aPlayers Alive:"));
-            lines.add("&f" + game.getPlayers().size());
-            lines.add(" ");
-            lines.add(configLine("Scoreboard.BrokenBlocks", "&eBlocks Broken:"));
-            lines.add("&f" + broken);
-            lines.add("  ");
-            lines.add(configLine("Scoreboard.TimeLeft", "&6Time Left:"));
-            lines.add("&f" + SpleggOG.getPlugin().game.getDigitTime(Math.max(0, game.getCount())));
+            lines.add("&aAlive: &f" + game.getPlayers().size());
+            lines.add("");
+            lines.add("&eBlocks: &f" + TrueOGBoard.compact(broken));
+            lines.add("");
+            lines.add("&6Time: &f" + TrueOGBoard.clock(game.getCount()));
 
         } else {
 
-            final int maxPlayers = game.getMaxPlayers();
             final int currentPlayers = game.getPlayers().size();
-            lines.add(configLine("Scoreboard.Queue", "&6Lobby Players:"));
-            lines.add("&f" + currentPlayers + "&7/&f" + maxPlayers);
-            lines.add(" ");
-            lines.add(configLine("Scoreboard.Starting", "&6Starting in:"));
+            lines.add("&6Players:");
+            lines.add("&f" + currentPlayers + "&7/&f" + game.getMaxPlayers());
+            lines.add("");
+            lines.add("&6Starting in:");
             if (game.isStarting()) {
 
-                lines.add("&f" + game.getLobbyCount() + "s");
+                lines.add("&f" + TrueOGBoard.clock(game.getLobbyCount()));
 
             } else {
 
                 final int required = Math.max(2, SpleggOG.getPlugin().getConfig().getInt("Options.AutoStartPlayers"));
                 final int needed = Math.max(0, required - currentPlayers);
-                lines.add(needed == 0 ? "&aReady" : "&f" + needed + " &7more");
+                lines.add(needed == 0 ? "&aReady" : "&7Need " + needed + " more");
 
             }
 
         }
 
-        lines.add("&7&m               ");
+        lines.add("");
+        lines.add(TrueOGBoard.FOOTER);
         return lines;
 
     }
@@ -226,20 +224,23 @@ public class LobbyScoreboard {
         }
 
         // Bukkit boards score from the bottom, so the top line gets the highest score.
+        // Entries must be unique, so repeated blanks get a different width each.
         final List<String> lines = rawLines(player, game);
+        final StringBuilder blank = new StringBuilder();
         int score = lines.size();
         for (String line : lines) {
 
-            objective.getScore(Utils.legacySectionize(line.isEmpty() ? " " : line)).setScore(score--);
+            String entry = line;
+            if (line.isEmpty()) {
+
+                blank.append(' ');
+                entry = blank.toString();
+
+            }
+
+            objective.getScore(Utils.legacySectionize(entry)).setScore(score--);
 
         }
-
-    }
-
-    private static String configLine(String path, String fallback) {
-
-        final String value = SpleggOG.getPlugin().getConfig().getString(path);
-        return value != null ? value : fallback;
 
     }
 

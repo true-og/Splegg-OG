@@ -153,7 +153,7 @@ Chat-OG routes worlds named `<letters><number>-<name>`, which is also the shape 
 
 **Scoreboard:**
 
-Queued players see a sidebar with the map, the players waiting and the countdown; during the match it shows the map, the players still alive, the player's own blocks broken and the time left. The labels are the `Scoreboard.*` keys in `config.yml`. With Scoreboard-OG `1.2.0` or newer installed, the sidebar is drawn through Scoreboard-OG's sidebar API, so the network board returns on its own when the player leaves and `/togglescoreboard` is honoured. Without it, a plain Bukkit sidebar is used and the main scoreboard is restored on leave.
+Queued players see a sidebar with the map, the players in the lobby and the countdown; during the match it shows the map, the players still alive, the player's own blocks broken and the time left. It uses the Scoreboard-OG network board's look (`♥ Splegg-OG ♥` title, blank-separated blocks, `true-og.net` footer), is built in code, and keeps every line within 16 legacy characters so 1.8 clients see it whole. With Scoreboard-OG `1.2.0` or newer installed, the sidebar is drawn through Scoreboard-OG's sidebar API, so the network board returns on its own when the player leaves and `/togglescoreboard` is honoured. Without it, a plain Bukkit sidebar is used and the main scoreboard is restored on leave.
 
 **Lobbies:**
 

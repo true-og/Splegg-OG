@@ -42,15 +42,6 @@ Messages:
   YouWonGame: '&aYou won the match on &e%map%&a!'
   LoseGame: '&cYou were eliminated from the match on &e%map%&c.'
   FinishReward: '&BYou received %reward% &BDiamonds for winning!'
-Scoreboard:
-  Title: '&2Splegg&r-&4OG'
-  Map: '&eMap:'
-  Queue: '&6Players Waiting:'
-  Starting: '&6Starting in:'
-  # Match card lines, shown while a game is live.
-  Alive: '&aPlayers Alive:'
-  BrokenBlocks: '&eBlocks Broken:'
-  TimeLeft: '&6Time Left:'
 Money:
   KillPlayer: 0
   # Diamonds awarded to the match winner.

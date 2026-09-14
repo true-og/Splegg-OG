@@ -1,3 +1,7 @@
+**0.9.9:**
+
+- The sidebar now follows the Scoreboard-OG network board's look: a `♥ Splegg-OG ♥` title, one blank line between labelled blocks and a `true-og.net` footer. The queue card shows the map, the players in the lobby and the countdown; the match card shows the map, the players still alive, the player's own blocks broken and the time left as `mm:ss`. Every line is at most 16 legacy characters, so 1.8 clients on ViaBackwards see it uncut, and the layout is built in code rather than the removed `Scoreboard.*` keys in `config.yml`.
+
 **0.9.8:**
 
 - Lobbies now work like TheHerobrine-OG's. Every hub world under `Worlds.Lobby` is one persistent lobby whose id is the world name up to the dash (`SP1-hub` is `SP1`). Players join with `/splegg join SP1`, `/splegg join 1`, `/sp join 1` or `/spjoin 1`, wait and vote in the hub, and the match runs in a fresh `SP1-<map>` copy that is deleted afterwards. `/splegg join` with no argument picks the best open lobby. Joining by map name and `/splegg random` are gone.
