@@ -360,14 +360,16 @@ public class Listeners implements Listener {
 
     }
 
-    @EventHandler
+    // A cancelled kick (anti-cheat setback, staff tooling) must not eject the
+    // player from their lobby.
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerKick(PlayerKickEvent playerKickEvent) {
 
         handlePlayerExit(playerKickEvent.getPlayer());
 
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onWorldUnload(WorldUnloadEvent worldUnloadEvent) {
 
         final String worldName = worldUnloadEvent.getWorld().getName();

@@ -7,6 +7,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
@@ -40,14 +42,74 @@ public class PreJoinLocationListener implements Listener {
         if (toManaged && !fromManaged) {
 
             plugin.savePreJoinLocation(event.getPlayer().getUniqueId(), from);
+            // Before the world change: MyWorlds' gamemode restore on entry and every
+            // adventure flip Splegg makes must run without GameModeInventories.
+            plugin.getGmiGuard().suspend(event.getPlayer());
             return;
 
         }
 
         // Left Splegg territory for a real world by any route, so the recorded spot
         // has served its purpose.
-        if (fromManaged && !toManaged)
+        if (fromManaged && !toManaged) {
+
             plugin.removePreJoinLocation(event.getPlayer().getUniqueId());
+            // Stays attached through this teleport's world change (MyWorlds restores
+            // the real inventory and then the saved survival gamemode there).
+            plugin.getGmiGuard().suspend(event.getPlayer());
+            plugin.getGmiGuard().releaseAfterLeaving(event.getPlayer());
+
+        }
+
+    }
+
+    // A respawn is a world change without a teleport event, so the suspension
+    // is handled here for both directions.
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onRespawnMonitor(PlayerRespawnEvent event) {
+
+        Player player = event.getPlayer();
+        Location respawn = event.getRespawnLocation();
+        if (respawn == null || respawn.getWorld() == null)
+            return;
+
+        boolean fromManaged = player.getWorld() != null && plugin.isSpleggTerritory(player.getWorld().getName());
+        boolean toManaged = plugin.isSpleggTerritory(respawn.getWorld().getName());
+
+        if (toManaged) {
+
+            plugin.getGmiGuard().suspend(player);
+            return;
+
+        }
+
+        if (fromManaged) {
+
+            plugin.getGmiGuard().suspend(player);
+            plugin.getGmiGuard().releaseAfterLeaving(player);
+
+        }
+
+    }
+
+    // A login inside Splegg territory: MyWorlds forces the world's gamemode at
+    // join, and the return teleport follows a tick later.
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onLogin(PlayerLoginEvent event) {
+
+        if (event.getResult() != PlayerLoginEvent.Result.ALLOWED)
+            return;
+
+        Player player = event.getPlayer();
+        if (player.getWorld() != null && plugin.isSpleggTerritory(player.getWorld().getName()))
+            plugin.getGmiGuard().suspend(player);
+
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuit(PlayerQuitEvent event) {
+
+        plugin.getGmiGuard().release(event.getPlayer());
 
     }
 

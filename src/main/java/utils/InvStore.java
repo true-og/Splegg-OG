@@ -3,8 +3,6 @@ package utils;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -17,7 +15,6 @@ public class InvStore {
     public int food;
     public int level;
     public float exp;
-    public GameMode gamemode;
     public Collection<PotionEffect> activePotionEffects;
 
     public InvStore(Player player) {
@@ -54,15 +51,11 @@ public class InvStore {
         final double restoredHealth = this.health > 0.0D ? this.health : maxHealth;
         this.player.setHealth(Math.min(restoredHealth, maxHealth));
 
-        if (this.gamemode != null) {
-
-            this.player.setGameMode(this.gamemode);
-
-        }
-
-        // Main scoreboard, not an empty one: an empty board would keep
-        // Scoreboard-OG from re-showing its sidebar after the player leaves.
-        this.player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+        // No gamemode restore here: load() runs after the player is back in the
+        // overworld, where MyWorlds already re-applied the saved gamemode, and a
+        // second change there is exactly the flip GameModeInventories-OG answers
+        // by swapping the real inventory out. No scoreboard reset either:
+        // LobbyScoreboard.detach() has already handed the board back.
         this.player.updateInventory();
 
     }
@@ -74,7 +67,6 @@ public class InvStore {
         this.food = this.player.getFoodLevel();
         this.fire = this.player.getFireTicks();
         this.health = this.player.getHealth();
-        this.gamemode = this.player.getGameMode();
         this.activePotionEffects = new ArrayList<>(this.player.getActivePotionEffects());
         this.player.updateInventory();
 
@@ -87,7 +79,6 @@ public class InvStore {
         this.health = 0.0D;
         this.food = 0;
         this.fire = 0;
-        this.gamemode = null;
         this.activePotionEffects = new ArrayList<>();
 
     }

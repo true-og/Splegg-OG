@@ -53,6 +53,7 @@ import managers.Status;
 import managers.VoidChunkGenerator;
 import net.trueog.diamondbankog.api.DiamondBankAPIJava;
 import signs.JoinSignUpdater;
+import utils.GameModeInventoriesGuard;
 import utils.PreJoinLocationStore;
 import utils.ScoreboardOGBridge;
 import utils.Utils;
@@ -89,6 +90,7 @@ public class SpleggOG extends JavaPlugin {
     private static MyWorlds myWorlds;
     private GameWorldManager gameWorldManager;
     private PreJoinLocationStore preJoinLocations;
+    private GameModeInventoriesGuard gmiGuard;
 
     // TODO: If a shovel in the Splegg shop is too expensive, close the inventory
     // and tell the user about it.
@@ -97,6 +99,9 @@ public class SpleggOG extends JavaPlugin {
     public void onEnable() {
 
         plugin = this;
+        // Built before any listener so every route into Splegg territory can use it.
+        this.gmiGuard = new GameModeInventoriesGuard(this,
+                player -> player.getWorld() != null && this.isSpleggTerritory(player.getWorld().getName()));
         this.chat = new Utils();
         if (this.getServer().getPluginManager().getPlugin("WorldEdit") == null) {
 
@@ -242,6 +247,11 @@ public class SpleggOG extends JavaPlugin {
 
         }
 
+        // After the teardown above moved everyone home, so their MyWorlds gamemode
+        // restore already ran under the suspension.
+        if (this.gmiGuard != null)
+            this.gmiGuard.releaseAll();
+
         this.getLogger().info("Splegg-OG shut down; " + gameCounter + " lobbies were active.");
 
     }
@@ -276,6 +286,12 @@ public class SpleggOG extends JavaPlugin {
         createLobbies();
         claimShortAlias();
         JoinSignUpdater.redrawNow(this);
+
+        // /reload leaves players standing in Splegg worlds with no suspension.
+        this.gmiGuard.sweepOnlinePlayers();
+        if (this.getServer().getPluginManager().getPlugin("GameModeInventories-OG") != null)
+            this.getLogger().info(
+                    "GameModeInventories-OG detected: its inventory swap is suspended for players inside Splegg worlds.");
 
     }
 
@@ -703,6 +719,12 @@ public class SpleggOG extends JavaPlugin {
         // Per-game world copies are ephemeral and not in config; ask the live
         // game registry. Guard against early-boot calls before games exists.
         return this.games != null && this.games.isActiveGameWorld(worldName);
+
+    }
+
+    public GameModeInventoriesGuard getGmiGuard() {
+
+        return this.gmiGuard;
 
     }
 

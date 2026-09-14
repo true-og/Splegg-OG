@@ -807,9 +807,13 @@ public class Game {
         // Stats are captured before the teleport so MyWorlds' own per-bundle
         // exp/health swap cannot pollute the snapshot.
         playerWhoIsJoining.getStore().save();
+        // GameModeInventories must already be suspended when the lobby teleport
+        // fires, before MyWorlds and preparePlayerForLobby change the gamemode.
+        splegg.getGmiGuard().suspend(player);
         if (!teleportToQueueLobby(player)) {
 
             Utils.spleggOGMessage(player, "&cUnable to teleport you to the game lobby.");
+            splegg.getGmiGuard().releaseAfterLeaving(player);
             return;
 
         }
