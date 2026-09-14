@@ -180,7 +180,7 @@ public class LobbyScoreboard {
 
             final int maxPlayers = game.getMaxPlayers();
             final int currentPlayers = game.getPlayers().size();
-            lines.add(configLine("Scoreboard.Queue", "&6Players Waiting:"));
+            lines.add(configLine("Scoreboard.Queue", "&6Lobby Players:"));
             lines.add("&f" + currentPlayers + "&7/&f" + maxPlayers);
             lines.add(" ");
             lines.add(configLine("Scoreboard.Starting", "&6Starting in:"));
