@@ -1,5 +1,7 @@
 **0.9.9:**
 
+- Fixed 1.21.2 and newer clients being kicked with `Network Protocol Error` on joining a lobby. The lobby inventory setup touched slot 41, one past the last player-inventory slot, and the server relayed that as a set-slot packet for container slot 46; older clients logged and ignored it, newer clients treat a bad packet as fatal. Present since the lobby items were added.
+
 - The sidebar now follows the Scoreboard-OG network board's look: a `♥ Splegg-OG ♥` title, one blank line between labelled blocks and a `true-og.net` footer. The queue card shows the map, the players in the lobby and the countdown; the match card shows the map, the players still alive, the player's own blocks broken and the time left as `mm:ss`. Every line is at most 16 legacy characters, so 1.8 clients on ViaBackwards see it uncut, and the layout is built in code rather than the removed `Scoreboard.*` keys in `config.yml`.
 
 **0.9.8:**

@@ -915,10 +915,17 @@ public class Game {
 
     }
 
+    // A player inventory has 41 Bukkit slots: 0-35 storage, 36-39 armour, 40
+    // offhand. Touching index 41 is a silent no-op server side, but
+    // CraftInventoryPlayer still sends a SetSlot packet for container slot 46,
+    // one past the end of the client's inventory menu. 1.21.2+ clients treat
+    // any packet handler exception as fatal and disconnect with
+    // "Network Protocol Error".
+    private static final int PLAYER_INVENTORY_SLOTS = 41;
+
     private void setLobbyInv(Player player) {
 
-        final int[] slotsDeclaredInConfigFile = new int[42];
-        for (int i = 0; i < slotsDeclaredInConfigFile.length; i++) {
+        for (int i = 0; i < PLAYER_INVENTORY_SLOTS; i++) {
 
             setInventorySlotItem(player, i);
 
