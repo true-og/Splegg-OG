@@ -1,4 +1,4 @@
-# Splegg-OG 0.9.8
+# Splegg-OG 0.9.9
 
 ![Icon](https://raw.githubusercontent.com/true-og/Splegg-OG/master/assets/splegg-logo.png)
 

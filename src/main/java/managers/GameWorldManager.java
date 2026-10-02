@@ -165,6 +165,11 @@ public class GameWorldManager {
 
             }
 
+            // Same as cleanupWorld: a copy still in its template's bundle could be the
+            // bundle's storage world, which MyWorlds refuses to delete
+
+            WorldInventory.detach(Collections.singletonList(name));
+
             if (worldConfig.deleteWorld())
                 return true;
 
