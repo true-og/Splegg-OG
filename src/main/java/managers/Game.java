@@ -25,6 +25,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.trueog.diamondbankog.DiamondBankException.EconomyDisabledException;
+import net.trueog.diamondbankog.DiamondBankException.InvalidPlayerException;
 import net.trueog.diamondbankog.api.DiamondBankAPIJava;
 import net.trueog.utilitiesog.UtilitiesOG;
 import runnables.GameTime;
@@ -1148,6 +1149,11 @@ public class Game {
 
                         UtilitiesOG.trueogMessage(remaining,
                                 "&cERROR: The Diamond economy is currently unavailable. Your kill reward could not be paid out.");
+
+                    } catch (InvalidPlayerException invalidPlayerException) {
+
+                        UtilitiesOG.trueogMessage(remaining,
+                                "&cERROR: Your player account could not be found. Your kill reward could not be paid out.");
 
                     }
 

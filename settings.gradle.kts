@@ -16,6 +16,11 @@ file("libs")
         directory.isDirectory && !directory.name.startsWith(".") && file("${directory.path}/build.gradle.kts").exists()
     }
     ?.forEach { directory ->
-        include(":libs:${directory.name}")
-        project(":libs:${directory.name}").projectDir = directory
+        if (directory.name == "Utilities-OG") {
+            // DiamondBank-OG depends on Utilities-OG by coordinate, which only an included build can satisfy.
+            includeBuild(directory)
+        } else {
+            include(":libs:${directory.name}")
+            project(":libs:${directory.name}").projectDir = directory
+        }
     }

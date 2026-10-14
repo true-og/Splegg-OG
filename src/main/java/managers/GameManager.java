@@ -12,6 +12,7 @@ import config.Map;
 import main.SpleggOG;
 import net.kyori.adventure.title.Title;
 import net.trueog.diamondbankog.DiamondBankException.EconomyDisabledException;
+import net.trueog.diamondbankog.DiamondBankException.InvalidPlayerException;
 import net.trueog.utilitiesog.UtilitiesOG;
 import stats.SpleggStats;
 import utils.SpleggPlayer;
@@ -222,6 +223,11 @@ public class GameManager {
 
             UtilitiesOG.trueogMessage(winner,
                     "&cERROR: The Diamond economy is currently unavailable. Your win reward could not be paid out.");
+
+        } catch (InvalidPlayerException invalidPlayerException) {
+
+            UtilitiesOG.trueogMessage(winner,
+                    "&cERROR: Your player account could not be found. Your win reward could not be paid out.");
 
         }
 

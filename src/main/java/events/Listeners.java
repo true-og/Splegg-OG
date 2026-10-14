@@ -29,7 +29,6 @@ import managers.Game;
 import net.trueog.diamondbankog.DiamondBankException.EconomyDisabledException;
 import net.trueog.diamondbankog.DiamondBankException.InsufficientFundsException;
 import net.trueog.diamondbankog.DiamondBankException.InvalidPlayerException;
-import net.trueog.diamondbankog.DiamondBankException.PlayerNotOnlineException;
 import net.trueog.diamondbankog.api.DiamondBankAPIJava;
 import net.trueog.utilitiesog.UtilitiesOG;
 import utils.UtilPlayer;
@@ -150,7 +149,7 @@ public class Listeners implements Listener {
             UtilitiesOG.trueogMessage(player, "&cERROR: The Diamond economy is currently unavailable.");
             return false;
 
-        } catch (InvalidPlayerException | PlayerNotOnlineException playerException) {
+        } catch (InvalidPlayerException playerException) {
 
             restoreDefaultLobbyState(playerId);
             UtilitiesOG.trueogMessage(player,
