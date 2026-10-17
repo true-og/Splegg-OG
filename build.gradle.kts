@@ -56,14 +56,14 @@ dependencies {
     compileOnly(
         "com.sk89q.worldedit:worldedit-bukkit:7.2.15"
     ) // Import WorldEdit API (7.2.15 matches the server's WorldEdit build).
-    compileOnly(files("libs/MyWorlds/MyWorlds-1.19.4-v1.jar")) // Import MyWorlds API (local build).
+    compileOnly(project(":libs:MyWorlds")) // Import MyWorlds API (git submodule, built from source).
     compileOnly(
         files("libs/BKCommonLib/BKCommonLib-1.19.4-v2.jar")
     ) // Import BKCommonLib API (local build, required by MyWorlds at compile time).
     compileOnly(files("libs/Chat-OG/Chat-OG.jar")) // Import Chat-OG API for world chat formatting.
     compileOnly(files("libs/Scoreboard-OG/Scoreboard-OG.jar")) // Import Scoreboard-OG sidebar API.
     implementation(project(":libs:GxUI-OG")) // Import TrueOG Network GxUI-OG Java API (from source).
-    compileOnlyApi("net.trueog.utilities-og:Utilities-OG") // Import TrueOG Network Utilities-OG Java API (from source).
+    compileOnlyApi(project(":libs:Utilities-OG")) // Import TrueOG Network Utilities-OG Java API (from source).
     compileOnlyApi(project(":libs:DiamondBank-OG")) {
         attributes { attribute(kotlinAttribute, true) }
     } // Import TrueOG network DiamondBank-OG Kotlin API (from source).

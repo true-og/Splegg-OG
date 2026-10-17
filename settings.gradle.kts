@@ -1,6 +1,6 @@
 rootProject.name = "Splegg-OG"
 
-val requiredLibraries = listOf("DiamondBank-OG", "GxUI-OG", "Utilities-OG")
+val requiredLibraries = listOf("DiamondBank-OG", "GxUI-OG", "MyWorlds", "Utilities-OG")
 val missingLibraries = requiredLibraries.filter { libraryName -> !file("libs/$libraryName/build.gradle.kts").exists() }
 
 if (missingLibraries.isNotEmpty()) {
@@ -16,11 +16,6 @@ file("libs")
         directory.isDirectory && !directory.name.startsWith(".") && file("${directory.path}/build.gradle.kts").exists()
     }
     ?.forEach { directory ->
-        if (directory.name == "Utilities-OG") {
-            // DiamondBank-OG depends on Utilities-OG by coordinate, which only an included build can satisfy.
-            includeBuild(directory)
-        } else {
-            include(":libs:${directory.name}")
-            project(":libs:${directory.name}").projectDir = directory
-        }
+        include(":libs:${directory.name}")
+        project(":libs:${directory.name}").projectDir = directory
     }
