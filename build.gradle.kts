@@ -42,6 +42,7 @@ tasks.named<ProcessResources>("processResources") {
 /* ---------------------------- Repos ---------------------------------- */
 repositories {
     mavenCentral() // Import the Maven Central Maven Repository.
+    maven("https://ci.mg-dev.eu/plugin/repository/everything/") // BKCommonLib.
     gradlePluginPortal() // Import the Gradle Plugin Portal Maven Repository.
     maven { url = uri("https://repo.purpurmc.org/snapshots") } // Import the PurpurMC Maven Repository.
     maven { url = uri("https://jitpack.io") } // Import the Jitpack Maven Repository.
@@ -57,11 +58,11 @@ dependencies {
         "com.sk89q.worldedit:worldedit-bukkit:7.2.15"
     ) // Import WorldEdit API (7.2.15 matches the server's WorldEdit build).
     compileOnly(project(":libs:MyWorlds")) // Import MyWorlds API (git submodule, built from source).
-    compileOnly(
-        files("libs/BKCommonLib/BKCommonLib-1.19.4-v2.jar")
-    ) // Import BKCommonLib API (local build, required by MyWorlds at compile time).
-    compileOnly(files("libs/Chat-OG/Chat-OG.jar")) // Import Chat-OG API for world chat formatting.
-    compileOnly(files("libs/Scoreboard-OG/Scoreboard-OG.jar")) // Import Scoreboard-OG sidebar API.
+    compileOnly("com.bergerkiller.bukkit:BKCommonLib:1.19.4-v2") // Import BKCommonLib API from its Maven repository (required by MyWorlds at compile time).
+    compileOnly(project(":libs:Chat-OG")) {
+        attributes { attribute(kotlinAttribute, true) }
+    } // Import TrueOG Network Chat-OG Kotlin API (from source).
+    compileOnly(project(":libs:Scoreboard-OG")) // Import TrueOG Network Scoreboard-OG Java API (from source).
     implementation(project(":libs:GxUI-OG")) // Import TrueOG Network GxUI-OG Java API (from source).
     compileOnlyApi(project(":libs:Utilities-OG")) // Import TrueOG Network Utilities-OG Java API (from source).
     compileOnlyApi(project(":libs:DiamondBank-OG")) {

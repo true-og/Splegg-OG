@@ -1,21 +1,15 @@
 rootProject.name = "Splegg-OG"
 
-val requiredLibraries = listOf("DiamondBank-OG", "GxUI-OG", "MyWorlds", "Utilities-OG")
-val missingLibraries = requiredLibraries.filter { libraryName -> !file("libs/$libraryName/build.gradle.kts").exists() }
-
-if (missingLibraries.isNotEmpty()) {
-    throw GradleException(
-        "Missing initialized git submodules: ${missingLibraries.joinToString(", ")}. " +
-            "Run ./bootstrap.sh or `git submodule update --init --recursive` before building."
-    )
+// Fetch submodule content before the libraries below are wired in as subprojects.
+ProcessBuilder("sh", "bootstrap.sh").directory(rootDir).inheritIO().start().let {
+    if (it.waitFor() != 0) throw GradleException("bootstrap.sh failed")
 }
 
+// Every git submodule under libs/ with a Gradle build becomes :libs:<name>, like Template-OG.
 file("libs")
     .listFiles()
-    ?.filter { directory ->
-        directory.isDirectory && !directory.name.startsWith(".") && file("${directory.path}/build.gradle.kts").exists()
-    }
-    ?.forEach { directory ->
-        include(":libs:${directory.name}")
-        project(":libs:${directory.name}").projectDir = directory
+    ?.filter { it.isDirectory && !it.name.startsWith(".") && file("${it.path}/build.gradle.kts").exists() }
+    ?.forEach { dir ->
+        include(":libs:${dir.name}")
+        project(":libs:${dir.name}").projectDir = dir
     }
