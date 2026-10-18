@@ -58,10 +58,12 @@ dependencies {
         "com.sk89q.worldedit:worldedit-bukkit:7.2.15"
     ) // Import WorldEdit API (7.2.15 matches the server's WorldEdit build).
     compileOnly(project(":libs:MyWorlds")) // Import MyWorlds API (git submodule, built from source).
-    compileOnly("com.bergerkiller.bukkit:BKCommonLib:1.19.4-v2") // Import BKCommonLib API from its Maven repository (required by MyWorlds at compile time).
-    compileOnly(project(":libs:Chat-OG")) {
-        attributes { attribute(kotlinAttribute, true) }
-    } // Import TrueOG Network Chat-OG Kotlin API (from source).
+    compileOnly(
+        "com.bergerkiller.bukkit:BKCommonLib:1.19.4-v2"
+    ) // Import BKCommonLib API from its Maven repository (required by MyWorlds at compile time).
+    compileOnly(
+        files("libs/Chat-OG/Chat-OG.jar")
+    ) // Import Chat-OG API for world chat formatting (vendored jar until the API lands in true-og/Chat-OG).
     compileOnly(project(":libs:Scoreboard-OG")) // Import TrueOG Network Scoreboard-OG Java API (from source).
     implementation(project(":libs:GxUI-OG")) // Import TrueOG Network GxUI-OG Java API (from source).
     compileOnlyApi(project(":libs:Utilities-OG")) // Import TrueOG Network Utilities-OG Java API (from source).
@@ -85,6 +87,9 @@ tasks.shadowJar {
     relocationPrefix = "${project.group}.shadow"
     archiveClassifier.set("") // Use empty string instead of null.
     minimize()
+    from("libs/Chat-OG/LICENSE") {
+        into("META-INF/licenses/libs/Chat-OG")
+    } // Bundle the vendored Chat-OG jar's license.
 }
 
 tasks.jar { archiveClassifier.set("part") } // Applies to root jarfile only.
