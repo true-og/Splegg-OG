@@ -1,6 +1,6 @@
 # Splegg-OG 0.9.9
 
-![Icon](https://raw.githubusercontent.com/true-og/Splegg-OG/master/assets/splegg-logo.png)
+![Icon](https://git.trueog.net/trueog/Splegg-OG/raw/branch/main/assets/splegg-logo.png)
 
 **Splegg-OG** is a Splegg plugin originally made by MrLuangamer, updated for Worldedit 7.2 and Spigot 1.16.4 by Hraponssi, then updated for Purpur 1.19.4 for use at [TrueOG Network](https://true-og.net/) by [NotAlexNoyle](https://github.com/NotAlexNoyle/).
 
@@ -28,7 +28,7 @@ Decide how you want to create your arena:
 
 #### 1A. Create Base Worlds (Manual Path)
 Splegg requires dedicated worlds for lobby hubs and maps.
-1. Install [MyWorlds](https://github.com/true-og/MyWorlds).
+1. Install [MyWorlds](https://git.trueog.net/trueog/MyWorlds).
 2. Create a hub world for lobby 1: `/mw create SP1-hub void`. The name must be `<GamePrefix><number>-<name>`; the number is the lobby id.
 3. Create an in-game world: `/mw create splegg_ingame void`
 4. Load them: `/mw load SP1-hub` and `/mw load splegg_ingame`
